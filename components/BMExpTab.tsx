@@ -5,7 +5,6 @@ import { VIP_SAUNA_EXP } from '@/data/vipSauna';
 import { MONSTER_PARK_EXP, getMonsterParkZone } from '@/data/monsterPark';
 import { SUPER_EXP_COUPON } from '@/data/superExpCoupon';
 import { MEKABERRY_EXP } from '@/data/mekaberry';
-import { EXPRESS_BOOSTER_EXP } from '@/data/expressBooster';
 import { LEVEL_EXP } from '@/data/levelExp';
 
 const LEVELS = Array.from({ length: 40 }, (_, i) => i + 260);
@@ -97,9 +96,9 @@ export default function BMExpTab({ charLevel, monsterLevel }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <SectionTable
-          title="VIP 사우나 (1시간 경험치)"
+          title="VIP 사우나 (1시간)"
           headerColor="bg-orange-100 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
           titleColor="text-gray-800 dark:text-zinc-100"
           levelLabel="캐릭터 레벨"
@@ -119,7 +118,7 @@ export default function BMExpTab({ charLevel, monsterLevel }: Props) {
           }))}
         />
         <SectionTable
-          title="메카베리 농장 입장권 (레벨 280+)"
+          title="메카베리 농장"
           headerColor="bg-orange-100 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
           titleColor="text-gray-800 dark:text-zinc-100"
           levelLabel="캐릭터 레벨"
@@ -129,45 +128,33 @@ export default function BMExpTab({ charLevel, monsterLevel }: Props) {
             badgeColor: 'bg-orange-500 dark:bg-orange-700', textColor: 'text-orange-600', rowBg: 'bg-orange-50 dark:bg-orange-900/40',
           }))}
         />
-        <SectionTable
-          title="익스프레스 부스터 (몬스터 레벨별)"
-          headerColor="bg-orange-100 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
-          titleColor="text-gray-800 dark:text-zinc-100"
-          levelLabel="몬스터 레벨"
-          rows={LEVELS.map(lv => ({
-            level: lv, value: EXPRESS_BOOSTER_EXP[lv] ?? 0, isMe: lv === monsterLevel,
-            badgeColor: 'bg-orange-500 dark:bg-orange-700', textColor: 'text-orange-600', rowBg: 'bg-orange-50 dark:bg-orange-900/40',
-          }))}
-        />
-      </div>
-
-      {/* 몬스터파크 */}
-      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden">
-        <div className="bg-orange-100 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5">
-          <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">몬스터파크 구역별 경험치</h3>
+        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden">
+          <div className="bg-orange-100 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5">
+            <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">몬스터파크 경험치</h3>
+          </div>
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
+                <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">구역</th>
+                <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">경험치</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(MONSTER_PARK_EXP).map(([zone, exp]) => {
+                const isMe = zone === myParkZone;
+                return (
+                  <tr key={zone} className={'border-b ' + (isMe ? 'bg-orange-50 dark:bg-orange-900/40 font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-700:bg-gray-700')}>
+                    <td className={'px-5 py-2 text-center ' + (isMe ? 'text-orange-700' : 'text-gray-700 dark:text-zinc-300')}>
+                      {zone}
+                      {isMe && <span className="ml-1.5 text-xs bg-orange-500 dark:bg-orange-700 text-white px-1.5 py-0.5 rounded-full">나</span>}
+                    </td>
+                    <td className={'px-5 py-2 text-center ' + (isMe ? 'text-orange-700 font-bold' : 'text-gray-700 dark:text-zinc-300')}>{fmt(exp)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
-        <table className="w-full text-sm border-collapse">
-          <thead>
-            <tr className="bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
-              <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">구역</th>
-              <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">경험치</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(MONSTER_PARK_EXP).map(([zone, exp]) => {
-              const isMe = zone === myParkZone;
-              return (
-                <tr key={zone} className={'border-b ' + (isMe ? 'bg-orange-50 dark:bg-orange-900/40 font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-700:bg-gray-700')}>
-                  <td className={'px-5 py-2 text-center ' + (isMe ? 'text-orange-700' : 'text-gray-700 dark:text-zinc-300')}>
-                    {zone}
-                    {isMe && <span className="ml-1.5 text-xs bg-orange-500 dark:bg-orange-700 text-white px-1.5 py-0.5 rounded-full">나</span>}
-                  </td>
-                  <td className={'px-5 py-2 text-center ' + (isMe ? 'text-orange-700 font-bold' : 'text-gray-700 dark:text-zinc-300')}>{fmt(exp)}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
       </div>
     </div>
   );
