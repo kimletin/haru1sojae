@@ -1,0 +1,39 @@
+export type EpicDungeonZone = '하이마운틴' | '앵컴' | '악몽선경';
+export type SundayType = '없음' | '기본' | '스페셜';
+
+export interface InputValues {
+  mesoMarketRate: number;       // 메소마켓 시세
+  charLevel: number;            // 캐릭터 레벨
+  monsterLevel: number;         // 몬스터 레벨
+  dailySessions: number;        // 하루 소재 횟수
+  mobCount: number;             // 젠당 마릿수
+  booster30min: number;         // 황금태엽/VIP/헥사 부스터 (30분 내)
+  eternal30min: number;         // 영겁의 황금태엽 (30분 내)
+  booster1day: number;          // 황금태엽/VIP/헥사 부스터 (1일 평균)
+  eternal1day: number;          // 영겁의 황금태엽 (1일 평균)
+  price50: number;              // 추가경험치 50% 가격
+  price70: number;              // 추가경험치 70% 가격
+  price2x: number;              // 2배 쿠폰
+  price3x: number;              // 3배 쿠폰
+  price4x: number;              // 4배 쿠폰
+  priceSmallBooster: number;    // 소경축비
+  priceLargeBooster: number;    // 고농축비
+  priceAzmos: number;           // 아즈모스 영약
+  priceHunterTitle: number;     // 사냥 칭호 (30일)
+  priceBloodRingMeso: number;   // 혈맹의 반지 (메소)
+  priceBoostringMeso: number;   // 부스트링 (메소)
+  priceJungpenMeso: number;     // 정펜 (메소)
+  priceEcho: number;            // 악몽의 메아리
+  epicDungeonZone: EpicDungeonZone;
+  sunday: SundayType;
+  boosterRate: number;          // 보약
+}
+
+export interface EfficiencyItem {
+  name: string;
+  category: '30분 도핑' | '30일 도핑' | 'BM' | '마진';
+  exp: number;
+  priceMeso: number;
+  efficiency: number;           // 가성비 (exp/meso)
+  ratio: number;                // 가성비 배율 (relative to VIP 사우나)
+}
