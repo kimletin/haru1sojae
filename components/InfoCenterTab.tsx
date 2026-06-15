@@ -104,6 +104,25 @@ export default function InfoCenterTab() {
           </div>
         )}
       </div>
+
+      {activeSection === '도움말' && (
+        <div className="flex justify-center mt-4">
+          <a
+            href="https://open.kakao.com/me/letin_k"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group inline-flex"
+            title="카카오톡 문의"
+          >
+            <div className="w-9 h-9 rounded-[9px] bg-gray-300 group-hover:bg-yellow-400 transition-colors flex items-center justify-center">
+              <svg width="24" height="20" viewBox="0 0 24 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="12" cy="9" rx="12" ry="9" className="fill-gray-500 group-hover:fill-[#3A1D1D] transition-colors"/>
+                <polygon points="3,18 7,13 5,19.5" className="fill-gray-500 group-hover:fill-[#3A1D1D] transition-colors"/>
+              </svg>
+            </div>
+          </a>
+        </div>
+      )}
     </div>
   );
 }

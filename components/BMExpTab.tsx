@@ -66,7 +66,7 @@ function SectionTable({ title, headerColor, titleColor, rows, levelLabel, showPc
             )}
           </colgroup>
           <thead className="sticky top-0">
-            <tr className="bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
+            <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
               <th className="text-center px-3 py-2 text-gray-600 dark:text-zinc-400 font-medium">{levelLabel}</th>
               <th className="text-center px-3 py-2 text-gray-600 dark:text-zinc-400 font-medium">경험치</th>
               {showPct && <th className="text-center px-3 py-2 text-gray-600 dark:text-zinc-400 font-medium">경험치 배율</th>}
@@ -112,7 +112,7 @@ export default function BMExpTab({ charLevel, monsterLevel }: Props) {
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-6">
         <SectionTable
-          title="VIP 사우나 (1시간)"
+          title="VIP 사우나 / MVP 리조트 (1시간)"
           headerColor="bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
           titleColor="text-gray-800 dark:text-zinc-100"
           levelLabel="캐릭터 레벨"
@@ -152,7 +152,7 @@ export default function BMExpTab({ charLevel, monsterLevel }: Props) {
               <col style={{width:'160px'}} />
             </colgroup>
             <thead>
-              <tr className="bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
+              <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
                 <th className="text-center px-3 py-2 text-gray-600 dark:text-zinc-400 font-medium">구역</th>
                 <th className="text-center px-3 py-2 text-gray-600 dark:text-zinc-400 font-medium">경험치</th>
               </tr>

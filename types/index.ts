@@ -1,13 +1,22 @@
 export type EpicDungeonZone = '하이마운틴' | '앵컴' | '악몽선경';
 export type SundayType = '없음' | '기본' | '스페셜';
 
+export interface MobGroup {
+  level: number;
+  count: number;
+}
+
 export interface InputValues {
   waterBottleRate: number;      // 물통 시세
   mesoMarketRate: number;       // 메소마켓 시세
   charLevel: number;            // 캐릭터 레벨
-  monsterLevel: number;         // 몬스터 레벨
+  monsterLevel: number;         // 몬스터 레벨 (단일 레벨 or 대표 레벨)
   dailySessions: number;        // 하루 소재 횟수
-  mobCount: number;             // 젠당 마릿수
+  mobCount: number;             // 젠당 마릿수 (합계)
+  huntingRegion: string;        // 선택된 지역
+  huntingGround: string;        // 선택된 사냥터
+  huntingMobs: MobGroup[];      // 사냥터 몹 구성 (혼합 레벨 대응)
+  boosterMonsterLevel: number;  // 부스터 몹 경험치 기준 레벨
   booster30min: number;         // 황금태엽/VIP/헥사 부스터 (30분 내)
   eternal30min: number;         // 영겁의 황금태엽 (30분 내)
   booster1day: number;          // 황금태엽/VIP/헥사 부스터 (1일 평균)

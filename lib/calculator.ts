@@ -3,7 +3,8 @@ import { VIP_SAUNA_EXP } from '@/data/vipSauna';
 import { MEKABERRY_EXP } from '@/data/mekaberry';
 import { MONSTER_PARK_EXP, getMonsterParkZone } from '@/data/monsterPark';
 import { HAIMOUNTAIN, ANGLER_COMPANY, NIGHTMARE_SANCTUARY, DUNGEON_METACOIN } from '@/data/epicDungeon';
-import type { InputValues, EfficiencyItem, EpicDungeonZone, SundayType } from '@/types';
+
+import type { InputValues, EfficiencyItem, EpicDungeonZone, SundayType, MobGroup } from '@/types';
 
 /** 캐릭터 레벨 - 몬스터 레벨 차이에 따른 경험치 배율 */
 export function getExpMultiplier(charLevel: number, monsterLevel: number): number {
@@ -32,25 +33,48 @@ export function mepoToMeso(mepo: number, mesoMarketRate: number): number {
   return mepo / 0.99 / mesoMarketRate * 100_000_000;
 }
 
+/** huntingMobs를 기반으로 한 사냥 핵심 경험치 (1회 사냥, 배율 포함) */
+function getHuntingExpCore(charLevel: number, mobs: MobGroup[]): number {
+  return mobs.reduce((sum, mob) => {
+    const monsterExp = MONSTER_EXP[mob.level] ?? 0;
+    const expMult = getExpMultiplier(charLevel, mob.level);
+    return sum + monsterExp * expMult * mob.count;
+  }, 0);
+}
+
+/** inputs에서 MobGroup[] 추출 (구버전 호환 폴백 포함) */
+function getMobs(inputs: InputValues): MobGroup[] {
+  if (inputs.huntingMobs && inputs.huntingMobs.length > 0) return inputs.huntingMobs;
+  return [{ level: inputs.monsterLevel, count: inputs.mobCount }];
+}
+
+/** 부스터 몹 기준 경험치 */
+function getBoosterMonsterExp(inputs: InputValues): number {
+  const level = inputs.boosterMonsterLevel ?? inputs.monsterLevel;
+  return MONSTER_EXP[level] ?? 0;
+}
+
 /** 30분 사냥 기본 경험치 (배율 적용 전) */
 export function getBase30MinExp(inputs: InputValues): number {
-  const monsterExp = MONSTER_EXP[inputs.monsterLevel] ?? 0;
-  const expMult = getExpMultiplier(inputs.charLevel, inputs.monsterLevel);
+  const mobs    = getMobs(inputs);
+  const huntExp = getHuntingExpCore(inputs.charLevel, mobs) * 240;
+  const repExp  = getBoosterMonsterExp(inputs);
   return (
-    monsterExp * expMult * inputs.mobCount * 240 +
-    monsterExp * 10 * 190 * inputs.booster30min +
-    monsterExp * 200 * 190 * inputs.eternal30min
+    huntExp +
+    repExp * 10 * 190 * inputs.booster30min +
+    repExp * 200 * 190 * inputs.eternal30min
   );
 }
 
 /** 30일 사냥 기본 경험치 (배율 적용 전) */
 export function getBase30DayExp(inputs: InputValues): number {
-  const monsterExp = MONSTER_EXP[inputs.monsterLevel] ?? 0;
-  const expMult = getExpMultiplier(inputs.charLevel, inputs.monsterLevel);
+  const mobs    = getMobs(inputs);
+  const huntExp = getHuntingExpCore(inputs.charLevel, mobs) * 240 * inputs.dailySessions;
+  const repExp  = getBoosterMonsterExp(inputs);
   return (
-    monsterExp * expMult * inputs.mobCount * 240 * inputs.dailySessions +
-    monsterExp * 10 * 190 * inputs.booster1day +
-    monsterExp * 200 * 190 * inputs.eternal1day
+    huntExp +
+    repExp * 10 * 190 * inputs.booster1day +
+    repExp * 200 * 190 * inputs.eternal1day
   ) * 30;
 }
 
@@ -146,7 +170,7 @@ export function calcAllItems(inputs: InputValues): EfficiencyItem[] {
     return { name, category, exp, priceMeso, efficiency, ratio: vipEff > 0 ? efficiency / vipEff : 0 };
   };
 
-  const { epicDungeonZone, charLevel, monsterLevel, mesoMarketRate, sunday, boosterRate } = inputs;
+  const { epicDungeonZone, charLevel, mesoMarketRate, sunday, boosterRate } = inputs;
   const epicName = epicDungeonZone === '앵컴' ? '앵글러컴퍼니' : epicDungeonZone;
 
   const stage01Exp   = getEpicDungeonStage01Exp(epicDungeonZone, charLevel);
@@ -161,12 +185,6 @@ export function calcAllItems(inputs: InputValues): EfficiencyItem[] {
 
   const vipExp   = getVipSaunaExp(charLevel);
   const vipPrice = getVipSaunaPrice(mesoMarketRate);
-
-  const mekExp   = getMekaberryExp(charLevel);
-  const mekPrice = mepoToMeso(10000, mesoMarketRate);
-
-  const echoExp   = getEchoExp(monsterLevel);
-  const echoPrice = inputs.priceEcho;
 
   // 혈맹의 반지/부스트링/정펜 메포 가격
   const bloodRingMetaPrice = mepoToMeso(5900, mesoMarketRate);

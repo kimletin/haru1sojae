@@ -56,7 +56,7 @@ function DungeonTable({ title, levels, data, metacoin, charLevel, headerColor, t
             <col style={{width:'220px'}} />
           </colgroup>
           <thead className="sticky top-0">
-            <tr className="bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
+            <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
               <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium whitespace-nowrap">레벨</th>
               <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium whitespace-nowrap">0단계</th>
               <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium whitespace-nowrap">1단계 ({metacoin.stage1.toLocaleString()}메포)</th>

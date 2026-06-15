@@ -1,6 +1,7 @@
 'use client';
 
 import { EfficiencyItem } from '@/types';
+import ItemName from '@/components/ItemName';
 
 interface Props {
   items: EfficiencyItem[];
@@ -51,7 +52,7 @@ export default function RankingPanel({ items }: Props) {
             className="flex items-center gap-2 px-4 py-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-zinc-700"
           >
             <RankBadge rank={i + 1} />
-            <span className="text-sm text-gray-800 dark:text-zinc-200 truncate flex-1">{item.name}</span>
+            <span className="text-sm text-gray-800 dark:text-zinc-200 flex-1 flex items-center gap-0.5 min-w-0"><ItemName name={item.name} /></span>
 <span className="text-sm font-semibold text-right ml-2" style={{ color: rankColor(i + 1, items.length) }}>
               {(item.ratio * 100).toFixed(1) + '%'}
             </span>

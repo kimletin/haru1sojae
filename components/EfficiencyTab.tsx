@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { InputValues, EfficiencyItem } from '@/types';
-import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMekaberryExp, getMonsterParkExp, getEchoExp, getVipEfficiency } from '@/lib/calculator';
+import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency } from '@/lib/calculator';
 import { getMonsterParkZone } from '@/data/monsterPark';
 
 function fmt(n: number): string {
@@ -50,8 +50,8 @@ function PriceInput({ value, onEdit }: { value: number; onEdit: (v: number) => v
   );
 }
 
-function EffTable({ title, rows, color = 'green' }: {
-  title: string; rows: TableRow[]; color?: 'green' | 'blue' | 'orange';
+function EffTable({ title, rows, color = 'green', headerExtra }: {
+  title: string; rows: TableRow[]; color?: 'green' | 'blue' | 'orange'; headerExtra?: React.ReactNode;
 }) {
   const header: Record<string, string> = {
     green:  'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800',
@@ -66,8 +66,9 @@ function EffTable({ title, rows, color = 'green' }: {
   const hasRate = rows.some(r => r.rate !== undefined);
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden">
-      <div className={'px-4 py-2.5 border-b ' + header[color]}>
+      <div className={'px-4 py-2.5 border-b relative ' + header[color]}>
         <h3 className={'text-sm font-semibold text-center ' + titleColor[color]}>{title}</h3>
+        {headerExtra && <div className="absolute right-3 top-1/2 -translate-y-1/2">{headerExtra}</div>}
       </div>
       <table className="table-fixed w-full text-sm border-collapse">
         <colgroup>
@@ -78,7 +79,7 @@ function EffTable({ title, rows, color = 'green' }: {
           <col style={{width:'110px'}} />
         </colgroup>
         <thead>
-          <tr className="bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
+          <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
             <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">항목</th>
             {hasRate && <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">배율</th>}
             <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">경험치</th>
@@ -90,8 +91,10 @@ function EffTable({ title, rows, color = 'green' }: {
           {rows.map((row, i) => (
             <tr key={i} className={"border-b transition-colors " + (row.isEvent ? "bg-amber-50 dark:bg-amber-900/40 hover:bg-amber-100 border-amber-100 dark:border-amber-800" : "border-gray-50 hover:bg-gray-50 dark:hover:bg-gray-700:bg-gray-700")}>
               <td className="px-2 py-1.5 text-center text-gray-800 dark:text-zinc-200">
-                {row.name}
-                {row.isEvent && <span className="ml-1.5 text-xs font-medium bg-amber-400 text-white px-1.5 py-0.5 rounded-full">E</span>}
+                <span className="inline-flex items-center justify-center gap-0.5 flex-wrap">
+                  <ItemName name={row.name} />
+                  {row.isEvent && <span className="text-xs font-medium bg-amber-400 text-white px-1.5 py-0.5 rounded-full">E</span>}
+                </span>
               </td>
               {hasRate && (
                 <td className="px-2 py-1.5 text-center text-gray-500 dark:text-zinc-400 text-xs">
@@ -141,9 +144,12 @@ function InlineInput({ label, value, onChange, min = 0, max = 100 }: {
   );
 }
 
+import type { MobGroup } from '@/types';
+import ItemName from '@/components/ItemName';
+
 interface Props {
   inputs: InputValues;
-  onChange: (key: keyof InputValues, value: number | string) => void;
+  onChange: (key: keyof InputValues, value: number | string | boolean | MobGroup[]) => void;
   items: EfficiencyItem[];
 }
 
@@ -213,8 +219,6 @@ export default function EfficiencyTab({ inputs, onChange }: Props) {
   const parkZone = getMonsterParkZone(inputs.charLevel);
   const parkExp  = getMonsterParkExp(inputs.charLevel, inputs.sunday, inputs.boosterRate);
   const vipExp   = getVipSaunaExp(inputs.charLevel);
-  const mekExp   = getMekaberryExp(inputs.charLevel);
-  const echoExp  = getEchoExp(inputs.monsterLevel);
 
   const bmRows: TableRow[] = [
     { name: epicName + ' 0→1단계', ...effRow(getEpicDungeonStage01Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage01Price(inputs.epicDungeonZone, inputs.mesoMarketRate, (inputs.useSolErda ?? true) ? (inputs.priceSolErda ?? 0) : 0)) },
@@ -227,8 +231,8 @@ export default function EfficiencyTab({ inputs, onChange }: Props) {
     <div className="space-y-3 w-[620px]">
       <EffTable title="경험치 도핑 (30분)" rows={doping30Rows} color="green" />
 
-      <div className="flex flex-wrap items-center justify-center gap-6 px-3 py-2 bg-gray-50 dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg">
-        <span className="text-xs font-bold text-gray-600 dark:text-zinc-400">30분 내 사용 부스터</span>
+      <div className="flex flex-wrap items-center justify-center gap-6 px-3 py-2 bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg">
+        <span className="text-xs font-bold text-orange-500 dark:text-orange-400">30분 내 사용 부스터</span>
         <div className="flex flex-wrap items-center gap-6">
           <InlineInput label="황금태엽/VIP/헥사" value={inputs.booster30min} onChange={v => onChange('booster30min', v)} min={0} />
           <InlineInput label="영겹의 황금태엽" value={inputs.eternal30min} onChange={v => onChange('eternal30min', v)} min={0} />
@@ -237,10 +241,20 @@ export default function EfficiencyTab({ inputs, onChange }: Props) {
 
       <EffTable title="상위 아이템 효율" rows={marginRows} color="green" />
 
-      <EffTable title="경험치 도핑 (30일)" rows={doping30dRows} color="blue" />
+      <EffTable
+        title="경험치 도핑 (30일)"
+        rows={doping30dRows}
+        color="blue"
+        headerExtra={
+          <span className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-zinc-400">
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-yellow-400 text-black text-[10px] font-bold">M</span>메소
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-500 text-black text-[10px] font-bold">P</span>메포
+          </span>
+        }
+      />
 
-      <div className="flex flex-wrap items-center justify-center gap-6 px-3 py-2 bg-gray-50 dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg">
-        <span className="text-xs font-bold text-gray-600 dark:text-zinc-400">1일 평균 사용 부스터</span>
+      <div className="flex flex-wrap items-center justify-center gap-6 px-3 py-2 bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg">
+        <span className="text-xs font-bold text-orange-500 dark:text-orange-400">1일 평균 사용 부스터</span>
         <div className="flex flex-wrap items-center gap-6">
           <InlineInput label="황금태엽/VIP/헥사" value={inputs.booster1day} onChange={v => onChange('booster1day', v)} min={0} />
           <InlineInput label="영겹의 황금태엽" value={inputs.eternal1day} onChange={v => onChange('eternal1day', v)} min={0} />
@@ -249,8 +263,8 @@ export default function EfficiencyTab({ inputs, onChange }: Props) {
 
       <EffTable title="경험치 BM" rows={bmRows} color="orange" />
 
-      <div className="flex flex-wrap items-center justify-center gap-3 px-3 py-2 bg-gray-50 dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg">
-        <span className="text-xs font-bold text-gray-600 dark:text-zinc-400">에픽 던전</span>
+      <div className="flex flex-wrap items-center justify-center gap-3 px-3 py-2 bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg">
+        <span className="text-xs font-bold text-orange-500 dark:text-orange-400">에픽 던전</span>
         <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-zinc-400">
           {'지역'}
           <select
@@ -263,7 +277,7 @@ export default function EfficiencyTab({ inputs, onChange }: Props) {
             <option className="text-center" value="악몽선경">악몽선경</option>
           </select>
         </label>
-        <span className="text-xs font-bold text-gray-600 dark:text-zinc-400 ml-2">몬스터파크</span>
+        <span className="text-xs font-bold text-orange-500 dark:text-orange-400 ml-2">몬스터파크</span>
         <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-zinc-400">
           {'썬데이'}
           <select

@@ -3,25 +3,21 @@
 import { useRef, useState, useEffect } from 'react';
 import { LEVEL_EXP } from '@/data/levelExp';
 import { getExpMultiplier } from '@/lib/calculator';
+import type { MobGroup } from '@/types';
 
-const LEVEL_DIFF_TABLE = [
-  { range: '40 이상',    mult: 0.70 },
-  { range: '39 ~ 21',   mult: null, note: '71 ~ 89%' },
-  { range: '20 ~ 19',   mult: 0.95 },
-  { range: '18 ~ 17',   mult: 0.96 },
-  { range: '16 ~ 15',   mult: 0.97 },
-  { range: '14 ~ 13',   mult: 0.98 },
-  { range: '12 ~ 11',   mult: 0.99 },
-  { range: '10',         mult: 1.00 },
-  { range: '9 ~ 5',     mult: 1.05 },
-  { range: '4 ~ 2',     mult: 1.10 },
-  { range: '1 ~ -1',    mult: 1.20 },
-  { range: '-2 ~ -4',   mult: 1.10 },
-  { range: '-5 ~ -9',   mult: 1.05 },
-  { range: '-10 ~ -20', mult: null, note: '100 ~ 90%' },
-  { range: '-21 ~ -35', mult: null, note: '70 ~ 14%' },
-  { range: '-36 ~ -39', mult: 0.10 },
-  { range: '-40 이하',  mult: 0, note: '최대 100' },
+interface PenaltyRow {
+  label: string;
+  diff: number | null;
+  mult: number;
+}
+
+const PENALTY_ROWS: PenaltyRow[] = [
+  { label: '40 이상', diff: null, mult: 0.70 },
+  ...Array.from({ length: 79 }, (_, i) => {
+    const d = 39 - i;
+    return { label: String(d), diff: d, mult: getExpMultiplier(d, 0) };
+  }),
+  { label: '-40 이하', diff: null, mult: 0 },
 ];
 
 function fmtBig(n: number) {
@@ -33,58 +29,51 @@ function fmtBig(n: number) {
 interface Props {
   charLevel: number;
   monsterLevel: number;
+  huntingMobs?: MobGroup[];
 }
 
-export default function ExpInfoTab({ charLevel, monsterLevel }: Props) {
-  const diff = charLevel - monsterLevel;
-  const mult = getExpMultiplier(charLevel, monsterLevel);
+export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs }: Props) {
+  const mobs = huntingMobs && huntingMobs.length > 1 ? huntingMobs : null;
+  const mobLevels = mobs
+    ? mobs.map(m => m.level).filter((v, i, a) => a.indexOf(v) === i)
+    : [monsterLevel];
+
   const levels = Object.keys(LEVEL_EXP).map(Number).sort((a, b) => a - b);
 
-  const rightRef = useRef<HTMLDivElement>(null);
-  const leftScrollRef = useRef<HTMLDivElement>(null);
-  const activeRowRef = useRef<HTMLTableRowElement>(null);
-  const [leftMaxH, setLeftMaxH] = useState<number | null>(null);
+  const activeDiffs = new Set(mobLevels.map(lv => charLevel - lv));
+
+  const leftScrollRef  = useRef<HTMLDivElement>(null);
+  const rightScrollRef = useRef<HTMLDivElement>(null);
+  const activeExpRef     = useRef<HTMLTableRowElement>(null);
+  const activePenaltyRef = useRef<HTMLTableRowElement>(null);
 
   useEffect(() => {
-    if (rightRef.current) {
-      setLeftMaxH(rightRef.current.offsetHeight);
+    if (activeExpRef.current && leftScrollRef.current) {
+      const c = leftScrollRef.current;
+      const r = activeExpRef.current;
+      c.scrollTop = r.offsetTop - c.clientHeight / 2 + r.clientHeight / 2;
+    }
+  }, [charLevel]);
+
+  useEffect(() => {
+    if (activePenaltyRef.current && rightScrollRef.current) {
+      const c = rightScrollRef.current;
+      const r = activePenaltyRef.current;
+      c.scrollTop = r.offsetTop - c.clientHeight / 2 + r.clientHeight / 2;
     }
   }, [charLevel, monsterLevel]);
 
-  useEffect(() => {
-    if (activeRowRef.current && leftScrollRef.current) {
-      const container = leftScrollRef.current;
-      const row = activeRowRef.current;
-      const offset = row.offsetTop - container.clientHeight / 2 + row.clientHeight / 2;
-      container.scrollTop = offset;
-    }
-  }, [charLevel, leftMaxH]);
+  const TABLE_H = 'max-h-[500px]';
 
   return (
-    <div className="space-y-6 w-fit mx-auto">
-      <div className="grid grid-cols-4 gap-3">
-        {[
-          { label: '캐릭터 레벨', value: String(charLevel), color: 'text-orange-500' },
-          { label: '몬스터 레벨', value: String(monsterLevel), color: 'text-orange-400' },
-          { label: '레벨 차이', value: (diff > 0 ? '+' : '') + diff, color: 'text-gray-800 dark:text-zinc-200' },
-          { label: '경험치 배율', value: (mult * 100).toFixed(0) + '%', color: 'text-orange-400' },
-        ].map(item => (
-          <div key={item.label} className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm px-8 py-3 min-w-[130px]">
-            <p className="text-xs text-gray-400 dark:text-zinc-500 mb-1 text-center">{item.label}</p>
-            <p className={'text-2xl font-bold text-center ' + item.color}>{item.value}</p>
-          </div>
-        ))}
-      </div>
-
+    <div className="w-fit mx-auto">
       <div className="flex flex-row gap-6 items-start">
-        <div
-          className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col"
-          style={leftMaxH ? { maxHeight: leftMaxH } : undefined}
-        >
+        {/* 레벨별 필요 경험치 */}
+        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
           <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
             <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">레벨별 필요 경험치</h3>
           </div>
-          <div ref={leftScrollRef} className="overflow-y-auto min-h-0 flex-1">
+          <div ref={leftScrollRef} className={`overflow-y-auto ${TABLE_H}`}>
             <table className="table-fixed text-sm border-collapse">
               <colgroup>
                 <col style={{width:'100px'}} />
@@ -93,7 +82,7 @@ export default function ExpInfoTab({ charLevel, monsterLevel }: Props) {
                 <col style={{width:'100px'}} />
               </colgroup>
               <thead className="sticky top-0 z-10">
-                <tr className="bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
+                <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
                   <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">레벨</th>
                   <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">필요 경험치</th>
                   <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">증가율</th>
@@ -105,7 +94,7 @@ export default function ExpInfoTab({ charLevel, monsterLevel }: Props) {
                   const d = LEVEL_EXP[lv];
                   const isMe = lv === charLevel;
                   return (
-                    <tr key={lv} ref={isMe ? activeRowRef : undefined} className={'border-b ' + (isMe ? 'bg-orange-50 dark:bg-orange-900/40 font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-700:bg-gray-700')}>
+                    <tr key={lv} ref={isMe ? activeExpRef : undefined} className={'border-b ' + (isMe ? 'bg-orange-50 dark:bg-orange-900/40 font-bold' : 'hover:bg-gray-50 dark:hover:bg-zinc-800')}>
                       <td className={'px-5 py-1.5 text-center ' + (isMe ? 'text-orange-600' : 'text-gray-700 dark:text-zinc-300')}>
                         {lv}
                         {isMe && <span className="ml-1.5 text-xs bg-orange-500 dark:bg-orange-700 text-white px-1.5 py-0.5 rounded-full">나</span>}
@@ -121,40 +110,57 @@ export default function ExpInfoTab({ charLevel, monsterLevel }: Props) {
           </div>
         </div>
 
-        <div ref={rightRef} className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden w-80 shrink-0">
-          <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5">
+        {/* 경험치 패널티 */}
+        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+          <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
             <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">경험치 패널티</h3>
           </div>
-          <table className="table-fixed text-sm border-collapse">
-            <colgroup>
-              <col style={{width:'170px'}} />
-              <col style={{width:'110px'}} />
-            </colgroup>
-            <thead>
-              <tr className="bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
-                <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">캐릭터 - 몬스터</th>
-                <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">경험치 배율</th>
-              </tr>
-            </thead>
-            <tbody>
-              {LEVEL_DIFF_TABLE.map((row, i) => {
-                const isActive = row.mult !== null
-                  ? Math.abs(getExpMultiplier(charLevel, charLevel - diff) - (row.mult as number)) < 0.001
-                  : false;
-                return (
-                  <tr key={i} className={'border-b ' + (isActive ? 'bg-orange-50 dark:bg-orange-900/40 font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-700:bg-gray-700')}>
-                    <td className={'px-5 py-2 text-center ' + (isActive ? 'text-orange-400' : 'text-gray-700 dark:text-zinc-300')}>
-                      {row.range}
-                      {isActive && <span className="ml-1.5 text-xs bg-orange-500 dark:bg-orange-700 text-white px-1.5 py-0.5 rounded-full">현재</span>}
-                    </td>
-                    <td className={'px-5 py-2 text-center font-semibold ' + (isActive ? 'text-orange-400' : 'text-gray-700 dark:text-zinc-300')}>
-                      {row.note ?? (row.mult !== null ? (row.mult * 100).toFixed(0) + '%' : '-')}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div ref={rightScrollRef} className={`overflow-y-auto ${TABLE_H}`}>
+            <table className="table-fixed text-sm border-collapse">
+              <colgroup>
+                <col style={{width:'160px'}} />
+                <col style={{width:'110px'}} />
+              </colgroup>
+              <thead className="sticky top-0 z-10">
+                <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
+                  <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">캐릭터 - 몬스터</th>
+                  <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">경험치 배율</th>
+                </tr>
+              </thead>
+              <tbody>
+                {PENALTY_ROWS.map((row, i) => {
+                  const isActive = row.diff !== null
+                    ? activeDiffs.has(row.diff)
+                    : row.label === '40 이상'
+                      ? mobLevels.some(lv => charLevel - lv >= 40)
+                      : mobLevels.some(lv => charLevel - lv <= -40);
+                  const isFirstActive = isActive && !PENALTY_ROWS.slice(0, i).some((r, j) => {
+                    const prev = r.diff !== null
+                      ? activeDiffs.has(r.diff)
+                      : r.label === '40 이상'
+                        ? mobLevels.some(lv => charLevel - lv >= 40)
+                        : mobLevels.some(lv => charLevel - lv <= -40);
+                    return prev;
+                  });
+                  return (
+                    <tr
+                      key={i}
+                      ref={isFirstActive ? activePenaltyRef : undefined}
+                      className={'border-b ' + (isActive ? 'bg-orange-50 dark:bg-orange-900/40 font-bold' : 'hover:bg-gray-50 dark:hover:bg-zinc-800')}
+                    >
+                      <td className={'px-5 py-1.5 text-center ' + (isActive ? 'text-orange-400' : 'text-gray-700 dark:text-zinc-300')}>
+                        {row.label}
+                        {isActive && <span className="ml-1.5 text-xs bg-orange-500 dark:bg-orange-700 text-white px-1.5 py-0.5 rounded-full">나</span>}
+                      </td>
+                      <td className={'px-5 py-1.5 text-center font-semibold ' + (isActive ? 'text-orange-400' : 'text-gray-700 dark:text-zinc-300')}>
+                        {row.label === '-40 이하' ? '0%' : (row.mult * 100).toFixed(0) + '%'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

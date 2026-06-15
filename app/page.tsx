@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
-import type { InputValues } from '@/types';
+import type { InputValues, MobGroup } from '@/types';
 import { calcAllItems } from '@/lib/calculator';
 import InputPanel from '@/components/InputPanel';
 import RankingPanel from '@/components/RankingPanel';
@@ -9,6 +9,7 @@ import EfficiencyTab from '@/components/EfficiencyTab';
 import ExpInfoTab from '@/components/ExpInfoTab';
 import BMExpTab from '@/components/BMExpTab';
 import EpicDungeonTab from '@/components/EpicDungeonTab';
+import HuntingGroundTab from '@/components/HuntingGroundTab';
 import InfoCenterTab from '@/components/InfoCenterTab';
 import { SunIcon, MoonIcon } from '@/components/Icons';
 
@@ -25,6 +26,10 @@ const DEFAULT_INPUTS: InputValues = {
   monsterLevel: 298,
   dailySessions: 10,
   mobCount: 40,
+  huntingRegion: '기어드락',
+  huntingGround: '로봇 창고 5',
+  huntingMobs: [{ level: 298, count: 40 }],
+  boosterMonsterLevel: 298,
   booster30min: 3,
   eternal30min: 0,
   booster1day: 6,
@@ -93,6 +98,7 @@ const TABS = [
   '경험치 정보',
   'BM 경험치',
   '에픽 던전',
+  '사냥터',
   '정보 센터',
 ] as const;
 type Tab = typeof TABS[number];
@@ -102,6 +108,7 @@ const TAB_PARAM: Record<Tab, string> = {
   '경험치 정보':   'exp',
   'BM 경험치':    'bm',
   '에픽 던전':     'epic',
+  '사냥터':        'hunt',
   '정보 센터':     'info',
 };
 const PARAM_TO_TAB: Record<string, Tab> = Object.fromEntries(
@@ -148,7 +155,7 @@ export default function Home() {
     window.history.replaceState({}, '', url.toString());
   };
 
-  const handleChange = (key: keyof InputValues, value: number | string | boolean) => {
+  const handleChange = (key: keyof InputValues, value: number | string | boolean | MobGroup[]) => {
     setInputs(prev => {
       const next = { ...prev, [key]: value };
       const newPresets = [...presetsRef.current];
@@ -204,7 +211,7 @@ export default function Home() {
             <img src="/icon.png" alt="icon" className="w-8 h-8" />
             <div className="text-left">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Mapleff</h1>
-              <p className="text-xs text-gray-400 dark:text-zinc-500">메이플스토리 경험치 BM 효율 계산기</p>
+              <p className="text-xs text-gray-400 dark:text-zinc-500">메이플스토리 경험치 효율 계산기</p>
             </div>
           </button>
           <div className="flex items-center gap-3">
@@ -235,7 +242,7 @@ export default function Home() {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="w-fit mx-auto">
-          {activeTab !== TABS[4] && <div className="mb-2 flex items-center gap-1.5">
+          {activeTab !== TABS[5] && <div className="mb-2 flex items-center gap-1.5">
             <span className="text-xs text-gray-400 dark:text-zinc-500">캐릭터</span>
             {Array.from({ length: NUM_PRESETS }, (_, i) => (
               editingPreset === i ? (
@@ -281,7 +288,7 @@ export default function Home() {
           ) : (
             <main className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 p-4">
               {activeTab === TABS[1] && (
-                <ExpInfoTab charLevel={inputs.charLevel} monsterLevel={inputs.monsterLevel} />
+                <ExpInfoTab charLevel={inputs.charLevel} monsterLevel={inputs.monsterLevel} huntingMobs={inputs.huntingMobs} />
               )}
               {activeTab === TABS[2] && (
                 <BMExpTab charLevel={inputs.charLevel} monsterLevel={inputs.monsterLevel} />
@@ -290,6 +297,9 @@ export default function Home() {
                 <EpicDungeonTab charLevel={inputs.charLevel} />
               )}
               {activeTab === TABS[4] && (
+                <HuntingGroundTab charLevel={inputs.charLevel} huntingRegion={inputs.huntingRegion} huntingGround={inputs.huntingGround} />
+              )}
+              {activeTab === TABS[5] && (
                 <InfoCenterTab />
               )}
             </main>

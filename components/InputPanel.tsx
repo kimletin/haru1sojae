@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { InputValues } from '@/types';
+import { InputValues, MobGroup } from '@/types';
+import { HUNTING_REGIONS } from '@/data/huntingGrounds';
 
 interface Props {
   inputs: InputValues;
-  onChange: (key: keyof InputValues, value: number | string | boolean) => void;
+  onChange: (key: keyof InputValues, value: number | string | boolean | MobGroup[]) => void;
 }
 
 function SolErdaInput({ value, onChange, disabled }: { value: number; onChange: (v: number) => void; disabled: boolean }) {
@@ -61,6 +62,29 @@ function NumInput({ label, value, onChange, min, max }: {
 }
 
 export default function InputPanel({ inputs, onChange }: Props) {
+  const currentRegion = HUNTING_REGIONS.find(r => r.name === inputs.huntingRegion) ?? HUNTING_REGIONS[0];
+
+  const applyGround = (ground: typeof currentRegion.grounds[0]) => {
+    onChange('huntingGround', ground.name);
+    onChange('huntingMobs', ground.mobs);
+    onChange('monsterLevel', ground.mobs[0].level);
+    onChange('mobCount', ground.mobs.reduce((s, m) => s + m.count, 0));
+    onChange('boosterMonsterLevel', ground.boosterLevel ?? ground.mobs[ground.mobs.length - 1].level);
+  };
+
+  const handleRegionChange = (regionName: string) => {
+    const region = HUNTING_REGIONS.find(r => r.name === regionName)!;
+    onChange('huntingRegion', regionName);
+    applyGround(region.grounds[0]);
+  };
+
+  const handleGroundChange = (groundName: string) => {
+    const ground = currentRegion.grounds.find(g => g.name === groundName)!;
+    applyGround(ground);
+  };
+
+  const selectCls = 'text-sm border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 cursor-pointer';
+
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden">
       <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5">
@@ -78,9 +102,7 @@ export default function InputPanel({ inputs, onChange }: Props) {
         </div>
         <NumInput label="메소마켓 시세" value={inputs.mesoMarketRate} onChange={v => onChange('mesoMarketRate', v)} min={1} />
         <NumInput label="캐릭터 레벨" value={inputs.charLevel} onChange={v => onChange('charLevel', v)} min={260} max={299} />
-        <NumInput label="몬스터 레벨" value={inputs.monsterLevel} onChange={v => onChange('monsterLevel', v)} min={260} max={299} />
         <NumInput label="하루 소재 횟수" value={inputs.dailySessions} onChange={v => onChange('dailySessions', v)} min={1} />
-        <NumInput label="젠당 마릿수" value={inputs.mobCount} onChange={v => onChange('mobCount', v)} min={1} />
         <div className="flex items-center gap-3 py-1">
           <div className="flex items-center gap-1 flex-1">
             <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap">솔 에르다 조각</label>
@@ -98,6 +120,34 @@ export default function InputPanel({ inputs, onChange }: Props) {
             className="w-4 h-4 accent-orange-500 cursor-pointer"
           />
           <SolErdaInput value={inputs.priceSolErda ?? 0} onChange={v => onChange('priceSolErda', v)} disabled={!(inputs.useSolErda ?? true)} />
+        </div>
+
+        {/* 지역 / 사냥터 선택 */}
+        <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2 space-y-1.5">
+          <div className="flex items-center gap-3 py-1">
+            <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap flex-1">지역</label>
+            <select
+              value={inputs.huntingRegion}
+              onChange={e => handleRegionChange(e.target.value)}
+              className={selectCls + ' w-24'}
+            >
+              {HUNTING_REGIONS.map(r => (
+                <option key={r.name} value={r.name}>{r.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-3 py-1">
+            <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap flex-1">사냥터</label>
+            <select
+              value={inputs.huntingGround}
+              onChange={e => handleGroundChange(e.target.value)}
+              className={selectCls + ' w-44'}
+            >
+              {currentRegion.grounds.map(g => (
+                <option key={g.name} value={g.name}>{g.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
     </div>
