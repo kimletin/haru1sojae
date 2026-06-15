@@ -13,11 +13,29 @@ const CATEGORY_COLOR: Record<EfficiencyItem['category'], string> = {
   '마진':      'bg-purple-100 text-purple-700',
 };
 
+function rankColor(rank: number, total: number): string {
+  const t = total <= 1 ? 0 : (rank - 1) / (total - 1);
+  let r, g, b;
+  if (t <= 0.5) {
+    const s = t * 2;
+    r = Math.round(34 + (234 - 34) * s);
+    g = Math.round(197 + (179 - 197) * s);
+    b = Math.round(94 + (8 - 94) * s);
+  } else {
+    const s = (t - 0.5) * 2;
+    r = Math.round(234 + (220 - 234) * s);
+    g = Math.round(179 + (38 - 179) * s);
+    b = Math.round(8 + (38 - 8) * s);
+  }
+  return `rgb(${r},${g},${b})`;
+}
+
 function RankBadge({ rank }: { rank: number }) {
-  if (rank === 1) return <span className="text-yellow-500 font-bold text-sm">🥇</span>;
-  if (rank === 2) return <span className="text-gray-400 dark:text-zinc-500 font-bold text-sm">🥈</span>;
-  if (rank === 3) return <span className="text-amber-600 font-bold text-sm">🥉</span>;
-  return <span className="text-xs text-gray-400 dark:text-zinc-500 w-6 text-center">{rank}</span>;
+  return (
+    <span className="w-5 h-5 rounded-full border border-orange-400 text-xs flex items-center justify-center shrink-0 font-bold text-orange-500">
+      {rank}
+    </span>
+  );
 }
 
 export default function RankingPanel({ items }: Props) {
@@ -26,19 +44,15 @@ export default function RankingPanel({ items }: Props) {
       <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5">
         <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">가성비 순위</h3>
       </div>
-      <div className="space-y-1 flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto">
         {items.map((item, i) => (
           <div
             key={item.name}
-            className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors ${
-              i < 3 ? 'bg-amber-50 dark:bg-amber-900/40' : 'hover:bg-gray-50 dark:hover:bg-gray-700:bg-gray-700'
-            }`}
+            className="flex items-center gap-2 px-4 py-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-zinc-700"
           >
             <RankBadge rank={i + 1} />
             <span className="text-sm text-gray-800 dark:text-zinc-200 truncate flex-1">{item.name}</span>
-<span className={`text-sm font-semibold text-right ml-2 ${
-              item.ratio >= 1 ? 'text-orange-500' : 'text-gray-500 dark:text-zinc-400'
-            }`}>
+<span className="text-sm font-semibold text-right ml-2" style={{ color: rankColor(i + 1, items.length) }}>
               {(item.ratio * 100).toFixed(1) + '%'}
             </span>
           </div>
