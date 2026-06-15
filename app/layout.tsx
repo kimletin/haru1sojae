@@ -9,7 +9,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: '경험치 BM 효율표',
+  title: '메이플스토리 경험치 BM 효율 계산기',
   description: '메이플스토리 경험치 BM 효율 계산기',
 };
 

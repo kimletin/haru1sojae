@@ -32,7 +32,7 @@ function rankColor(rank: number, total: number): string {
 
 function RankBadge({ rank }: { rank: number }) {
   return (
-    <span className="w-5 h-5 rounded-full border border-orange-400 text-xs flex items-center justify-center shrink-0 font-bold text-orange-500">
+    <span className="min-w-[20px] h-5 px-1 rounded-full bg-orange-500 text-white text-xs flex items-center justify-center shrink-0 font-bold">
       {rank}
     </span>
   );

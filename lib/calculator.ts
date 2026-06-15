@@ -108,15 +108,15 @@ export function getEpicDungeonStage12Exp(zone: EpicDungeonZone, charLevel: numbe
 }
 
 /** 에픽 던전 메소 가격 (0→1) */
-export function getEpicDungeonStage01Price(zone: EpicDungeonZone, mesoMarketRate: number): number {
+export function getEpicDungeonStage01Price(zone: EpicDungeonZone, mesoMarketRate: number, priceSolErda: number): number {
   const metacoin = DUNGEON_METACOIN[zone]?.stage1 ?? 0;
-  return mepoToMeso(metacoin, mesoMarketRate) - 40_000_000 * 4;
+  return mepoToMeso(metacoin, mesoMarketRate) - priceSolErda * 15;
 }
 
 /** 에픽 던전 메소 가격 (1→2) */
-export function getEpicDungeonStage12Price(zone: EpicDungeonZone, mesoMarketRate: number): number {
+export function getEpicDungeonStage12Price(zone: EpicDungeonZone, mesoMarketRate: number, priceSolErda: number): number {
   const metacoin = DUNGEON_METACOIN[zone]?.stage2 ?? 0;
-  return mepoToMeso(metacoin, mesoMarketRate) - 40_000_000 * 4;
+  return mepoToMeso(metacoin, mesoMarketRate) - priceSolErda * 15;
 }
 
 /** 악몽의 메아리 경험치 */
@@ -151,8 +151,9 @@ export function calcAllItems(inputs: InputValues): EfficiencyItem[] {
 
   const stage01Exp   = getEpicDungeonStage01Exp(epicDungeonZone, charLevel);
   const stage12Exp   = getEpicDungeonStage12Exp(epicDungeonZone, charLevel);
-  const stage01Price = getEpicDungeonStage01Price(epicDungeonZone, mesoMarketRate);
-  const stage12Price = getEpicDungeonStage12Price(epicDungeonZone, mesoMarketRate);
+  const solErdaPrice = (inputs.useSolErda ?? true) ? (inputs.priceSolErda ?? 0) : 0;
+  const stage01Price = getEpicDungeonStage01Price(epicDungeonZone, mesoMarketRate, solErdaPrice);
+  const stage12Price = getEpicDungeonStage12Price(epicDungeonZone, mesoMarketRate, solErdaPrice);
 
   const parkExp   = getMonsterParkExp(charLevel, sunday, boosterRate);
   const parkZone  = getMonsterParkZone(charLevel);
@@ -193,8 +194,6 @@ export function calcAllItems(inputs: InputValues): EfficiencyItem[] {
     item(`${epicName} 1→2단계`, 'BM', stage12Exp, stage12Price),
     item(`몬스터파크(${parkZone})`, 'BM', parkExp, parkPrice),
     item('VIP 사우나',          'BM', vipExp, vipPrice),
-    ...(mekExp > 0 ? [item('메카베리 농장 입장권', 'BM', mekExp, mekPrice)] : []),
-    item('악몽의 메아리',        'BM', echoExp, echoPrice),
     // 마진 비교
     item('추가경험치 50%→70%',  '마진', base30 * 0.2, inputs.price70 - inputs.price50),
     item('소경축비→고농축비',   '마진', base30 * 0.1, inputs.priceLargeBooster - inputs.priceSmallBooster),

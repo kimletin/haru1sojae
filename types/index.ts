@@ -2,6 +2,7 @@ export type EpicDungeonZone = '하이마운틴' | '앵컴' | '악몽선경';
 export type SundayType = '없음' | '기본' | '스페셜';
 
 export interface InputValues {
+  waterBottleRate: number;      // 물통 시세
   mesoMarketRate: number;       // 메소마켓 시세
   charLevel: number;            // 캐릭터 레벨
   monsterLevel: number;         // 몬스터 레벨
@@ -24,6 +25,8 @@ export interface InputValues {
   priceBoostringMeso: number;   // 부스트링 (메소)
   priceJungpenMeso: number;     // 정펜 (메소)
   priceEcho: number;            // 악몽의 메아리
+  priceSolErda: number;         // 솔에르다 조각
+  useSolErda: boolean;          // 솔에르다 조각 가치 반영 여부
   epicDungeonZone: EpicDungeonZone;
   sunday: SundayType;
   boosterRate: number;          // 보약

@@ -106,7 +106,7 @@ function EffTable({ title, rows, color = 'green' }: {
                   <span className="text-gray-700 dark:text-zinc-300">{fmtMeso(row.priceMeso)}</span>
                 )}
               </td>
-              <td className={'px-2 py-1.5 text-center font-semibold ' + (row.ratio >= 1 ? 'text-orange-500' : 'text-gray-500 dark:text-zinc-400')}>
+              <td className="px-2 py-1.5 text-center font-semibold text-orange-500">
                 {row.ratio > 0 ? (row.ratio * 100).toFixed(1) + '%' : '-'}
               </td>
             </tr>
@@ -217,12 +217,10 @@ export default function EfficiencyTab({ inputs, onChange }: Props) {
   const echoExp  = getEchoExp(inputs.monsterLevel);
 
   const bmRows: TableRow[] = [
-    { name: epicName + ' 0→1단계', ...effRow(getEpicDungeonStage01Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage01Price(inputs.epicDungeonZone, inputs.mesoMarketRate)) },
-    { name: epicName + ' 1→2단계', ...effRow(getEpicDungeonStage12Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage12Price(inputs.epicDungeonZone, inputs.mesoMarketRate)) },
+    { name: epicName + ' 0→1단계', ...effRow(getEpicDungeonStage01Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage01Price(inputs.epicDungeonZone, inputs.mesoMarketRate, (inputs.useSolErda ?? true) ? (inputs.priceSolErda ?? 0) : 0)) },
+    { name: epicName + ' 1→2단계', ...effRow(getEpicDungeonStage12Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage12Price(inputs.epicDungeonZone, inputs.mesoMarketRate, (inputs.useSolErda ?? true) ? (inputs.priceSolErda ?? 0) : 0)) },
     { name: '몬스터파크(' + parkZone + ')', ...effRow(parkExp, mepoToMeso(600, inputs.mesoMarketRate)) },
     { name: 'VIP 사우나',            ...effRow(vipExp, getVipSaunaPrice(inputs.mesoMarketRate)) },
-    ...(mekExp > 0 ? [{ name: '메카베리 농장 입장권', ...effRow(mekExp, mepoToMeso(10000, inputs.mesoMarketRate)), isEvent: true }] : []),
-    { name: '악몽의 메아리', ...effRow(echoExp, inputs.priceEcho), editable: true, inputValue: inputs.priceEcho, onEdit: v => onChange('priceEcho', v), isEvent: true },
   ];
 
   return (

@@ -9,6 +9,7 @@ import EfficiencyTab from '@/components/EfficiencyTab';
 import ExpInfoTab from '@/components/ExpInfoTab';
 import BMExpTab from '@/components/BMExpTab';
 import EpicDungeonTab from '@/components/EpicDungeonTab';
+import InfoCenterTab from '@/components/InfoCenterTab';
 import { SunIcon, MoonIcon } from '@/components/Icons';
 
 const STORAGE_KEY = 'maple-exp-bm-inputs';
@@ -18,6 +19,7 @@ const ACTIVE_PRESET_KEY = 'maple-exp-bm-active-preset';
 const NUM_PRESETS = 5;
 
 const DEFAULT_INPUTS: InputValues = {
+  waterBottleRate: 0,
   mesoMarketRate: 2280,
   charLevel: 297,
   monsterLevel: 298,
@@ -40,6 +42,8 @@ const DEFAULT_INPUTS: InputValues = {
   priceBoostringMeso: 450_000_000,
   priceJungpenMeso: 2_000_000_000,
   priceEcho: 40_000_000,
+  priceSolErda: 7_100_000,
+  useSolErda: true,
   epicDungeonZone: '악몽선경',
   sunday: '없음',
   boosterRate: 0.5,
@@ -89,6 +93,7 @@ const TABS = [
   '경험치 정보',
   'BM 경험치',
   '에픽 던전',
+  '정보 센터',
 ] as const;
 type Tab = typeof TABS[number];
 
@@ -97,6 +102,7 @@ const TAB_PARAM: Record<Tab, string> = {
   '경험치 정보':   'exp',
   'BM 경험치':    'bm',
   '에픽 던전':     'epic',
+  '정보 센터':     'info',
 };
 const PARAM_TO_TAB: Record<string, Tab> = Object.fromEntries(
   Object.entries(TAB_PARAM).map(([k, v]) => [v, k as Tab])
@@ -197,8 +203,8 @@ export default function Home() {
           >
             <img src="/icon.png" alt="icon" className="w-8 h-8" />
             <div className="text-left">
-              <h1 className="text-lg font-bold text-gray-900 dark:text-zinc-100">경험치 BM 효율표</h1>
-              <p className="text-xs text-gray-400 dark:text-zinc-500">Made by 레틴</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Mapleff</h1>
+              <p className="text-xs text-gray-400 dark:text-zinc-500">메이플스토리 경험치 BM 효율 계산기</p>
             </div>
           </button>
           <div className="flex items-center gap-3">
@@ -229,7 +235,7 @@ export default function Home() {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="w-fit mx-auto">
-          <div className="mb-2 flex items-center gap-1.5">
+          {activeTab !== TABS[4] && <div className="mb-2 flex items-center gap-1.5">
             <span className="text-xs text-gray-400 dark:text-zinc-500">캐릭터</span>
             {Array.from({ length: NUM_PRESETS }, (_, i) => (
               editingPreset === i ? (
@@ -259,7 +265,7 @@ export default function Home() {
                 </button>
               )
             ))}
-          </div>
+          </div>}
           {activeTab === TABS[0] ? (
             <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 p-4">
               <div className="flex flex-row gap-6">
@@ -282,6 +288,9 @@ export default function Home() {
               )}
               {activeTab === TABS[3] && (
                 <EpicDungeonTab charLevel={inputs.charLevel} />
+              )}
+              {activeTab === TABS[4] && (
+                <InfoCenterTab />
               )}
             </main>
           )}
