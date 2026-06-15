@@ -45,7 +45,7 @@ function PriceInput({ value, onEdit }: { value: number; onEdit: (v: number) => v
         const raw = Number(e.target.value.replace(/,/g, ''));
         if (!isNaN(raw)) onEdit(raw);
       }}
-      className="w-28 border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-gray-700 rounded px-1.5 py-0 text-center text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+      className="w-28 border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 text-center text-sm text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
     />
   );
 }
@@ -54,75 +54,53 @@ function EffTable({ title, rows, color = 'green' }: {
   title: string; rows: TableRow[]; color?: 'green' | 'blue' | 'orange';
 }) {
   const header: Record<string, string> = {
-    green:  'bg-green-50 dark:bg-green-900/40 border-green-100 dark:border-green-800',
-    blue:   'bg-blue-50 dark:bg-blue-900/40 border-blue-100 dark:border-blue-800',
-    orange: 'bg-orange-50 dark:bg-orange-900/40 border-orange-100 dark:border-orange-800',
+    green:  'bg-orange-100 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800',
+    blue:   'bg-orange-100 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800',
+    orange: 'bg-orange-100 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800',
   };
   const titleColor: Record<string, string> = {
-    green:  'text-green-800 dark:text-green-300',
-    blue:   'text-blue-800 dark:text-blue-300',
-    orange: 'text-orange-800 dark:text-orange-300',
+    green:  'text-gray-800 dark:text-zinc-100',
+    blue:   'text-gray-800 dark:text-zinc-100',
+    orange: 'text-gray-800 dark:text-zinc-100',
   };
   const hasRate = rows.some(r => r.rate !== undefined);
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden">
       <div className={'px-4 py-2.5 border-b ' + header[color]}>
-        <h3 className={'text-sm font-semibold ' + titleColor[color]}>{title}</h3>
+        <h3 className={'text-sm font-semibold text-center ' + titleColor[color]}>{title}</h3>
       </div>
       <div className="overflow-x-auto">
-      <table className="w-full text-sm border-collapse table-fixed">
-        <colgroup>
-          {hasRate ? (
-            <>
-              <col style={{width:'24%'}} />
-              <col style={{width:'7%'}} />
-              <col style={{width:'15%'}} />
-              <col style={{width:'27%'}} />
-              <col style={{width:'15%'}} />
-              <col style={{width:'12%'}} />
-            </>
-          ) : (
-            <>
-              <col style={{width:'31%'}} />
-              <col style={{width:'15%'}} />
-              <col style={{width:'27%'}} />
-              <col style={{width:'15%'}} />
-              <col style={{width:'12%'}} />
-            </>
-          )}
-        </colgroup>
+      <table className="w-full text-sm border-collapse">
         <thead>
-          <tr className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-            <th className="text-center px-3 py-2 text-gray-600 dark:text-gray-400 font-medium">항목</th>
-            {hasRate && <th className="text-center px-3 py-2 text-gray-600 dark:text-gray-400 font-medium">배율</th>}
-            <th className="text-center px-3 py-2 text-gray-600 dark:text-gray-400 font-medium">경험치</th>
-            <th className="text-center px-3 py-2 text-gray-600 dark:text-gray-400 font-medium">가격(메소)</th>
-            <th className="text-center px-3 py-2 text-gray-600 dark:text-gray-400 font-medium">가성비</th>
-            <th className="text-center px-3 py-2 text-gray-600 dark:text-gray-400 font-medium">배율</th>
+          <tr className="bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
+            <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">항목</th>
+            {hasRate && <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">배율</th>}
+            <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">경험치</th>
+            <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">가격(메소)</th>
+            <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">가성비 배율</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row, i) => (
             <tr key={i} className={"border-b transition-colors " + (row.isEvent ? "bg-amber-50 dark:bg-amber-900/40 hover:bg-amber-100 border-amber-100 dark:border-amber-800" : "border-gray-50 hover:bg-gray-50 dark:hover:bg-gray-700:bg-gray-700")}>
-              <td className="px-3 py-2 text-center text-gray-800 dark:text-gray-200">
+              <td className="px-2 py-1.5 text-center text-gray-800 dark:text-zinc-200">
                 {row.name}
                 {row.isEvent && <span className="ml-1.5 text-xs font-medium bg-amber-400 text-white px-1.5 py-0.5 rounded-full">E</span>}
               </td>
               {hasRate && (
-                <td className="px-3 py-2 text-center text-gray-500 dark:text-gray-400 text-xs">
+                <td className="px-2 py-1.5 text-center text-gray-500 dark:text-zinc-400 text-xs">
                   {row.rate !== undefined && (typeof row.rate === 'string' ? row.rate : '+' + (Number(row.rate) * 100).toFixed(0) + '%')}
                 </td>
               )}
-              <td className="px-3 py-2 text-center text-gray-700 dark:text-gray-300 whitespace-nowrap">{fmt(row.exp)}</td>
-              <td className="px-3 py-2 text-center">
+              <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300 whitespace-nowrap">{fmt(row.exp)}</td>
+              <td className="px-2 py-1.5 text-center">
                 {row.editable && row.onEdit ? (
                   <PriceInput value={row.inputValue ?? 0} onEdit={row.onEdit} />
                 ) : (
-                  <span className="text-gray-700 dark:text-gray-300">{fmtMeso(row.priceMeso)}</span>
+                  <span className="text-gray-700 dark:text-zinc-300">{fmtMeso(row.priceMeso)}</span>
                 )}
               </td>
-              <td className="px-3 py-2 text-center text-gray-700 dark:text-gray-300">{row.efficiency > 0 ? row.efficiency.toFixed(2) : '-'}</td>
-              <td className={'px-3 py-2 text-center font-semibold ' + (row.ratio >= 1 ? 'text-blue-600' : 'text-gray-500 dark:text-gray-400')}>
+              <td className={'px-2 py-1.5 text-center font-semibold ' + (row.ratio >= 1 ? 'text-orange-500' : 'text-gray-500 dark:text-zinc-400')}>
                 {row.ratio > 0 ? (row.ratio * 100).toFixed(1) + '%' : '-'}
               </td>
             </tr>
@@ -140,7 +118,7 @@ function InlineInput({ label, value, onChange, min }: {
   const [focused, setFocused] = useState(false);
   const display = focused ? String(value) : value.toLocaleString('ko-KR');
   return (
-    <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+    <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-zinc-400">
       {label}
       <input
         type="text"
@@ -152,7 +130,7 @@ function InlineInput({ label, value, onChange, min }: {
           const raw = Number(e.target.value.replace(/,/g, ''));
           if (!isNaN(raw) && raw >= (min ?? 0)) onChange(raw);
         }}
-        className="w-12 border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-gray-700 rounded px-1.5 py-0 text-center text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+        className="w-12 border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 text-center text-sm text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
       />
     </label>
   );
@@ -169,7 +147,7 @@ function BoosterRateInput({ value, onChange }: { value: number; onChange: (v: nu
   const pct = Math.round(value * 100);
   const display = focused ? String(pct) : pct.toLocaleString('ko-KR');
   return (
-    <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+    <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-zinc-400">
       보약
       <input
         type="text"
@@ -181,7 +159,7 @@ function BoosterRateInput({ value, onChange }: { value: number; onChange: (v: nu
           const raw = Number(e.target.value.replace(/,/g, ''));
           if (!isNaN(raw)) onChange(raw / 100);
         }}
-        className="w-12 border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-gray-700 rounded px-1.5 py-0 text-center text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+        className="w-12 border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 text-center text-sm text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
       />
       %
     </label>
@@ -243,23 +221,23 @@ export default function EfficiencyTab({ inputs, onChange }: Props) {
   ];
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 max-w-3xl mx-auto">
       <EffTable title="경험치 도핑 (30분)" rows={doping30Rows} color="green" />
 
-      <div className="flex flex-wrap items-center justify-center gap-6 px-3 py-2 bg-green-50 dark:bg-green-900/40 border border-green-100 dark:border-green-800 rounded-lg">
-        <span className="text-xs font-bold text-gray-600 dark:text-gray-400">30분 내 사용 부스터</span>
+      <div className="flex flex-wrap items-center justify-center gap-6 px-3 py-2 bg-gray-50 dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg">
+        <span className="text-xs font-bold text-gray-600 dark:text-zinc-400">30분 내 사용 부스터</span>
         <div className="flex flex-wrap items-center gap-6">
           <InlineInput label="황금태엽/VIP/헥사" value={inputs.booster30min} onChange={v => onChange('booster30min', v)} min={0} />
           <InlineInput label="영겹의 황금태엽" value={inputs.eternal30min} onChange={v => onChange('eternal30min', v)} min={0} />
         </div>
       </div>
 
-      <EffTable title="마진 비교" rows={marginRows} color="green" />
+      <EffTable title="상위 아이템 효율" rows={marginRows} color="green" />
 
       <EffTable title="경험치 도핑 (30일)" rows={doping30dRows} color="blue" />
 
-      <div className="flex flex-wrap items-center justify-center gap-6 px-3 py-2 bg-blue-50 dark:bg-blue-900/40 border border-blue-100 dark:border-blue-800 rounded-lg">
-        <span className="text-xs font-bold text-gray-600 dark:text-gray-400">1일 평균 사용 부스터</span>
+      <div className="flex flex-wrap items-center justify-center gap-6 px-3 py-2 bg-gray-50 dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg">
+        <span className="text-xs font-bold text-gray-600 dark:text-zinc-400">1일 평균 사용 부스터</span>
         <div className="flex flex-wrap items-center gap-6">
           <InlineInput label="황금태엽/VIP/헥사" value={inputs.booster1day} onChange={v => onChange('booster1day', v)} min={0} />
           <InlineInput label="영겹의 황금태엽" value={inputs.eternal1day} onChange={v => onChange('eternal1day', v)} min={0} />
@@ -268,27 +246,27 @@ export default function EfficiencyTab({ inputs, onChange }: Props) {
 
       <EffTable title="경험치 BM" rows={bmRows} color="orange" />
 
-      <div className="flex flex-wrap items-center justify-center gap-3 px-3 py-2 bg-orange-50 dark:bg-orange-900/40 border border-orange-100 dark:border-orange-800 rounded-lg">
-        <span className="text-xs font-bold text-gray-600 dark:text-gray-400">에픽 던전</span>
-        <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+      <div className="flex flex-wrap items-center justify-center gap-3 px-3 py-2 bg-gray-50 dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg">
+        <span className="text-xs font-bold text-gray-600 dark:text-zinc-400">에픽 던전</span>
+        <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-zinc-400">
           {'지역'}
           <select
             value={inputs.epicDungeonZone}
             onChange={e => onChange('epicDungeonZone', e.target.value)}
-            className="border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-gray-700 rounded px-1.5 py-0 text-center text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            className="border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 text-center text-sm text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
           >
             <option className="text-center" value="하이마운틴">하이마운틴</option>
             <option className="text-center" value="앵컴">앵글러컴퍼니</option>
             <option className="text-center" value="악몽선경">악몽선경</option>
           </select>
         </label>
-        <span className="text-xs font-bold text-gray-600 dark:text-gray-400 ml-2">몬스터파크</span>
-        <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+        <span className="text-xs font-bold text-gray-600 dark:text-zinc-400 ml-2">몬스터파크</span>
+        <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-zinc-400">
           {'썬데이'}
           <select
             value={inputs.sunday}
             onChange={e => onChange('sunday', e.target.value)}
-            className="border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-gray-700 rounded px-1.5 py-0 text-center text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            className="border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 text-center text-sm text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
           >
             <option className="text-center" value="없음">없음</option>
             <option className="text-center" value="기본">기본</option>
