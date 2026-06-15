@@ -148,7 +148,7 @@ export default function Home() {
     window.history.replaceState({}, '', url.toString());
   };
 
-  const handleChange = (key: keyof InputValues, value: number | string) => {
+  const handleChange = (key: keyof InputValues, value: number | string | boolean) => {
     setInputs(prev => {
       const next = { ...prev, [key]: value };
       const newPresets = [...presetsRef.current];
