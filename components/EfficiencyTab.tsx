@@ -43,7 +43,7 @@ function PriceInput({ value, onEdit }: { value: number; onEdit: (v: number) => v
       onBlur={() => setFocused(false)}
       onChange={e => {
         const raw = Number(e.target.value.replace(/,/g, ''));
-        if (!isNaN(raw)) onEdit(raw);
+        if (!isNaN(raw)) onEdit(Math.min(raw, 10_000_000_000));
       }}
       className="w-28 border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 text-center text-sm text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
     />
@@ -117,8 +117,8 @@ function EffTable({ title, rows, color = 'green' }: {
   );
 }
 
-function InlineInput({ label, value, onChange, min }: {
-  label: string; value: number; onChange: (v: number) => void; min?: number;
+function InlineInput({ label, value, onChange, min = 0, max = 100 }: {
+  label: string; value: number; onChange: (v: number) => void; min?: number; max?: number;
 }) {
   const [focused, setFocused] = useState(false);
   const display = focused ? String(value) : value.toLocaleString('ko-KR');
@@ -133,7 +133,7 @@ function InlineInput({ label, value, onChange, min }: {
         onBlur={() => setFocused(false)}
         onChange={e => {
           const raw = Number(e.target.value.replace(/,/g, ''));
-          if (!isNaN(raw) && raw >= (min ?? 0)) onChange(raw);
+          if (!isNaN(raw)) onChange(Math.min(Math.max(raw, min), max));
         }}
         className="w-12 border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 text-center text-sm text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
       />
@@ -162,7 +162,7 @@ function BoosterRateInput({ value, onChange }: { value: number; onChange: (v: nu
         onBlur={() => setFocused(false)}
         onChange={e => {
           const raw = Number(e.target.value.replace(/,/g, ''));
-          if (!isNaN(raw)) onChange(raw / 100);
+          if (!isNaN(raw)) onChange(Math.min(Math.max(raw, 0), 100) / 100);
         }}
         className="w-12 border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 text-center text-sm text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
       />
