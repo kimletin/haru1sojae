@@ -62,7 +62,7 @@ export default function ExpInfoTab({ charLevel, monsterLevel }: Props) {
 
   return (
     <div className="space-y-6 w-fit mx-auto">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-4 gap-3">
         {[
           { label: '캐릭터 레벨', value: String(charLevel), color: 'text-orange-500' },
           { label: '몬스터 레벨', value: String(monsterLevel), color: 'text-orange-400' },
@@ -76,16 +76,22 @@ export default function ExpInfoTab({ charLevel, monsterLevel }: Props) {
         ))}
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6 items-start">
+      <div className="flex flex-row gap-6 items-start">
         <div
           className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col"
           style={leftMaxH ? { maxHeight: leftMaxH } : undefined}
         >
-          <div className="bg-orange-100 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
+          <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
             <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">레벨별 필요 경험치</h3>
           </div>
           <div ref={leftScrollRef} className="overflow-y-auto min-h-0 flex-1">
-            <table className="w-full text-sm border-collapse">
+            <table className="table-fixed text-sm border-collapse">
+              <colgroup>
+                <col style={{width:'100px'}} />
+                <col style={{width:'120px'}} />
+                <col style={{width:'90px'}} />
+                <col style={{width:'100px'}} />
+              </colgroup>
               <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
                   <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">레벨</th>
@@ -115,11 +121,15 @@ export default function ExpInfoTab({ charLevel, monsterLevel }: Props) {
           </div>
         </div>
 
-        <div ref={rightRef} className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden w-full md:w-80 shrink-0">
-          <div className="bg-orange-100 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5">
+        <div ref={rightRef} className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden w-80 shrink-0">
+          <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5">
             <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">경험치 패널티</h3>
           </div>
-          <table className="w-full text-sm border-collapse">
+          <table className="table-fixed text-sm border-collapse">
+            <colgroup>
+              <col style={{width:'170px'}} />
+              <col style={{width:'110px'}} />
+            </colgroup>
             <thead>
               <tr className="bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
                 <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">캐릭터 - 몬스터</th>

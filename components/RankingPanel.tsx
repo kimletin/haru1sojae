@@ -23,7 +23,7 @@ function RankBadge({ rank }: { rank: number }) {
 export default function RankingPanel({ items }: Props) {
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden flex flex-col flex-1">
-      <div className="bg-orange-100 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5">
+      <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5">
         <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">가성비 순위</h3>
       </div>
       <div className="space-y-1 flex-1 overflow-y-auto p-4">

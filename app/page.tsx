@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import type { InputValues } from '@/types';
 import { calcAllItems } from '@/lib/calculator';
 import InputPanel from '@/components/InputPanel';
@@ -12,6 +12,10 @@ import EpicDungeonTab from '@/components/EpicDungeonTab';
 import { SunIcon, MoonIcon } from '@/components/Icons';
 
 const STORAGE_KEY = 'maple-exp-bm-inputs';
+const PRESETS_KEY = 'maple-exp-bm-presets';
+const PRESET_NAMES_KEY = 'maple-exp-bm-preset-names';
+const ACTIVE_PRESET_KEY = 'maple-exp-bm-active-preset';
+const NUM_PRESETS = 5;
 
 const DEFAULT_INPUTS: InputValues = {
   mesoMarketRate: 2280,
@@ -41,12 +45,43 @@ const DEFAULT_INPUTS: InputValues = {
   boosterRate: 0.5,
 };
 
-function loadInputs(): InputValues {
+const DEFAULT_NAMES = ['1', '2', '3', '4', '5'];
+
+function makeDefaultPresets(): InputValues[] {
+  return Array.from({ length: NUM_PRESETS }, () => ({ ...DEFAULT_INPUTS }));
+}
+
+function loadPresets(): { presets: InputValues[]; active: number; names: string[] } {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return { ...DEFAULT_INPUTS, ...JSON.parse(saved) };
+    const savedPresets = localStorage.getItem(PRESETS_KEY);
+    const savedActive = parseInt(localStorage.getItem(ACTIVE_PRESET_KEY) ?? '0');
+    const savedNames = localStorage.getItem(PRESET_NAMES_KEY);
+    const active = isNaN(savedActive) ? 0 : Math.min(Math.max(0, savedActive), NUM_PRESETS - 1);
+    const names: string[] = savedNames
+      ? (() => { try { const p = JSON.parse(savedNames); return Array.isArray(p) && p.length === NUM_PRESETS ? p : [...DEFAULT_NAMES]; } catch { return [...DEFAULT_NAMES]; } })()
+      : [...DEFAULT_NAMES];
+    if (savedPresets) {
+      const parsed = JSON.parse(savedPresets);
+      if (Array.isArray(parsed) && parsed.length === NUM_PRESETS) {
+        return { presets: parsed.map(p => ({ ...DEFAULT_INPUTS, ...p })), active, names };
+      }
+    }
+    const old = localStorage.getItem(STORAGE_KEY);
+    if (old) {
+      const presets = makeDefaultPresets();
+      presets[0] = { ...DEFAULT_INPUTS, ...JSON.parse(old) };
+      return { presets, active: 0, names };
+    }
   } catch {}
-  return DEFAULT_INPUTS;
+  return { presets: makeDefaultPresets(), active: 0, names: [...DEFAULT_NAMES] };
+}
+
+function savePresets(presets: InputValues[]) {
+  try { localStorage.setItem(PRESETS_KEY, JSON.stringify(presets)); } catch {}
+}
+
+function saveNames(names: string[]) {
+  try { localStorage.setItem(PRESET_NAMES_KEY, JSON.stringify(names)); } catch {}
 }
 
 const TABS = [
@@ -71,22 +106,30 @@ export default function Home() {
   const [inputs, setInputs] = useState<InputValues>(DEFAULT_INPUTS);
   const [activeTab, setActiveTab] = useState<Tab>(TABS[0]);
   const [darkMode, setDarkMode] = useState(false);
+  const [activePreset, setActivePreset] = useState(0);
+  const [presetNames, setPresetNames] = useState<string[]>([...DEFAULT_NAMES]);
+  const [editingPreset, setEditingPreset] = useState<number | null>(null);
+  const presetsRef = useRef<InputValues[]>(makeDefaultPresets());
+  const activePresetRef = useRef(0);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = PARAM_TO_TAB[params.get('tab') ?? ''];
     if (tab) setActiveTab(tab);
-    setInputs(loadInputs());
+
+    const { presets, active, names } = loadPresets();
+    presetsRef.current = presets;
+    activePresetRef.current = active;
+    setActivePreset(active);
+    setPresetNames(names);
+    setInputs(presets[active]);
+
     const saved = localStorage.getItem('maple-dark-mode');
     if (saved === 'true') {
       setDarkMode(true);
       document.documentElement.classList.add('dark');
     }
   }, []);
-
-  useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(inputs)); } catch {}
-  }, [inputs]);
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
@@ -100,7 +143,39 @@ export default function Home() {
   };
 
   const handleChange = (key: keyof InputValues, value: number | string) => {
-    setInputs(prev => ({ ...prev, [key]: value }));
+    setInputs(prev => {
+      const next = { ...prev, [key]: value };
+      const newPresets = [...presetsRef.current];
+      newPresets[activePresetRef.current] = next;
+      presetsRef.current = newPresets;
+      savePresets(newPresets);
+      return next;
+    });
+  };
+
+  const handlePresetChange = (idx: number) => {
+    if (idx === activePresetRef.current) return;
+    const newPresets = [...presetsRef.current];
+    presetsRef.current = newPresets;
+    savePresets(newPresets);
+    activePresetRef.current = idx;
+    setActivePreset(idx);
+    setInputs(newPresets[idx]);
+    try { localStorage.setItem(ACTIVE_PRESET_KEY, String(idx)); } catch {}
+  };
+
+  const handleNameChange = (idx: number, name: string) => {
+    const newNames = [...presetNames];
+    newNames[idx] = name;
+    setPresetNames(newNames);
+    saveNames(newNames);
+  };
+
+  const handleNameBlur = (idx: number) => {
+    if (!presetNames[idx].trim()) {
+      handleNameChange(idx, DEFAULT_NAMES[idx]);
+    }
+    setEditingPreset(null);
   };
 
   const toggleDark = () => {
@@ -115,7 +190,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       <header className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-600 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <button
             onClick={() => handleTabChange(TABS[0])}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
@@ -126,7 +201,7 @@ export default function Home() {
               <p className="text-xs text-gray-400 dark:text-zinc-500">Made by 레틴</p>
             </div>
           </button>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-3">
             <nav className="flex flex-wrap gap-1">
               {TABS.map(tab => (
                 <button
@@ -153,33 +228,65 @@ export default function Home() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        {activeTab === TABS[0] ? (
-          <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 p-4 max-w-6xl mx-auto">
-            <div className="flex flex-col xl:flex-row gap-6">
-              <main className="min-w-0" style={{flex: "3 1 0"}}>
-                <EfficiencyTab inputs={inputs} onChange={handleChange} items={rankedItems} />
-              </main>
-              <aside className="xl:w-80 shrink-0 flex flex-col gap-4">
-                <InputPanel inputs={inputs} onChange={handleChange} />
-                <RankingPanel items={rankedItems} />
-              </aside>
-            </div>
+        <div className="w-fit mx-auto">
+          <div className="mb-2 flex items-center gap-1.5">
+            <span className="text-xs text-gray-400 dark:text-zinc-500">캐릭터</span>
+            {Array.from({ length: NUM_PRESETS }, (_, i) => (
+              editingPreset === i ? (
+                <input
+                  key={i}
+                  autoFocus
+                  maxLength={12}
+                  value={presetNames[i]}
+                  onChange={e => handleNameChange(i, e.target.value)}
+                  onBlur={() => handleNameBlur(i)}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') handleNameBlur(i); }}
+                  className="w-16 h-7 text-xs text-center border border-orange-400 rounded-lg px-1 outline-none bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100"
+                />
+              ) : (
+                <button
+                  key={i}
+                  onClick={() => handlePresetChange(i)}
+                  onDoubleClick={() => setEditingPreset(i)}
+                  className={
+                    'h-7 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer max-w-[64px] truncate ' +
+                    (activePreset === i
+                      ? 'bg-orange-500 text-white'
+                      : 'text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700')
+                  }
+                >
+                  {presetNames[i]}
+                </button>
+              )
+            ))}
           </div>
-        ) : (
-          <main className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 p-4 w-fit mx-auto">
-            {activeTab === TABS[1] && (
-              <ExpInfoTab charLevel={inputs.charLevel} monsterLevel={inputs.monsterLevel} />
-            )}
-            {activeTab === TABS[2] && (
-              <BMExpTab charLevel={inputs.charLevel} monsterLevel={inputs.monsterLevel} />
-            )}
-            {activeTab === TABS[3] && (
-              <EpicDungeonTab charLevel={inputs.charLevel} />
-            )}
-          </main>
-        )}
+          {activeTab === TABS[0] ? (
+            <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 p-4">
+              <div className="flex flex-row gap-6">
+                <main className="min-w-[500px]" style={{flex: "0 0 auto"}}>
+                  <EfficiencyTab inputs={inputs} onChange={handleChange} items={rankedItems} />
+                </main>
+                <aside className="w-80 shrink-0 flex flex-col gap-4">
+                  <InputPanel inputs={inputs} onChange={handleChange} />
+                  <RankingPanel items={rankedItems} />
+                </aside>
+              </div>
+            </div>
+          ) : (
+            <main className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 p-4">
+              {activeTab === TABS[1] && (
+                <ExpInfoTab charLevel={inputs.charLevel} monsterLevel={inputs.monsterLevel} />
+              )}
+              {activeTab === TABS[2] && (
+                <BMExpTab charLevel={inputs.charLevel} monsterLevel={inputs.monsterLevel} />
+              )}
+              {activeTab === TABS[3] && (
+                <EpicDungeonTab charLevel={inputs.charLevel} />
+              )}
+            </main>
+          )}
+        </div>
+      </div>
     </div>
-    </div>
-  )
-;
+  );
 }

@@ -54,9 +54,9 @@ function EffTable({ title, rows, color = 'green' }: {
   title: string; rows: TableRow[]; color?: 'green' | 'blue' | 'orange';
 }) {
   const header: Record<string, string> = {
-    green:  'bg-orange-100 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800',
-    blue:   'bg-orange-100 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800',
-    orange: 'bg-orange-100 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800',
+    green:  'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800',
+    blue:   'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800',
+    orange: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800',
   };
   const titleColor: Record<string, string> = {
     green:  'text-gray-800 dark:text-zinc-100',
@@ -69,8 +69,14 @@ function EffTable({ title, rows, color = 'green' }: {
       <div className={'px-4 py-2.5 border-b ' + header[color]}>
         <h3 className={'text-sm font-semibold text-center ' + titleColor[color]}>{title}</h3>
       </div>
-      <div className="overflow-x-auto">
-      <table className="w-full text-sm border-collapse">
+      <table className="table-fixed w-full text-sm border-collapse">
+        <colgroup>
+          <col style={{width: hasRate ? '160px' : '230px'}} />
+          {hasRate && <col style={{width:'70px'}} />}
+          <col style={{width:'110px'}} />
+          <col style={{width:'160px'}} />
+          <col style={{width:'110px'}} />
+        </colgroup>
         <thead>
           <tr className="bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
             <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">항목</th>
@@ -107,7 +113,6 @@ function EffTable({ title, rows, color = 'green' }: {
           ))}
         </tbody>
       </table>
-      </div>
     </div>
   );
 }
@@ -221,7 +226,7 @@ export default function EfficiencyTab({ inputs, onChange }: Props) {
   ];
 
   return (
-    <div className="space-y-3 max-w-3xl mx-auto">
+    <div className="space-y-3 w-[620px]">
       <EffTable title="경험치 도핑 (30분)" rows={doping30Rows} color="green" />
 
       <div className="flex flex-wrap items-center justify-center gap-6 px-3 py-2 bg-gray-50 dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-lg">

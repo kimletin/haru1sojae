@@ -48,13 +48,19 @@ function DungeonTable({ title, levels, data, metacoin, charLevel, headerColor, t
         <h3 className={'text-sm font-semibold text-center ' + titleColor}>{title}</h3>
       </div>
       <div ref={scrollRef} className="overflow-x-auto overflow-y-auto max-h-[300px]">
-        <table className="w-full text-sm border-collapse">
+        <table className="table-fixed text-sm border-collapse">
+          <colgroup>
+            <col style={{width:'80px'}} />
+            <col style={{width:'170px'}} />
+            <col style={{width:'220px'}} />
+            <col style={{width:'220px'}} />
+          </colgroup>
           <thead className="sticky top-0">
             <tr className="bg-gray-50 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
-              <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">레벨</th>
-              <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">0단계</th>
-              <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">1단계 ({metacoin.stage1.toLocaleString()}메포)</th>
-              <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">2단계 ({metacoin.stage2.toLocaleString()}메포)</th>
+              <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium whitespace-nowrap">레벨</th>
+              <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium whitespace-nowrap">0단계</th>
+              <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium whitespace-nowrap">1단계 ({metacoin.stage1.toLocaleString()}메포)</th>
+              <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium whitespace-nowrap">2단계 ({metacoin.stage2.toLocaleString()}메포)</th>
             </tr>
           </thead>
           <tbody>
@@ -70,7 +76,7 @@ function DungeonTable({ title, levels, data, metacoin, charLevel, headerColor, t
                   ref={isMe ? activeRef : undefined}
                   className={'border-b ' + (isMe ? rowBg + ' font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-700:bg-gray-700')}
                 >
-                  <td className={'px-5 py-1.5 text-center ' + baseColor}>
+                  <td className={'px-5 py-1.5 text-center whitespace-nowrap ' + baseColor}>
                     {lv}
                     {isMe && <span className={'ml-1.5 text-xs text-white px-1.5 py-0.5 rounded-full ' + badgeColor}>나</span>}
                   </td>
@@ -111,7 +117,7 @@ export default function EpicDungeonTab({ charLevel }: Props) {
         data={HAIMOUNTAIN}
         metacoin={{ stage1: 7500, stage2: 22500 }}
         charLevel={charLevel}
-        headerColor="bg-orange-100 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
+        headerColor="bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
         titleColor="text-gray-800 dark:text-zinc-100"
         badgeColor="bg-orange-500 dark:bg-orange-700"
         rowBg="bg-orange-50 dark:bg-orange-900/40"
@@ -123,7 +129,7 @@ export default function EpicDungeonTab({ charLevel }: Props) {
         data={ANGLER_COMPANY}
         metacoin={{ stage1: 10000, stage2: 30000 }}
         charLevel={charLevel}
-        headerColor="bg-orange-100 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
+        headerColor="bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
         titleColor="text-gray-800 dark:text-zinc-100"
         badgeColor="bg-orange-500 dark:bg-orange-700"
         rowBg="bg-orange-50 dark:bg-orange-900/40"
@@ -135,7 +141,7 @@ export default function EpicDungeonTab({ charLevel }: Props) {
         data={NIGHTMARE_SANCTUARY}
         metacoin={{ stage1: 12500, stage2: 37500 }}
         charLevel={charLevel}
-        headerColor="bg-orange-100 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
+        headerColor="bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
         titleColor="text-gray-800 dark:text-zinc-100"
         badgeColor="bg-orange-500 dark:bg-orange-700"
         rowBg="bg-orange-50 dark:bg-orange-900/40"
