@@ -15,14 +15,14 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: '경험치 효율표 | Mapleff',
+  title: '경험치 효율표 | MaplEFF',
   description: '메이플스토리 경험치 효율 계산기',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
-      <body className={`min-h-screen bg-gray-50 text-gray-900 antialiased ${notoSansKR.className}`}>
+      <body className={`min-h-screen bg-gray-50 text-gray-900 antialiased font-bold ${notoSansKR.className}`}>
         {children}
       </body>
     </html>

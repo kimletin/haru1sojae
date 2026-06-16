@@ -44,6 +44,10 @@ table tr {
   border-color: rgb(243 244 246);
 }
 
+input, select, textarea, button {
+  font-weight: inherit;
+}
+
 select {
   text-align: center;
   text-align-last: center;

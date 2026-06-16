@@ -23,7 +23,7 @@ const UPDATES: UpdateEntry[] = [
   {
     date: '2026.06.15.',
     title: '서비스 오픈',
-    items: ['Mapleff 오픈'],
+    items: ['MaplEFF 오픈'],
   },
 ];
 

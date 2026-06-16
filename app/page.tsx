@@ -11,13 +11,16 @@ import BMExpTab from '@/components/BMExpTab';
 import EpicDungeonTab from '@/components/EpicDungeonTab';
 import HuntingGroundTab from '@/components/HuntingGroundTab';
 import InfoCenterTab from '@/components/InfoCenterTab';
+import CharacterSearchModal, { type CharacterInfo } from '@/components/CharacterSearchModal';
 import { SunIcon, MoonIcon } from '@/components/Icons';
 
 const STORAGE_KEY = 'maple-exp-bm-inputs';
 const PRESETS_KEY = 'maple-exp-bm-presets';
 const PRESET_NAMES_KEY = 'maple-exp-bm-preset-names';
 const ACTIVE_PRESET_KEY = 'maple-exp-bm-active-preset';
+const NUM_SLOTS_KEY = 'maple-exp-bm-num-slots';
 const NUM_PRESETS = 5;
+const DEFAULT_NUM_SLOTS = 1;
 
 const DEFAULT_INPUTS: InputValues = {
   waterBottleRate: 0,
@@ -121,7 +124,13 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(false);
   const [activePreset, setActivePreset] = useState(0);
   const [presetNames, setPresetNames] = useState<string[]>([...DEFAULT_NAMES]);
-  const [editingPreset, setEditingPreset] = useState<number | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [numSlots, setNumSlots] = useState(DEFAULT_NUM_SLOTS);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [searchModalTarget, setSearchModalTarget] = useState(0);
+  const [isFirstVisit, setIsFirstVisit] = useState(false);
   const presetsRef = useRef<InputValues[]>(makeDefaultPresets());
   const activePresetRef = useRef(0);
 
@@ -130,7 +139,17 @@ export default function Home() {
     const tab = PARAM_TO_TAB[params.get('tab') ?? ''];
     const initialTab = tab ?? TABS[0];
     if (tab) setActiveTab(tab);
-    document.title = `${initialTab} | Mapleff`;
+    document.title = `${initialTab} | MaplEFF`;
+
+    const savedSlots = parseInt(localStorage.getItem(NUM_SLOTS_KEY) ?? '');
+    if (!isNaN(savedSlots)) setNumSlots(Math.min(Math.max(savedSlots, 1), NUM_PRESETS));
+
+    const isNew = !localStorage.getItem(PRESETS_KEY) && !localStorage.getItem(STORAGE_KEY);
+    if (isNew) {
+      setIsFirstVisit(true);
+      setSearchModalTarget(0);
+      setShowSearchModal(true);
+    }
 
     const { presets, active, names } = loadPresets();
     presetsRef.current = presets;
@@ -148,7 +167,7 @@ export default function Home() {
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
-    document.title = `${tab} | Mapleff`;
+    document.title = `${tab} | MaplEFF`;
     const url = new URL(window.location.href);
     if (tab === TABS[0]) {
       url.searchParams.delete('tab');
@@ -187,11 +206,76 @@ export default function Home() {
     saveNames(newNames);
   };
 
-  const handleNameBlur = (idx: number) => {
-    if (!presetNames[idx].trim()) {
-      handleNameChange(idx, DEFAULT_NAMES[idx]);
+  const handleCharacterConfirm = (info: CharacterInfo) => {
+    const idx = searchModalTarget;
+    // 새 슬롯이면 이때 추가
+    if (idx >= numSlots) {
+      const newSlots = idx + 1;
+      setNumSlots(newSlots);
+      try { localStorage.setItem(NUM_SLOTS_KEY, String(newSlots)); } catch {}
     }
-    setEditingPreset(null);
+    handleNameChange(idx, info.name.slice(0, 12));
+    const newPresets = [...presetsRef.current];
+    newPresets[idx] = { ...newPresets[idx], charLevel: Math.min(Math.max(info.level, 260), 299) };
+    presetsRef.current = newPresets;
+    savePresets(newPresets);
+    if (idx === activePresetRef.current) setInputs(newPresets[idx]);
+    setShowSearchModal(false);
+    setIsFirstVisit(false);
+    handlePresetChange(idx);
+  };
+
+  const handleAddCharacter = () => {
+    if (numSlots >= NUM_PRESETS) return;
+    setSearchModalTarget(numSlots); // 아직 슬롯 추가 안 함
+    setIsFirstVisit(false);
+    setShowSearchModal(true);
+  };
+
+  const handleDeleteSlot = (idx: number) => {
+    if (numSlots <= 1) return;
+    const newNames = [...presetNames];
+    const newPresets = [...presetsRef.current];
+    newNames.splice(idx, 1);
+    newNames.push(DEFAULT_NAMES[newNames.length] ?? String(newNames.length + 1));
+    newPresets.splice(idx, 1);
+    newPresets.push({ ...DEFAULT_INPUTS });
+    const newSlots = numSlots - 1;
+    let newActive = activePreset;
+    if (activePreset === idx) newActive = Math.max(0, idx - 1);
+    else if (activePreset > idx) newActive = activePreset - 1;
+    setNumSlots(newSlots);
+    setPresetNames(newNames);
+    saveNames(newNames);
+    presetsRef.current = newPresets;
+    savePresets(newPresets);
+    activePresetRef.current = newActive;
+    setActivePreset(newActive);
+    setInputs(newPresets[newActive]);
+    try { localStorage.setItem(ACTIVE_PRESET_KEY, String(newActive)); } catch {}
+    try { localStorage.setItem(NUM_SLOTS_KEY, String(newSlots)); } catch {}
+  };
+
+  const handleReorder = (from: number, to: number) => {
+    if (from === to) return;
+    const newNames = [...presetNames];
+    const newPresets = [...presetsRef.current];
+    const [n] = newNames.splice(from, 1);
+    newNames.splice(to, 0, n);
+    const [p] = newPresets.splice(from, 1);
+    newPresets.splice(to, 0, p);
+    setPresetNames(newNames);
+    saveNames(newNames);
+    presetsRef.current = newPresets;
+    savePresets(newPresets);
+    let newActive = activePreset;
+    if (activePreset === from) newActive = to;
+    else if (from < to && activePreset > from && activePreset <= to) newActive = activePreset - 1;
+    else if (from > to && activePreset >= to && activePreset < from) newActive = activePreset + 1;
+    activePresetRef.current = newActive;
+    setActivePreset(newActive);
+    setInputs(newPresets[newActive]);
+    try { localStorage.setItem(ACTIVE_PRESET_KEY, String(newActive)); } catch {}
   };
 
   const toggleDark = () => {
@@ -205,6 +289,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
+      {showSearchModal && (
+        <CharacterSearchModal
+          onConfirm={handleCharacterConfirm}
+          onClose={() => { setShowSearchModal(false); setIsFirstVisit(false); }}
+          onSkip={isFirstVisit ? () => { setShowSearchModal(false); setIsFirstVisit(false); } : undefined}
+        />
+      )}
       <header className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-600 sticky top-0 z-10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <button
@@ -213,7 +304,7 @@ export default function Home() {
           >
             <img src="/icon.png" alt="icon" className="w-8 h-8" />
             <div className="text-left">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Mapleff</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">MaplEFF</h1>
               <p className="text-xs text-gray-400 dark:text-zinc-500">메이플스토리 경험치 효율 계산기</p>
             </div>
           </button>
@@ -247,43 +338,70 @@ export default function Home() {
         <div className="w-fit mx-auto">
           {activeTab !== TABS[5] && <div className="mb-2 flex items-center gap-1.5">
             <span className="text-xs text-gray-400 dark:text-zinc-500">캐릭터</span>
-            {Array.from({ length: NUM_PRESETS }, (_, i) => (
-              editingPreset === i ? (
-                <input
+            {Array.from({ length: numSlots }, (_, i) => (
+              isEditMode ? (
+                <div
                   key={i}
-                  autoFocus
-                  maxLength={12}
-                  value={presetNames[i]}
-                  onChange={e => handleNameChange(i, e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') handleNameBlur(i); }}
-                  className="w-16 h-7 text-xs text-center border border-orange-400 rounded-lg px-1 outline-none bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100"
-                />
+                  draggable
+                  onDragStart={() => setDragIndex(i)}
+                  onDragOver={e => { e.preventDefault(); setDragOverIndex(i); }}
+                  onDrop={() => { handleReorder(dragIndex ?? i, i); setDragIndex(null); setDragOverIndex(null); }}
+                  onDragEnd={() => { setDragIndex(null); setDragOverIndex(null); }}
+                  className={
+                    'flex items-center h-7 rounded-lg border text-xs transition-colors select-none ' +
+                    (dragOverIndex === i && dragIndex !== i
+                      ? 'border-orange-400 bg-orange-50 dark:bg-orange-900/20'
+                      : 'border-gray-200 dark:border-zinc-600 bg-gray-50 dark:bg-zinc-800')
+                  }
+                >
+                  {numSlots > 1 && (
+                    <span className="px-1.5 cursor-grab text-gray-400 dark:text-zinc-500">
+                      <svg width="8" height="13" viewBox="0 0 8 13" fill="currentColor">
+                        <circle cx="2" cy="2" r="1.2"/><circle cx="6" cy="2" r="1.2"/>
+                        <circle cx="2" cy="6.5" r="1.2"/><circle cx="6" cy="6.5" r="1.2"/>
+                        <circle cx="2" cy="11" r="1.2"/><circle cx="6" cy="11" r="1.2"/>
+                      </svg>
+                    </span>
+                  )}
+                  <span className="px-1.5 text-gray-700 dark:text-zinc-300 max-w-[56px] truncate font-semibold">{presetNames[i]}</span>
+                  {numSlots > 1 && (
+                    <button
+                      onClick={() => handleDeleteSlot(i)}
+                      className="px-1.5 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
               ) : (
                 <button
                   key={i}
                   onClick={() => handlePresetChange(i)}
                   className={
-                    'h-7 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer max-w-[64px] truncate ' +
+                    'h-7 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer max-w-[64px] truncate border ' +
                     (activePreset === i
-                      ? 'bg-orange-500 text-white'
-                      : 'text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700')
+                      ? 'bg-orange-500 text-white border-orange-500'
+                      : 'text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700 border-gray-200 dark:border-zinc-600')
                   }
                 >
                   {presetNames[i]}
                 </button>
               )
             ))}
+            {!isEditMode && numSlots < NUM_PRESETS && (
+              <button
+                onClick={handleAddCharacter}
+                className="h-7 w-7 flex items-center justify-center rounded-lg text-sm font-semibold transition-colors cursor-pointer text-gray-400 dark:text-zinc-500 hover:bg-gray-100 dark:hover:bg-zinc-700 border border-dashed border-gray-300 dark:border-zinc-600"
+                title="캐릭터 추가"
+              >
+                +
+              </button>
+            )}
             <button
-              onClick={() => {
-                if (editingPreset === activePreset) {
-                  handleNameBlur(activePreset);
-                } else {
-                  setEditingPreset(activePreset);
-                }
-              }}
+              onClick={() => setIsEditMode(v => !v)}
               className="h-7 px-2 text-xs underline transition-colors cursor-pointer text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300"
             >
-              {editingPreset === activePreset ? '완료' : '편집'}
+              {isEditMode ? '완료' : '편집'}
             </button>
           </div>}
           {activeTab === TABS[0] ? (
