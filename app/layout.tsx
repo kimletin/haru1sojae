@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Noto_Sans_KR } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 
 const notoSansKR = Noto_Sans_KR({
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko">
       <body className={`min-h-screen bg-gray-50 text-gray-900 antialiased ${notoSansKR.className}`}>
         {children}
+        <Analytics />
       </body>
     </html>
   );
