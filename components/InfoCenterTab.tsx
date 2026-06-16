@@ -97,32 +97,10 @@ export default function InfoCenterTab() {
               <p className="font-semibold text-gray-900 dark:text-zinc-100 mb-1">💡 가성비 배율 기준</p>
               <p>가성비 배율은 VIP 사우나를 기준(100%)으로 계산됩니다. 배율이 높을수록 VIP 사우나 대비 더 효율적인 아이템입니다.</p>
             </div>
-            <div>
-              <p className="font-semibold text-gray-900 dark:text-zinc-100 mb-1">💡 캐릭터 이름 편집</p>
-              <p>상단의 캐릭터 버튼을 더블클릭하면 이름을 직접 수정할 수 있습니다. 최대 12글자까지 입력 가능하며, 비워두면 기본값으로 돌아갑니다.</p>
-            </div>
           </div>
         )}
       </div>
 
-      {activeSection === '도움말' && (
-        <div className="flex justify-center mt-4">
-          <a
-            href="https://open.kakao.com/me/letin_k"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group inline-flex"
-            title="카카오톡 문의"
-          >
-            <div className="w-9 h-9 rounded-[9px] bg-gray-300 group-hover:bg-yellow-400 transition-colors flex items-center justify-center">
-              <svg width="24" height="20" viewBox="0 0 24 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <ellipse cx="12" cy="9" rx="12" ry="9" className="fill-gray-500 group-hover:fill-[#3A1D1D] transition-colors"/>
-                <polygon points="3,18 7,13 5,19.5" className="fill-gray-500 group-hover:fill-[#3A1D1D] transition-colors"/>
-              </svg>
-            </div>
-          </a>
-        </div>
-      )}
     </div>
   );
 }

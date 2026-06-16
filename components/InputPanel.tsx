@@ -22,10 +22,10 @@ function SolErdaInput({ value, onChange, disabled }: { value: number; onChange: 
       onBlur={() => setFocused(false)}
       onChange={e => {
         const raw = Number(e.target.value.replace(/,/g, ''));
-        if (!isNaN(raw)) onChange(Math.min(raw, 10_000_000_000));
+        if (!isNaN(raw)) onChange(Math.min(raw, 10_000_000));
       }}
       className={
-        'w-24 text-center text-sm border-2 rounded px-1.5 py-0 focus:outline-none ' +
+        'w-[88px] text-center text-[13px] border-2 rounded px-1.5 py-0 h-[24px] focus:outline-none ' +
         (disabled
           ? 'border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-500 cursor-not-allowed'
           : 'border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-yellow-400')
@@ -55,7 +55,7 @@ function NumInput({ label, value, onChange, min, max }: {
           const raw = Number(e.target.value.replace(/,/g, ''));
           if (!isNaN(raw)) onChange(raw);
         }}
-        className="w-24 text-center text-sm border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 text-sm text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+        className="w-[88px] text-center text-[13px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
       />
     </div>
   );
@@ -83,7 +83,7 @@ export default function InputPanel({ inputs, onChange }: Props) {
     applyGround(ground);
   };
 
-  const selectCls = 'text-sm border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 cursor-pointer';
+  const selectCls = 'text-[13px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 cursor-pointer';
 
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden">
@@ -97,7 +97,7 @@ export default function InputPanel({ inputs, onChange }: Props) {
             type="text"
             value=""
             disabled
-            className="w-24 text-center text-sm border-2 border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 rounded px-1.5 py-0 text-gray-400 dark:text-zinc-500 cursor-not-allowed"
+            className="w-[88px] text-center text-[13px] border-2 border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-400 dark:text-zinc-500 cursor-not-allowed"
           />
         </div>
         <NumInput label="메소마켓 시세" value={inputs.mesoMarketRate} onChange={v => onChange('mesoMarketRate', v)} min={1} />
@@ -123,13 +123,13 @@ export default function InputPanel({ inputs, onChange }: Props) {
         </div>
 
         {/* 지역 / 사냥터 선택 */}
-        <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2 space-y-1.5">
+        <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
           <div className="flex items-center gap-3 py-1">
             <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap flex-1">지역</label>
             <select
               value={inputs.huntingRegion}
               onChange={e => handleRegionChange(e.target.value)}
-              className={selectCls + ' w-24'}
+              className={selectCls + ' w-[88px]'}
             >
               {HUNTING_REGIONS.map(r => (
                 <option key={r.name} value={r.name}>{r.name}</option>
@@ -141,7 +141,7 @@ export default function InputPanel({ inputs, onChange }: Props) {
             <select
               value={inputs.huntingGround}
               onChange={e => handleGroundChange(e.target.value)}
-              className={selectCls + ' w-44'}
+              className={selectCls + ' w-[184px]'}
             >
               {currentRegion.grounds.map(g => (
                 <option key={g.name} value={g.name}>{g.name}</option>

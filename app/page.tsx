@@ -128,7 +128,9 @@ export default function Home() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tab = PARAM_TO_TAB[params.get('tab') ?? ''];
+    const initialTab = tab ?? TABS[0];
     if (tab) setActiveTab(tab);
+    document.title = `${initialTab} | Mapleff`;
 
     const { presets, active, names } = loadPresets();
     presetsRef.current = presets;
@@ -146,6 +148,7 @@ export default function Home() {
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
+    document.title = `${tab} | Mapleff`;
     const url = new URL(window.location.href);
     if (tab === TABS[0]) {
       url.searchParams.delete('tab');
@@ -252,15 +255,13 @@ export default function Home() {
                   maxLength={12}
                   value={presetNames[i]}
                   onChange={e => handleNameChange(i, e.target.value)}
-                  onBlur={() => handleNameBlur(i)}
-                  onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') handleNameBlur(i); }}
+                  onKeyDown={e => { if (e.key === 'Enter') handleNameBlur(i); }}
                   className="w-16 h-7 text-xs text-center border border-orange-400 rounded-lg px-1 outline-none bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100"
                 />
               ) : (
                 <button
                   key={i}
                   onClick={() => handlePresetChange(i)}
-                  onDoubleClick={() => setEditingPreset(i)}
                   className={
                     'h-7 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer max-w-[64px] truncate ' +
                     (activePreset === i
@@ -272,6 +273,18 @@ export default function Home() {
                 </button>
               )
             ))}
+            <button
+              onClick={() => {
+                if (editingPreset === activePreset) {
+                  handleNameBlur(activePreset);
+                } else {
+                  setEditingPreset(activePreset);
+                }
+              }}
+              className="h-7 px-2 text-xs underline transition-colors cursor-pointer text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300"
+            >
+              {editingPreset === activePreset ? '완료' : '편집'}
+            </button>
           </div>}
           {activeTab === TABS[0] ? (
             <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 p-4">
@@ -303,6 +316,24 @@ export default function Home() {
                 <InfoCenterTab />
               )}
             </main>
+          )}
+          {activeTab === TABS[5] && (
+            <div className="flex justify-center mt-4">
+              <a
+                href="https://open.kakao.com/me/letin_k"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex"
+                title="카카오톡 문의"
+              >
+                <div className="w-9 h-9 rounded-[9px] bg-gray-300 group-hover:bg-yellow-400 transition-colors flex items-center justify-center">
+                  <svg width="24" height="20" viewBox="0 0 24 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="12" cy="9" rx="12" ry="9" className="fill-gray-500 group-hover:fill-[#3A1D1D] transition-colors"/>
+                    <polygon points="3,18 7,13 5,19.5" className="fill-gray-500 group-hover:fill-[#3A1D1D] transition-colors"/>
+                  </svg>
+                </div>
+              </a>
+            </div>
           )}
         </div>
       </div>

@@ -15,7 +15,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Mapleff',
+  title: '경험치 효율표 | Mapleff',
   description: '메이플스토리 경험치 효율 계산기',
 };
 
