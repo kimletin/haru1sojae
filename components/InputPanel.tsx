@@ -34,8 +34,8 @@ function SolErdaInput({ value, onChange, disabled }: { value: number; onChange: 
   );
 }
 
-function NumInput({ label, value, onChange, min, max }: {
-  label: string; value: number; onChange: (v: number) => void; min?: number; max?: number;
+function NumInput({ label, value, onChange, min, max, width = 'w-[88px]' }: {
+  label: string; value: number; onChange: (v: number) => void; min?: number; max?: number; width?: string;
 }) {
   const [focused, setFocused] = useState(false);
   const display = focused ? String(value) : value.toLocaleString('ko-KR');
@@ -53,9 +53,36 @@ function NumInput({ label, value, onChange, min, max }: {
         onBlur={() => setFocused(false)}
         onChange={e => {
           const raw = Number(e.target.value.replace(/,/g, ''));
-          if (!isNaN(raw)) onChange(raw);
+          if (!isNaN(raw)) {
+            const clamped = min !== undefined && max !== undefined ? Math.min(Math.max(raw, min), max) : raw;
+            onChange(clamped);
+          }
         }}
-        className="w-[88px] text-center text-[13px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+        className={`${width} text-center text-[13px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400`}
+      />
+    </div>
+  );
+}
+
+function BoosterRateRow({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [focused, setFocused] = useState(false);
+  const pct = Math.round(value * 100);
+  const display = focused ? String(pct) : pct + '%';
+  return (
+    <div className="flex items-center gap-3 py-1">
+      <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap flex-1">보약</label>
+      <input
+        type="text"
+        inputMode="numeric"
+        value={display}
+        onFocus={e => { setFocused(true); e.target.select(); }}
+        onBlur={() => setFocused(false)}
+        onChange={e => {
+          const raw = Number(e.target.value.replace('%', ''));
+          if (!isNaN(raw)) onChange(Math.min(Math.max(raw, 0), 100) / 100);
+        }}
+        style={{ textAlign: 'center' }}
+        className="w-[64px] text-[13px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
       />
     </div>
   );
@@ -101,8 +128,6 @@ export default function InputPanel({ inputs, onChange }: Props) {
           />
         </div>
         <NumInput label="메소마켓 시세" value={inputs.mesoMarketRate} onChange={v => onChange('mesoMarketRate', v)} min={1} />
-        <NumInput label="캐릭터 레벨" value={inputs.charLevel} onChange={v => onChange('charLevel', v)} min={260} max={299} />
-        <NumInput label="하루 소재 횟수" value={inputs.dailySessions} onChange={v => onChange('dailySessions', v)} min={1} />
         <div className="flex items-center gap-3 py-1">
           <div className="flex items-center gap-1 flex-1">
             <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap">솔 에르다 조각</label>
@@ -124,6 +149,7 @@ export default function InputPanel({ inputs, onChange }: Props) {
 
         {/* 지역 / 사냥터 선택 */}
         <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
+          <NumInput label="하루 소재 횟수" value={inputs.dailySessions} onChange={v => onChange('dailySessions', v)} min={1} />
           <div className="flex items-center gap-3 py-1">
             <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap flex-1">지역</label>
             <select
@@ -148,6 +174,45 @@ export default function InputPanel({ inputs, onChange }: Props) {
               ))}
             </select>
           </div>
+        </div>
+
+        {/* 부스터 사용 횟수 */}
+        <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2 space-y-0.5">
+          <p className="text-xs text-orange-500 dark:text-orange-400 font-bold mb-1">30분 내 사용 부스터</p>
+          <NumInput label="황금태엽/VIP/헥사" value={inputs.booster30min} onChange={v => onChange('booster30min', v)} min={0} max={99} width="w-[44px]" />
+          <NumInput label="영겁의 황금태엽" value={inputs.eternal30min} onChange={v => onChange('eternal30min', v)} min={0} max={99} width="w-[44px]" />
+          <p className="text-xs text-orange-500 dark:text-orange-400 font-bold mt-2 mb-1">1일 평균 사용 부스터</p>
+          <NumInput label="황금태엽/VIP/헥사" value={inputs.booster1day} onChange={v => onChange('booster1day', v)} min={0} max={99} width="w-[44px]" />
+          <NumInput label="영겁의 황금태엽" value={inputs.eternal1day} onChange={v => onChange('eternal1day', v)} min={0} max={99} width="w-[44px]" />
+        </div>
+
+        {/* 에픽던전 / 몬스터파크 */}
+        <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
+          <div className="flex items-center gap-3 py-1">
+            <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap flex-1">에픽던전 지역</label>
+            <select
+              value={inputs.epicDungeonZone}
+              onChange={e => onChange('epicDungeonZone', e.target.value)}
+              className={selectCls + ' w-[108px]'}
+            >
+              <option value="하이마운틴">하이마운틴</option>
+              <option value="앵컴">앵글러컴퍼니</option>
+              <option value="악몽선경">악몽선경</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-3 py-1">
+            <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap flex-1">몬파 썬데이</label>
+            <select
+              value={inputs.sunday}
+              onChange={e => onChange('sunday', e.target.value)}
+              className={selectCls + ' w-[108px]'}
+            >
+              <option value="없음">평일</option>
+              <option value="기본">썬데이 (+50%)</option>
+              <option value="스페셜">스페셜 (+250%)</option>
+            </select>
+          </div>
+          <BoosterRateRow value={inputs.boosterRate} onChange={v => onChange('boosterRate', v)} />
         </div>
       </div>
     </div>

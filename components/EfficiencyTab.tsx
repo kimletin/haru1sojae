@@ -89,7 +89,7 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
         </thead>
         <tbody>
           {rows.map((row, i) => (
-            <tr key={i} className={"border-b transition-colors " + (row.isEvent ? "bg-amber-50 dark:bg-amber-900/40 hover:bg-amber-100 border-amber-100 dark:border-amber-800" : "border-gray-50 hover:bg-gray-50 dark:hover:bg-gray-700:bg-gray-700")}>
+            <tr key={i} style={{ height: 36 }} className={"border-b transition-colors " + (row.isEvent ? "bg-amber-50 dark:bg-amber-900/40 hover:bg-amber-100 border-amber-100 dark:border-amber-800" : "border-gray-50 hover:bg-gray-50 dark:hover:bg-gray-700:bg-gray-700")}>
               <td className="px-2 py-1.5 text-center text-gray-800 dark:text-zinc-200">
                 <span className="inline-flex items-center justify-center gap-0.5 flex-wrap">
                   <ItemName name={row.name} />
@@ -231,14 +231,6 @@ export default function EfficiencyTab({ inputs, onChange }: Props) {
     <div className="space-y-3 w-[620px]">
       <EffTable title="경험치 도핑 (30분)" rows={doping30Rows} color="green" />
 
-      <div className="flex flex-wrap items-center justify-center gap-6 px-3 py-2 bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg">
-        <span className="text-xs font-bold text-orange-500 dark:text-orange-400">30분 내 사용 부스터</span>
-        <div className="flex flex-wrap items-center gap-6">
-          <InlineInput label="황금태엽/VIP/헥사" value={inputs.booster30min} onChange={v => onChange('booster30min', v)} min={0} />
-          <InlineInput label="영겹의 황금태엽" value={inputs.eternal30min} onChange={v => onChange('eternal30min', v)} min={0} />
-        </div>
-      </div>
-
       <EffTable title="상위 아이템 효율" rows={marginRows} color="green" />
 
       <EffTable
@@ -253,45 +245,7 @@ export default function EfficiencyTab({ inputs, onChange }: Props) {
         }
       />
 
-      <div className="flex flex-wrap items-center justify-center gap-6 px-3 py-2 bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg">
-        <span className="text-xs font-bold text-orange-500 dark:text-orange-400">1일 평균 사용 부스터</span>
-        <div className="flex flex-wrap items-center gap-6">
-          <InlineInput label="황금태엽/VIP/헥사" value={inputs.booster1day} onChange={v => onChange('booster1day', v)} min={0} />
-          <InlineInput label="영겹의 황금태엽" value={inputs.eternal1day} onChange={v => onChange('eternal1day', v)} min={0} />
-        </div>
-      </div>
-
       <EffTable title="경험치 BM" rows={bmRows} color="orange" />
-
-      <div className="flex flex-wrap items-center justify-center gap-3 px-3 py-2 bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg">
-        <span className="text-xs font-bold text-orange-500 dark:text-orange-400">에픽 던전</span>
-        <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-zinc-400">
-          {'지역'}
-          <select
-            value={inputs.epicDungeonZone}
-            onChange={e => onChange('epicDungeonZone', e.target.value)}
-            className="border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-center text-[13px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          >
-            <option className="text-center" value="하이마운틴">하이마운틴</option>
-            <option className="text-center" value="앵컴">앵글러컴퍼니</option>
-            <option className="text-center" value="악몽선경">악몽선경</option>
-          </select>
-        </label>
-        <span className="text-xs font-bold text-orange-500 dark:text-orange-400 ml-2">몬스터파크</span>
-        <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-zinc-400">
-          {'썬데이'}
-          <select
-            value={inputs.sunday}
-            onChange={e => onChange('sunday', e.target.value)}
-            className="border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-center text-[13px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          >
-            <option className="text-center" value="없음">평일</option>
-            <option className="text-center" value="기본">썬데이 (+50%)</option>
-            <option className="text-center" value="스페셜">스페셜 (+250%)</option>
-          </select>
-        </label>
-        <BoosterRateInput value={inputs.boosterRate} onChange={v => onChange('boosterRate', v)} />
-      </div>
     </div>
   );
 }

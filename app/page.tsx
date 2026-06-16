@@ -12,15 +12,33 @@ import EpicDungeonTab from '@/components/EpicDungeonTab';
 import HuntingGroundTab from '@/components/HuntingGroundTab';
 import InfoCenterTab from '@/components/InfoCenterTab';
 import CharacterSearchModal, { type CharacterInfo } from '@/components/CharacterSearchModal';
+import CharacterCard from '@/components/CharacterCard';
 import { SunIcon, MoonIcon } from '@/components/Icons';
+import type { CharMeta } from '@/types';
 
-const STORAGE_KEY = 'maple-exp-bm-inputs';
-const PRESETS_KEY = 'maple-exp-bm-presets';
-const PRESET_NAMES_KEY = 'maple-exp-bm-preset-names';
-const ACTIVE_PRESET_KEY = 'maple-exp-bm-active-preset';
-const NUM_SLOTS_KEY = 'maple-exp-bm-num-slots';
+const STORAGE_KEY = 'mapleff-inputs';
+const PRESETS_KEY = 'mapleff-presets';
+const PRESET_NAMES_KEY = 'mapleff-preset-names';
+const ACTIVE_PRESET_KEY = 'mapleff-active-preset';
+const NUM_SLOTS_KEY = 'mapleff-num-slots';
+const CHAR_META_KEY = 'mapleff-char-meta';
 const NUM_PRESETS = 5;
-const DEFAULT_NUM_SLOTS = 1;
+const DEFAULT_NUM_SLOTS = 0;
+
+function makeDefaultMetas(): (CharMeta | null)[] {
+  return Array.from({ length: NUM_PRESETS }, () => null);
+}
+
+function loadMetas(): (CharMeta | null)[] {
+  try {
+    const saved = localStorage.getItem(CHAR_META_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length === NUM_PRESETS) return parsed;
+    }
+  } catch {}
+  return makeDefaultMetas();
+}
 
 const DEFAULT_INPUTS: InputValues = {
   waterBottleRate: 0,
@@ -57,7 +75,7 @@ const DEFAULT_INPUTS: InputValues = {
   boosterRate: 0.5,
 };
 
-const DEFAULT_NAMES = ['1', '2', '3', '4', '5'];
+const DEFAULT_NAMES = ['null', 'null', 'null', 'null', 'null'];
 
 function makeDefaultPresets(): InputValues[] {
   return Array.from({ length: NUM_PRESETS }, () => ({ ...DEFAULT_INPUTS }));
@@ -75,7 +93,7 @@ function loadPresets(): { presets: InputValues[]; active: number; names: string[
     if (savedPresets) {
       const parsed = JSON.parse(savedPresets);
       if (Array.isArray(parsed) && parsed.length === NUM_PRESETS) {
-        return { presets: parsed.map(p => ({ ...DEFAULT_INPUTS, ...p })), active, names };
+        return { presets: parsed.map(p => p ? { ...DEFAULT_INPUTS, ...p } : { ...DEFAULT_INPUTS }), active, names };
       }
     }
     const old = localStorage.getItem(STORAGE_KEY);
@@ -119,6 +137,7 @@ const PARAM_TO_TAB: Record<string, Tab> = Object.fromEntries(
 );
 
 export default function Home() {
+  const [mounted, setMounted] = useState(false);
   const [inputs, setInputs] = useState<InputValues>(DEFAULT_INPUTS);
   const [activeTab, setActiveTab] = useState<Tab>(TABS[0]);
   const [darkMode, setDarkMode] = useState(false);
@@ -131,6 +150,7 @@ export default function Home() {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchModalTarget, setSearchModalTarget] = useState(0);
   const [isFirstVisit, setIsFirstVisit] = useState(false);
+  const [charMetas, setCharMetas] = useState<(CharMeta | null)[]>(makeDefaultMetas());
   const presetsRef = useRef<InputValues[]>(makeDefaultPresets());
   const activePresetRef = useRef(0);
 
@@ -151,6 +171,8 @@ export default function Home() {
       setShowSearchModal(true);
     }
 
+    setCharMetas(loadMetas());
+
     const { presets, active, names } = loadPresets();
     presetsRef.current = presets;
     activePresetRef.current = active;
@@ -163,6 +185,8 @@ export default function Home() {
       setDarkMode(true);
       document.documentElement.classList.add('dark');
     }
+
+    setMounted(true);
   }, []);
 
   const handleTabChange = (tab: Tab) => {
@@ -216,10 +240,26 @@ export default function Home() {
     }
     handleNameChange(idx, info.name.slice(0, 12));
     const newPresets = [...presetsRef.current];
-    newPresets[idx] = { ...newPresets[idx], charLevel: Math.min(Math.max(info.level, 260), 299) };
+    newPresets[idx] = { ...newPresets[idx], charLevel: Math.min(Math.max(info.level, 260), 300) };
     presetsRef.current = newPresets;
     savePresets(newPresets);
     if (idx === activePresetRef.current) setInputs(newPresets[idx]);
+
+    // charMeta 저장
+    const meta: CharMeta = {
+      ocid: info.ocid ?? null,
+      image: info.image ?? null,
+      guild: info.guild ?? null,
+      class: info.class ?? null,
+      world: info.world ?? null,
+    };
+    setCharMetas(prev => {
+      const next = [...prev];
+      next[idx] = meta;
+      try { localStorage.setItem(CHAR_META_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+
     setShowSearchModal(false);
     setIsFirstVisit(false);
     handlePresetChange(idx);
@@ -234,6 +274,14 @@ export default function Home() {
 
   const handleDeleteSlot = (idx: number) => {
     if (numSlots <= 1) return;
+
+    // 삭제되는 슬롯의 ocid 캐시 제거
+    const deletedOcid = charMetas[idx]?.ocid;
+    if (deletedOcid) {
+      try { localStorage.removeItem(`maple-hist-past-${deletedOcid}`); } catch {}
+      try { localStorage.removeItem(`maple-ranking-${deletedOcid}`); } catch {}
+    }
+
     const newNames = [...presetNames];
     const newPresets = [...presetsRef.current];
     newNames.splice(idx, 1);
@@ -252,6 +300,16 @@ export default function Home() {
     activePresetRef.current = newActive;
     setActivePreset(newActive);
     setInputs(newPresets[newActive]);
+
+    // charMeta 업데이트
+    setCharMetas(prev => {
+      const next = [...prev];
+      next.splice(idx, 1);
+      next.push(null);
+      try { localStorage.setItem(CHAR_META_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+
     try { localStorage.setItem(ACTIVE_PRESET_KEY, String(newActive)); } catch {}
     try { localStorage.setItem(NUM_SLOTS_KEY, String(newSlots)); } catch {}
   };
@@ -287,13 +345,14 @@ export default function Home() {
 
   const rankedItems = useMemo(() => calcAllItems(inputs), [inputs]);
 
+  if (!mounted) return <div className="min-h-screen bg-gray-50 dark:bg-black" />;
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black">
       {showSearchModal && (
         <CharacterSearchModal
           onConfirm={handleCharacterConfirm}
-          onClose={() => { setShowSearchModal(false); setIsFirstVisit(false); }}
-          onSkip={isFirstVisit ? () => { setShowSearchModal(false); setIsFirstVisit(false); } : undefined}
+          onClose={isFirstVisit ? undefined : () => setShowSearchModal(false)}
         />
       )}
       <header className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-600 sticky top-0 z-10 shadow-sm">
@@ -354,24 +413,20 @@ export default function Home() {
                       : 'border-gray-200 dark:border-zinc-600 bg-gray-50 dark:bg-zinc-800')
                   }
                 >
-                  {numSlots > 1 && (
-                    <span className="px-1.5 cursor-grab text-gray-400 dark:text-zinc-500">
-                      <svg width="8" height="13" viewBox="0 0 8 13" fill="currentColor">
-                        <circle cx="2" cy="2" r="1.2"/><circle cx="6" cy="2" r="1.2"/>
-                        <circle cx="2" cy="6.5" r="1.2"/><circle cx="6" cy="6.5" r="1.2"/>
-                        <circle cx="2" cy="11" r="1.2"/><circle cx="6" cy="11" r="1.2"/>
-                      </svg>
-                    </span>
-                  )}
+                  <span className="px-1.5 cursor-grab text-gray-400 dark:text-zinc-500">
+                    <svg width="8" height="13" viewBox="0 0 8 13" fill="currentColor">
+                      <circle cx="2" cy="2" r="1.2"/><circle cx="6" cy="2" r="1.2"/>
+                      <circle cx="2" cy="6.5" r="1.2"/><circle cx="6" cy="6.5" r="1.2"/>
+                      <circle cx="2" cy="11" r="1.2"/><circle cx="6" cy="11" r="1.2"/>
+                    </svg>
+                  </span>
                   <span className="px-1.5 text-gray-700 dark:text-zinc-300 max-w-[56px] truncate font-semibold">{presetNames[i]}</span>
-                  {numSlots > 1 && (
-                    <button
-                      onClick={() => handleDeleteSlot(i)}
-                      className="px-1.5 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer"
-                    >
-                      ×
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleDeleteSlot(i)}
+className={`px-1.5 transition-colors cursor-pointer ${numSlots === 1 ? 'text-gray-200 dark:text-zinc-700 cursor-not-allowed' : 'text-gray-400 hover:text-red-500 dark:hover:text-red-400'}`}
+                  >
+                    ×
+                  </button>
                 </div>
               ) : (
                 <button
@@ -397,17 +452,28 @@ export default function Home() {
                 +
               </button>
             )}
-            <button
-              onClick={() => setIsEditMode(v => !v)}
-              className="h-7 px-2 text-xs underline transition-colors cursor-pointer text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300"
-            >
-              {isEditMode ? '완료' : '편집'}
-            </button>
+            {numSlots > 0 && (
+              <button
+                onClick={() => setIsEditMode(v => !v)}
+                className="h-7 px-2 text-xs underline transition-colors cursor-pointer text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300"
+              >
+                {isEditMode ? '완료' : '편집'}
+              </button>
+            )}
           </div>}
           {activeTab === TABS[0] ? (
             <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 p-4">
               <div className="flex flex-row gap-6">
                 <main className="min-w-[500px]" style={{flex: "0 0 auto"}}>
+                  {numSlots > 0 && (
+                    <div className="mb-4">
+                      <CharacterCard
+                        name={presetNames[activePreset]}
+                        level={presetsRef.current[activePreset]?.charLevel ?? inputs.charLevel}
+                        meta={charMetas[activePreset]}
+                      />
+                    </div>
+                  )}
                   <EfficiencyTab inputs={inputs} onChange={handleChange} items={rankedItems} />
                 </main>
                 <aside className="w-80 shrink-0 flex flex-col gap-4">

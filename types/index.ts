@@ -41,6 +41,14 @@ export interface InputValues {
   boosterRate: number;          // 보약
 }
 
+export interface CharMeta {
+  ocid: string | null;
+  image: string | null;
+  guild: string | null;
+  class: string | null;
+  world: string | null;
+}
+
 export interface EfficiencyItem {
   name: string;
   category: '30분 도핑' | '30일 도핑' | 'BM' | '마진';
