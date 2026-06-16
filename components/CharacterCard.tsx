@@ -96,8 +96,8 @@ export default function CharacterCard({ name, level, meta }: Props) {
           if (savedDate === kstDate(0)) { setRanking(data); return; }
         }
         const params = new URLSearchParams({ ocid });
-        if (meta.world) params.set('world', meta.world);
-        if (meta.class) params.set('class', meta.class);
+        if (meta?.world) params.set('world', meta.world);
+        if (meta?.class) params.set('class', meta.class);
         const res = await fetch(`/api/character/ranking?${params}`);
         const data: Ranking = await res.json();
         setRanking(data);
