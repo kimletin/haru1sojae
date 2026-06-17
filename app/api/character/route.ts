@@ -19,17 +19,39 @@ function nexonErrorMessage(status: number): { message: string; clientStatus: num
 }
 
 export async function GET(req: NextRequest) {
-  const name = req.nextUrl.searchParams.get('name');
-  if (!name) {
-    return NextResponse.json({ error: '닉네임을 입력하세요' }, { status: 400 });
-  }
-
   const apiKey = process.env.NEXON_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ error: 'API 키가 설정되지 않았습니다' }, { status: 500 });
   }
 
   const headers = { 'x-nxopen-api-key': apiKey };
+
+  // ocid 직접 전달 시: 이미지만 재조회
+  const ocidParam = req.nextUrl.searchParams.get('ocid');
+  if (ocidParam) {
+    try {
+      const charRes = await fetchWithTimeout(
+        `https://open.api.nexon.com/maplestory/v1/character/basic?ocid=${encodeURIComponent(ocidParam)}`,
+        { headers }
+      );
+      if (!charRes.ok) {
+        const { message, clientStatus } = nexonErrorMessage(charRes.status);
+        return NextResponse.json({ error: message }, { status: clientStatus });
+      }
+      const char = await charRes.json();
+      return NextResponse.json({ image: char.character_image ?? null });
+    } catch (e) {
+      if (e instanceof Error && e.name === 'AbortError') {
+        return NextResponse.json({ error: 'API 응답 시간이 초과됐습니다' }, { status: 504 });
+      }
+      return NextResponse.json({ error: '네트워크 오류가 발생했습니다' }, { status: 500 });
+    }
+  }
+
+  const name = req.nextUrl.searchParams.get('name');
+  if (!name) {
+    return NextResponse.json({ error: '닉네임을 입력하세요' }, { status: 400 });
+  }
 
   try {
     const ocidRes = await fetchWithTimeout(

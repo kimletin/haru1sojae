@@ -1,8 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { InputValues, MobGroup } from '@/types';
 import { HUNTING_REGIONS } from '@/data/huntingGrounds';
+
+function TooltipIcon({ text }: { text: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: TouchEvent | MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('touchstart', handler);
+    document.addEventListener('mousedown', handler);
+    return () => {
+      document.removeEventListener('touchstart', handler);
+      document.removeEventListener('mousedown', handler);
+    };
+  }, [open]);
+
+  return (
+    <div className="relative group" ref={ref}>
+      <span
+        className="text-xs text-gray-400 dark:text-zinc-500 border border-gray-300 dark:border-zinc-600 rounded-full w-4 h-4 flex items-center justify-center cursor-default select-none"
+        onClick={() => setOpen(v => !v)}
+      >?</span>
+      <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-52 bg-gray-800 text-white text-[11px] rounded-lg px-2.5 py-2 transition-opacity pointer-events-none z-50 leading-relaxed ${open ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+        {text}
+      </div>
+    </div>
+  );
+}
 
 interface Props {
   inputs: InputValues;
@@ -25,7 +55,7 @@ function SolErdaInput({ value, onChange, disabled }: { value: number; onChange: 
         if (!isNaN(raw)) onChange(Math.min(raw, 10_000_000));
       }}
       className={
-        'w-[88px] text-center text-[13px] border-2 rounded px-1.5 py-0 h-[24px] focus:outline-none ' +
+        'w-[88px] text-center text-[12px] border-2 rounded px-1.5 py-0 h-[24px] focus:outline-none ' +
         (disabled
           ? 'border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-500 cursor-not-allowed'
           : 'border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-yellow-400')
@@ -58,35 +88,12 @@ function NumInput({ label, value, onChange, min, max, width = 'w-[88px]' }: {
             onChange(clamped);
           }
         }}
-        className={`${width} text-center text-[13px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400`}
+        className={`${width} text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400`}
       />
     </div>
   );
 }
 
-function BoosterRateRow({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  const [focused, setFocused] = useState(false);
-  const pct = Math.round(value * 100);
-  const display = focused ? String(pct) : pct + '%';
-  return (
-    <div className="flex items-center gap-3 py-1">
-      <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap flex-1">보약</label>
-      <input
-        type="text"
-        inputMode="numeric"
-        value={display}
-        onFocus={e => { setFocused(true); e.target.select(); }}
-        onBlur={() => setFocused(false)}
-        onChange={e => {
-          const raw = Number(e.target.value.replace('%', ''));
-          if (!isNaN(raw)) onChange(Math.min(Math.max(raw, 0), 100) / 100);
-        }}
-        style={{ textAlign: 'center' }}
-        className="w-[64px] text-[13px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-      />
-    </div>
-  );
-}
 
 export default function InputPanel({ inputs, onChange }: Props) {
   const currentRegion = HUNTING_REGIONS.find(r => r.name === inputs.huntingRegion) ?? HUNTING_REGIONS[0];
@@ -110,7 +117,7 @@ export default function InputPanel({ inputs, onChange }: Props) {
     applyGround(ground);
   };
 
-  const selectCls = 'text-[13px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 cursor-pointer';
+  const selectCls = 'text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 cursor-pointer';
 
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden">
@@ -124,27 +131,33 @@ export default function InputPanel({ inputs, onChange }: Props) {
             type="text"
             value=""
             disabled
-            className="w-[88px] text-center text-[13px] border-2 border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-400 dark:text-zinc-500 cursor-not-allowed"
+            className="w-[88px] text-center text-[12px] border-2 border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-400 dark:text-zinc-500 cursor-not-allowed"
           />
         </div>
         <NumInput label="메소마켓 시세" value={inputs.mesoMarketRate} onChange={v => onChange('mesoMarketRate', v)} min={1} />
         <div className="flex items-center gap-3 py-1">
           <div className="flex items-center gap-1 flex-1">
             <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap">솔 에르다 조각</label>
-            <div className="relative group">
-              <span className="text-xs text-gray-400 dark:text-zinc-500 border border-gray-300 dark:border-zinc-600 rounded-full w-4 h-4 flex items-center justify-center cursor-default select-none">?</span>
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-52 bg-gray-800 dark:bg-zinc-700 text-white text-xs rounded-lg px-2.5 py-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 leading-relaxed">
-                솔 에르다 조각을 사용할 캐릭터라면 체크박스를 클릭하세요.<br />교환불가 아이템이므로 사용하지 않을 캐릭터는 체크박스를 해제하세요.
-              </div>
-            </div>
+            <TooltipIcon text={<>솔 에르다 조각을 사용할 캐릭터라면<br />체크박스를 클릭하세요.<br />교환불가 아이템이므로 사용하지 않을<br />캐릭터는 체크박스를 해제하세요.</>} />
           </div>
-          <input
-            type="checkbox"
-            checked={inputs.useSolErda ?? true}
-            onChange={e => onChange('useSolErda', e.target.checked as unknown as number)}
-            className="w-4 h-4 accent-orange-500 cursor-pointer"
-          />
-          <SolErdaInput value={inputs.priceSolErda ?? 0} onChange={v => onChange('priceSolErda', v)} disabled={!(inputs.useSolErda ?? true)} />
+          <div className="flex items-center gap-1.5">
+            <label className="relative w-4 h-4 cursor-pointer shrink-0">
+              <input
+                type="checkbox"
+                checked={inputs.useSolErda ?? true}
+                onChange={e => onChange('useSolErda', e.target.checked as unknown as number)}
+                className="absolute opacity-0 w-0 h-0"
+              />
+              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${(inputs.useSolErda ?? true) ? 'bg-orange-500 border-orange-500' : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600'}`}>
+                {(inputs.useSolErda ?? true) && (
+                  <svg className="w-2.5 h-2.5" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </div>
+            </label>
+            <SolErdaInput value={inputs.priceSolErda ?? 0} onChange={v => onChange('priceSolErda', v)} disabled={!(inputs.useSolErda ?? true)} />
+          </div>
         </div>
 
         {/* 지역 / 사냥터 선택 */}
@@ -189,30 +202,57 @@ export default function InputPanel({ inputs, onChange }: Props) {
         {/* 에픽던전 / 몬스터파크 */}
         <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
           <div className="flex items-center gap-3 py-1">
-            <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap flex-1">에픽던전 지역</label>
-            <select
-              value={inputs.epicDungeonZone}
-              onChange={e => onChange('epicDungeonZone', e.target.value)}
-              className={selectCls + ' w-[108px]'}
-            >
-              <option value="하이마운틴">하이마운틴</option>
-              <option value="앵컴">앵글러컴퍼니</option>
-              <option value="악몽선경">악몽선경</option>
-            </select>
+            <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap flex-1">에픽 던전</label>
+            <div className="flex gap-1">
+              {([
+                { val: '하이마운틴', label: '하마' },
+                { val: '앵컴',       label: '앵컴' },
+                { val: '악몽선경',   label: '선경' },
+              ] as const).map(({ val, label }) => (
+                <button
+                  key={val}
+                  onClick={() => onChange('epicDungeonZone', val)}
+                  className={
+                    'px-2 py-0 h-[24px] text-[12px] font-medium rounded border-2 transition-colors cursor-pointer ' +
+                    (inputs.epicDungeonZone === val
+                      ? 'bg-orange-500 border-orange-500 text-white'
+                      : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400 dark:hover:border-orange-400')
+                  }
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="flex items-center gap-3 py-1">
-            <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap flex-1">몬파 썬데이</label>
-            <select
-              value={inputs.sunday}
-              onChange={e => onChange('sunday', e.target.value)}
-              className={selectCls + ' w-[108px]'}
-            >
-              <option value="없음">평일</option>
-              <option value="기본">썬데이 (+50%)</option>
-              <option value="스페셜">스페셜 (+250%)</option>
-            </select>
+            <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap flex-1">썬데이 몬파</label>
+            <div className="flex gap-1">
+              {([
+                { val: '없음',   label: '평일',   tip: null },
+                { val: '기본',   label: '기본',   tip: '+50%' },
+                { val: '스페셜', label: '스페셜', tip: '+300%' },
+              ] as const).map(({ val, label, tip }) => (
+                <div key={val} className="relative group flex items-center">
+                  <button
+                    onClick={() => onChange('sunday', val)}
+                    className={
+                      'px-2 py-0 h-[24px] text-[12px] font-medium rounded border-2 transition-colors cursor-pointer ' +
+                      (inputs.sunday === val
+                        ? 'bg-orange-500 border-orange-500 text-white'
+                        : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400 dark:hover:border-orange-400')
+                    }
+                  >
+                    {label}
+                  </button>
+                  {tip && (
+                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-16 bg-gray-800 text-white text-[11px] rounded-lg px-2.5 py-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center leading-relaxed">
+                      {tip}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-          <BoosterRateRow value={inputs.boosterRate} onChange={v => onChange('boosterRate', v)} />
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -23,6 +24,17 @@ body {
 
 html {
   overflow-x: auto;
+  font-size: 15px;
+}
+
+/* 카드 제목은 원래 크기(14px) 유지 */
+.bg-orange-200 h3 {
+  font-size: 14px !important;
+}
+
+/* 캐릭터 정보 카드는 폰트 크기 변경 없음 */
+.character-card {
+  font-size: 16px;
 }
 
 input[type="number"] {

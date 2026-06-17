@@ -99,13 +99,12 @@ export function getVipEfficiency(inputs: InputValues): number {
 export function getMonsterParkExp(
   charLevel: number,
   sunday: SundayType,
-  boosterRate: number
+  monsterParkBonus: number = 0  // API에서 받은 % 값
 ): number {
   const zone = getMonsterParkZone(charLevel);
   const base = MONSTER_PARK_EXP[zone] ?? 0;
-  const sundayBonus = sunday === '기본' ? 0.5 : sunday === '스페셜' ? 3 : 0;
-  const boosterBonus = boosterRate;
-  return base * (1 + sundayBonus + boosterBonus);
+  const sundayBonus = sunday === '기본' ? 0.5 : sunday === '스페셜' ? 3.0 : 0;
+  return base * (1 + sundayBonus + monsterParkBonus / 100);
 }
 
 /** 에픽 던전 데이터 조회 */
@@ -155,7 +154,7 @@ export function getMekaberryExp(charLevel: number): number {
 }
 
 /** 전체 가성비 아이템 목록 계산 */
-export function calcAllItems(inputs: InputValues): EfficiencyItem[] {
+export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0): EfficiencyItem[] {
   const vipEff = getVipEfficiency(inputs);
   const base30 = getBase30MinExp(inputs);
   const base30d = getBase30DayExp(inputs);
@@ -170,7 +169,7 @@ export function calcAllItems(inputs: InputValues): EfficiencyItem[] {
     return { name, category, exp, priceMeso, efficiency, ratio: vipEff > 0 ? efficiency / vipEff : 0 };
   };
 
-  const { epicDungeonZone, charLevel, mesoMarketRate, sunday, boosterRate } = inputs;
+  const { epicDungeonZone, charLevel, mesoMarketRate, sunday } = inputs;
   const epicName = epicDungeonZone === '앵컴' ? '앵글러컴퍼니' : epicDungeonZone;
 
   const stage01Exp   = getEpicDungeonStage01Exp(epicDungeonZone, charLevel);
@@ -179,7 +178,7 @@ export function calcAllItems(inputs: InputValues): EfficiencyItem[] {
   const stage01Price = getEpicDungeonStage01Price(epicDungeonZone, mesoMarketRate, solErdaPrice);
   const stage12Price = getEpicDungeonStage12Price(epicDungeonZone, mesoMarketRate, solErdaPrice);
 
-  const parkExp   = getMonsterParkExp(charLevel, sunday, boosterRate);
+  const parkExp   = getMonsterParkExp(charLevel, sunday, monsterParkBonus);
   const parkZone  = getMonsterParkZone(charLevel);
   const parkPrice = mepoToMeso(600, mesoMarketRate);
 
@@ -202,10 +201,10 @@ export function calcAllItems(inputs: InputValues): EfficiencyItem[] {
     // 30일 도핑
     item('사냥 칭호',           '30일 도핑', base30d * 1,    inputs.priceHunterTitle),
     item('혈맹의 반지(메소)',    '30일 도핑', base30d * 0.1,  inputs.priceBloodRingMeso),
-    item('부스트링(메소)',       '30일 도핑', base30d * 0.15, inputs.priceBoostringMeso),
+    item('경험치 부스트링(메소)',       '30일 도핑', base30d * 0.15, inputs.priceBoostringMeso),
     item('정펜(메소)',           '30일 도핑', base30d * 0.3,  inputs.priceJungpenMeso),
     item('혈맹의 반지(메포)',    '30일 도핑', base30d * 0.1,  bloodRingMetaPrice),
-    item('부스트링(메포)',       '30일 도핑', base30d * 0.15, boostringMetaPrice),
+    item('경험치 부스트링(메포)',       '30일 도핑', base30d * 0.15, boostringMetaPrice),
     item('정펜(메포)',           '30일 도핑', base30d * 0.3,  jungpenMetaPrice),
     // BM
     item(`${epicName} 0→1단계`, 'BM', stage01Exp, stage01Price),

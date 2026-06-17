@@ -1,11 +1,23 @@
-// 익스프레스 부스터 몬스터 레벨별 경험치
-export const EXPRESS_BOOSTER_EXP: Record<number, number> = {
-  260: 331288512,  261: 336055680,  262: 340830528,  263: 345638976,  264: 351054528,
-  265: 454179859,  266: 460416355,  267: 466676698,  268: 473747597,  269: 480079699,
-  270: 657274330,  271: 666983386,  272: 675664819,  273: 684404851,  274: 694285133,
-  275: 780332851,  276: 790168781,  277: 801295488,  278: 811235174,  279: 822451661,
-  280: 824646480,  281: 835899360,  282: 845944320,  283: 857282400,  284: 867426720,
-  285: 975111600,  286: 986472960,  287: 999300240,  288: 1012206240, 289: 1023717360,
-  290: 1058364614, 291: 1070220250, 292: 1083644890, 293: 1097150122, 294: 1109186813,
-  295: 1109186813, 296: 1109186813, 297: 1109186813, 298: 1109186813, 299: 1109186813,
-};
+import { MONSTER_EXP } from './monsterExp';
+
+// 레벨 구간별 배율 (동렙 몬스터 경험치 기준)
+function getMultiplier(lv: number): number {
+  if (lv <= 264) return 192;
+  if (lv <= 269) return 220.8;
+  if (lv <= 279) return 268.8;
+  if (lv <= 289) return 240;
+  return 220.8; // 290-294
+}
+
+const MONSTERS_PER_USE = 190;
+
+// 295 이상은 294 경험치와 동일
+const exp294 = Math.round((MONSTER_EXP[294] ?? 0) * getMultiplier(294) * MONSTERS_PER_USE);
+
+export const EXPRESS_BOOSTER_EXP: Record<number, number> = Object.fromEntries(
+  Array.from({ length: 40 }, (_, i) => i + 260).map(lv => {
+    if (lv >= 295) return [lv, exp294];
+    const val = Math.round((MONSTER_EXP[lv] ?? 0) * getMultiplier(lv) * MONSTERS_PER_USE);
+    return [lv, val];
+  })
+);

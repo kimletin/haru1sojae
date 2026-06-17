@@ -1,11 +1,11 @@
 const ZONE_COLORS: Record<string, { bg: string; text: string }> = {
-  '세르니움':   { bg: 'bg-yellow-400',  text: 'text-black' },
-  '아르크스':   { bg: 'bg-orange-400',  text: 'text-black' },
-  '오디움':     { bg: 'bg-lime-400',    text: 'text-black' },
-  '도원경':     { bg: 'bg-pink-300',    text: 'text-black' },
-  '아르테리아': { bg: 'bg-blue-500',    text: 'text-black' },
-  '카르시온':   { bg: 'bg-blue-800',    text: 'text-black' },
-  '탈라하트':   { bg: 'bg-gray-400',    text: 'text-black' },
+  '세르니움':   { bg: 'bg-rose-500', text: 'text-white' },
+  '아르크스':   { bg: 'bg-rose-500', text: 'text-white' },
+  '오디움':     { bg: 'bg-rose-500', text: 'text-white' },
+  '도원경':     { bg: 'bg-rose-500', text: 'text-white' },
+  '아르테리아': { bg: 'bg-rose-500', text: 'text-white' },
+  '카르시온':   { bg: 'bg-rose-500', text: 'text-white' },
+  '탈라하트':   { bg: 'bg-rose-500', text: 'text-white' },
 };
 
 export default function ItemName({ name }: { name: string }) {
@@ -26,7 +26,12 @@ export default function ItemName({ name }: { name: string }) {
     return (
       <>
         {name.replace('(메소)', '')}
-        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-yellow-400 text-black text-[10px] font-bold ml-1 shrink-0">M</span>
+        <span className="relative group inline-flex items-center justify-center w-4 h-4 rounded bg-amber-500 text-white text-[10px] font-bold ml-0.5 shrink-0 cursor-default">
+          M
+          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 bg-gray-800 text-white text-[11px] rounded-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50">
+            메소
+          </span>
+        </span>
       </>
     );
   }
@@ -34,7 +39,12 @@ export default function ItemName({ name }: { name: string }) {
     return (
       <>
         {name.replace('(메포)', '')}
-        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-500 text-black text-[10px] font-bold ml-1 shrink-0">P</span>
+        <span className="relative group inline-flex items-center justify-center w-4 h-4 rounded bg-red-500 text-white text-[10px] font-bold ml-0.5 shrink-0 cursor-default">
+          P
+          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 bg-gray-800 text-white text-[11px] rounded-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50">
+            메이플포인트
+          </span>
+        </span>
       </>
     );
   }

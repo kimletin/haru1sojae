@@ -33,7 +33,7 @@ function rankColor(rank: number, total: number): string {
 
 function RankBadge({ rank }: { rank: number }) {
   return (
-    <span className="min-w-[20px] h-5 px-1 rounded-full bg-orange-500 text-white text-xs flex items-center justify-center shrink-0 font-bold">
+    <span className="min-w-[20px] h-5 px-1 rounded bg-orange-500 text-white text-xs flex items-center justify-center shrink-0 font-bold">
       {rank}
     </span>
   );
@@ -41,11 +41,11 @@ function RankBadge({ rank }: { rank: number }) {
 
 export default function RankingPanel({ items }: Props) {
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden flex flex-col flex-1">
+    <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden flex flex-col">
       <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5">
         <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">가성비 순위</h3>
       </div>
-      <div className="flex-1 overflow-y-auto">
+      <div>
         {items.map((item, i) => (
           <div
             key={item.name}

@@ -44,9 +44,15 @@ export interface InputValues {
 export interface CharMeta {
   ocid: string | null;
   image: string | null;
+  imageUpdatedAt: number | null;
   guild: string | null;
   class: string | null;
   world: string | null;
+  monsterParkBonus: number | null;
+  epicDungeonBonus: number | null;
+  monsterParkBonuses: { name: string; pct: number; icon: string | null }[] | null;
+  epicDungeonBonuses: { name: string; pct: number; icon: string | null }[] | null;
+  skillUpdatedAt: number | null;
 }
 
 export interface EfficiencyItem {

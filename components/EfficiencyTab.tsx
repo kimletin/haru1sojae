@@ -4,14 +4,7 @@ import { useState } from 'react';
 import { InputValues, EfficiencyItem } from '@/types';
 import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency } from '@/lib/calculator';
 import { getMonsterParkZone } from '@/data/monsterPark';
-
-function fmt(n: number): string {
-  if (n === 0) return '0';
-  if (Math.abs(n) >= 1e12) return (n / 1e12).toFixed(2) + '조';
-  if (Math.abs(n) >= 1e8)  return (n / 1e8).toFixed(2) + '억';
-  if (Math.abs(n) >= 1e4)  return n.toLocaleString('ko-KR');
-  return n.toFixed(0);
-}
+import Num from '@/components/Num';
 
 function fmtMeso(n: number): string {
   if (n <= 0) return '-';
@@ -45,7 +38,7 @@ function PriceInput({ value, onEdit }: { value: number; onEdit: (v: number) => v
         const raw = Number(e.target.value.replace(/,/g, ''));
         if (!isNaN(raw)) onEdit(Math.min(raw, 9_999_999_999));
       }}
-      className="w-[108px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-center text-[13px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+      className="w-[108px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-center text-[12px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
     />
   );
 }
@@ -72,10 +65,10 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
       </div>
       <table className="table-fixed w-full text-sm border-collapse">
         <colgroup>
-          <col style={{width: hasRate ? '160px' : '230px'}} />
-          {hasRate && <col style={{width:'70px'}} />}
-          <col style={{width:'110px'}} />
-          <col style={{width:'160px'}} />
+          <col style={{width: hasRate ? '150px' : '200px'}} />
+          {hasRate && <col style={{width:'60px'}} />}
+          <col style={{width:'100px'}} />
+          <col style={{width:'140px'}} />
           <col style={{width:'110px'}} />
         </colgroup>
         <thead>
@@ -101,7 +94,7 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
                   {row.rate !== undefined && (typeof row.rate === 'string' ? row.rate : '+' + (Number(row.rate) * 100).toFixed(0) + '%')}
                 </td>
               )}
-              <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300 whitespace-nowrap">{fmt(row.exp)}</td>
+              <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300 whitespace-nowrap"><Num n={row.exp} /></td>
               <td className="px-2 py-1.5 text-center">
                 {row.editable && row.onEdit ? (
                   <PriceInput value={row.inputValue ?? 0} onEdit={row.onEdit} />
@@ -138,7 +131,7 @@ function InlineInput({ label, value, onChange, min = 0, max = 99 }: {
           const raw = Number(e.target.value.replace(/,/g, ''));
           if (!isNaN(raw)) onChange(Math.min(Math.max(raw, min), max));
         }}
-        className="w-10 border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-center text-[13px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+        className="w-10 border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-center text-[12px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
       />
     </label>
   );
@@ -151,6 +144,7 @@ interface Props {
   inputs: InputValues;
   onChange: (key: keyof InputValues, value: number | string | boolean | MobGroup[]) => void;
   items: EfficiencyItem[];
+  monsterParkBonus?: number;
 }
 
 function BoosterRateInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
@@ -170,14 +164,14 @@ function BoosterRateInput({ value, onChange }: { value: number; onChange: (v: nu
           const raw = Number(e.target.value.replace(/,/g, ''));
           if (!isNaN(raw)) onChange(Math.min(Math.max(raw, 0), 100) / 100);
         }}
-        className="w-10 border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-center text-[13px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+        className="w-10 border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-center text-[12px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
       />
       %
     </label>
   );
 }
 
-export default function EfficiencyTab({ inputs, onChange }: Props) {
+export default function EfficiencyTab({ inputs, onChange, monsterParkBonus = 0 }: Props) {
   const vipEff = getVipEfficiency(inputs);
   const base30 = getBase30MinExp(inputs);
   const base30d = getBase30DayExp(inputs);
@@ -208,16 +202,16 @@ export default function EfficiencyTab({ inputs, onChange }: Props) {
   const doping30dRows: TableRow[] = [
     { name: '사냥 칭호',          rate: 1,    ...effRow(base30d * 1,    inputs.priceHunterTitle), editable: true, inputValue: inputs.priceHunterTitle, onEdit: v => onChange('priceHunterTitle', v) },
     { name: '혈맹의 반지(메소)', rate: 0.1, ...effRow(base30d * 0.1, inputs.priceBloodRingMeso), editable: true, inputValue: inputs.priceBloodRingMeso, onEdit: v => onChange('priceBloodRingMeso', v) },
-    { name: '부스트링(메소)', rate: 0.15, ...effRow(base30d * 0.15, inputs.priceBoostringMeso), editable: true, inputValue: inputs.priceBoostringMeso, onEdit: v => onChange('priceBoostringMeso', v) },
-    { name: '정펜(메소)',          rate: 0.3,  ...effRow(base30d * 0.3,  inputs.priceJungpenMeso), editable: true, inputValue: inputs.priceJungpenMeso, onEdit: v => onChange('priceJungpenMeso', v) },
+    { name: '경험치 부스트링(메소)', rate: 0.15, ...effRow(base30d * 0.15, inputs.priceBoostringMeso), editable: true, inputValue: inputs.priceBoostringMeso, onEdit: v => onChange('priceBoostringMeso', v) },
+    { name: '정령의 펜던트(메소)',          rate: 0.3,  ...effRow(base30d * 0.3,  inputs.priceJungpenMeso), editable: true, inputValue: inputs.priceJungpenMeso, onEdit: v => onChange('priceJungpenMeso', v) },
     { name: '혈맹의 반지(메포)', rate: 0.1, ...effRow(base30d * 0.1,  mepoToMeso(5900,  inputs.mesoMarketRate)) },
-    { name: '부스트링(메포)', rate: 0.15, ...effRow(base30d * 0.15, mepoToMeso(29900, inputs.mesoMarketRate)) },
-    { name: '정펜(메포)',          rate: 0.3,  ...effRow(base30d * 0.3,  mepoToMeso(49900, inputs.mesoMarketRate)) },
+    { name: '경험치 부스트링(메포)', rate: 0.15, ...effRow(base30d * 0.15, mepoToMeso(29900, inputs.mesoMarketRate)) },
+    { name: '정령의 펜던트(메포)',          rate: 0.3,  ...effRow(base30d * 0.3,  mepoToMeso(49900, inputs.mesoMarketRate)) },
   ];
 
   const epicName = inputs.epicDungeonZone === '앵컴' ? '앵글러컴퍼니' : inputs.epicDungeonZone;
   const parkZone = getMonsterParkZone(inputs.charLevel);
-  const parkExp  = getMonsterParkExp(inputs.charLevel, inputs.sunday, inputs.boosterRate);
+  const parkExp  = getMonsterParkExp(inputs.charLevel, inputs.sunday, monsterParkBonus);
   const vipExp   = getVipSaunaExp(inputs.charLevel);
 
   const bmRows: TableRow[] = [
@@ -228,7 +222,7 @@ export default function EfficiencyTab({ inputs, onChange }: Props) {
   ];
 
   return (
-    <div className="space-y-3 w-[620px]">
+    <div className="space-y-4 w-[560px]">
       <EffTable title="경험치 도핑 (30분)" rows={doping30Rows} color="green" />
 
       <EffTable title="상위 아이템 효율" rows={marginRows} color="green" />
@@ -237,12 +231,6 @@ export default function EfficiencyTab({ inputs, onChange }: Props) {
         title="경험치 도핑 (30일)"
         rows={doping30dRows}
         color="blue"
-        headerExtra={
-          <span className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-zinc-400">
-            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-yellow-400 text-black text-[10px] font-bold">M</span>메소
-            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-500 text-black text-[10px] font-bold">P</span>메포
-          </span>
-        }
       />
 
       <EffTable title="경험치 BM" rows={bmRows} color="orange" />

@@ -10,6 +10,8 @@ export interface CharacterInfo {
   image?: string | null;
   ocid?: string | null;
   guild?: string | null;
+  monsterParkBonus?: number;
+  epicDungeonBonus?: number;
 }
 
 interface Props {
@@ -25,6 +27,8 @@ export default function CharacterSearchModal({ onConfirm, onClose, onSkip }: Pro
   const [result, setResult] = useState<CharacterInfo | null>(null);
   const [manualLevel, setManualLevel] = useState('');
   const [manualName, setManualName] = useState('');
+  const [manualMonsterPark, setManualMonsterPark] = useState('');
+  const [manualEpicDungeon, setManualEpicDungeon] = useState('');
   const [showManual, setShowManual] = useState(false);
 
   const handleSearch = async () => {
@@ -49,7 +53,7 @@ export default function CharacterSearchModal({ onConfirm, onClose, onSkip }: Pro
   };
 
   const manualLv = parseInt(manualLevel);
-  const manualValid = manualLv >= 260 && manualLv <= 299 && manualName.trim().length > 0;
+  const manualValid = manualLv >= 260 && manualLv < 300 && manualName.trim().length > 0;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -71,6 +75,7 @@ export default function CharacterSearchModal({ onConfirm, onClose, onSkip }: Pro
           <input
             type="text"
             placeholder="닉네임 입력"
+            maxLength={12}
             value={query}
             autoFocus
             onChange={e => setQuery(e.target.value)}
@@ -116,10 +121,11 @@ export default function CharacterSearchModal({ onConfirm, onClose, onSkip }: Pro
                 )}
               </div>
               <button
-                onClick={() => onConfirm(result)}
-                className="mt-2.5 w-full py-1.5 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 cursor-pointer transition-colors"
+                onClick={() => { if (result.level < 300) onConfirm(result); }}
+                disabled={result.level >= 300}
+                className="mt-2.5 w-full py-1.5 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                추가
+                {result.level >= 300 ? '만렙을 축하합니다 🎉' : '추가'}
               </button>
             </div>
           </div>
@@ -141,30 +147,69 @@ export default function CharacterSearchModal({ onConfirm, onClose, onSkip }: Pro
         {showManual && (
           <div className="flex gap-2 mt-2 items-stretch">
             <div className="flex flex-col gap-2 flex-1 min-w-0">
-              <input
-                type="text"
-                placeholder="닉네임"
-                value={manualName}
-                onChange={e => setManualName(e.target.value)}
-                className="w-full border border-gray-300 dark:border-zinc-600 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-              />
-              <input
-                type="number"
-                placeholder="레벨 (260~299)"
-                value={manualLevel}
-                min={260}
-                max={299}
-                onChange={e => setManualLevel(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && manualValid)
-                    onConfirm({ name: manualName.trim(), level: manualLv, class: '', world: '' });
-                }}
-                style={{ textAlign: 'left' }}
-                className="w-full border border-gray-300 dark:border-zinc-600 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-              />
+              {/* 1행: 닉네임 + 레벨 */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="닉네임"
+                  maxLength={12}
+                  value={manualName}
+                  onChange={e => setManualName(e.target.value)}
+                  className="flex-1 min-w-0 border border-gray-300 dark:border-zinc-600 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="레벨"
+                  value={manualLevel}
+                  onChange={e => {
+                    const v = e.target.value.replace(/[^0-9]/g, '');
+                    if (v === '' || parseInt(v) <= 300) setManualLevel(v);
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && manualValid)
+                      onConfirm({ name: manualName.trim(), level: manualLv, class: '', world: '', monsterParkBonus: manualMonsterPark ? parseInt(manualMonsterPark) : 0, epicDungeonBonus: manualEpicDungeon ? parseInt(manualEpicDungeon) : 0 });
+                  }}
+                  className="flex-1 min-w-0 border border-gray-300 dark:border-zinc-600 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                />
+              </div>
+              {/* 2행: 몬파 보약 + 에픽 보약 */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="몬파 보약 (%)"
+                  value={manualMonsterPark}
+                  onChange={e => {
+                    const v = e.target.value.replace(/[^0-9]/g, '');
+                    if (v === '' || parseInt(v) <= 999) setManualMonsterPark(v);
+                  }}
+                  className="flex-1 min-w-0 border border-gray-300 dark:border-zinc-600 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                />
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="에던 보약 (%)"
+                  value={manualEpicDungeon}
+                  onChange={e => {
+                    const v = e.target.value.replace(/[^0-9]/g, '');
+                    if (v === '' || parseInt(v) <= 999) setManualEpicDungeon(v);
+                  }}
+                  className="flex-1 min-w-0 border border-gray-300 dark:border-zinc-600 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                />
+              </div>
             </div>
             <button
-              onClick={() => { if (manualValid) onConfirm({ name: manualName.trim(), level: manualLv, class: '', world: '' }); }}
+              onClick={() => {
+                if (manualValid) onConfirm({
+                  name: manualName.trim(),
+                  level: manualLv,
+                  class: '',
+                  world: '',
+                  monsterParkBonus: manualMonsterPark ? parseInt(manualMonsterPark) : 0,
+                  epicDungeonBonus: manualEpicDungeon ? parseInt(manualEpicDungeon) : 0,
+                });
+              }}
               disabled={!manualValid}
               className="px-3 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 disabled:opacity-50 cursor-pointer transition-colors whitespace-nowrap shrink-0"
             >

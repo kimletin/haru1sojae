@@ -7,8 +7,7 @@ import InputPanel from '@/components/InputPanel';
 import RankingPanel from '@/components/RankingPanel';
 import EfficiencyTab from '@/components/EfficiencyTab';
 import ExpInfoTab from '@/components/ExpInfoTab';
-import BMExpTab from '@/components/BMExpTab';
-import EpicDungeonTab from '@/components/EpicDungeonTab';
+import ExpContentsTab from '@/components/ExpContentsTab';
 import HuntingGroundTab from '@/components/HuntingGroundTab';
 import InfoCenterTab from '@/components/InfoCenterTab';
 import CharacterSearchModal, { type CharacterInfo } from '@/components/CharacterSearchModal';
@@ -16,13 +15,16 @@ import CharacterCard from '@/components/CharacterCard';
 import { SunIcon, MoonIcon } from '@/components/Icons';
 import type { CharMeta } from '@/types';
 
-const STORAGE_KEY = 'mapleff-inputs';
-const PRESETS_KEY = 'mapleff-presets';
-const PRESET_NAMES_KEY = 'mapleff-preset-names';
-const ACTIVE_PRESET_KEY = 'mapleff-active-preset';
-const NUM_SLOTS_KEY = 'mapleff-num-slots';
-const CHAR_META_KEY = 'mapleff-char-meta';
-const NUM_PRESETS = 5;
+// 세션 내 오늘 경험치 조회 완료된 ocid (새로고침 시 초기화)
+const sessionTodayFetched = new Set<string>();
+
+const STORAGE_KEY = 'haru1sojae-inputs';
+const PRESETS_KEY = 'haru1sojae-presets';
+const PRESET_NAMES_KEY = 'haru1sojae-preset-names';
+const ACTIVE_PRESET_KEY = 'haru1sojae-active-preset';
+const NUM_SLOTS_KEY = 'haru1sojae-num-slots';
+const CHAR_META_KEY = 'haru1sojae-char-meta';
+const NUM_PRESETS = 6;
 const DEFAULT_NUM_SLOTS = 0;
 
 function makeDefaultMetas(): (CharMeta | null)[] {
@@ -75,7 +77,7 @@ const DEFAULT_INPUTS: InputValues = {
   boosterRate: 0.5,
 };
 
-const DEFAULT_NAMES = ['null', 'null', 'null', 'null', 'null'];
+const DEFAULT_NAMES = ['null', 'null', 'null', 'null', 'null', 'null'];
 
 function makeDefaultPresets(): InputValues[] {
   return Array.from({ length: NUM_PRESETS }, () => ({ ...DEFAULT_INPUTS }));
@@ -116,21 +118,19 @@ function saveNames(names: string[]) {
 
 const TABS = [
   '경험치 효율표',
+  '경험치 컨텐츠',
   '경험치 정보',
-  'BM 경험치',
-  '에픽 던전',
-  '사냥터',
+  '사냥터 정보',
   '정보 센터',
 ] as const;
 type Tab = typeof TABS[number];
 
 const TAB_PARAM: Record<Tab, string> = {
-  '경험치 효율표': 'eff',
-  '경험치 정보':   'exp',
-  'BM 경험치':    'bm',
-  '에픽 던전':     'epic',
-  '사냥터':        'hunt',
-  '정보 센터':     'info',
+  '경험치 효율표':  'eff',
+  '경험치 컨텐츠':  'cont',
+  '경험치 정보':    'exp',
+  '사냥터 정보':    'hunt',
+  '정보 센터':      'info',
 };
 const PARAM_TO_TAB: Record<string, Tab> = Object.fromEntries(
   Object.entries(TAB_PARAM).map(([k, v]) => [v, k as Tab])
@@ -151,6 +151,7 @@ export default function Home() {
   const [searchModalTarget, setSearchModalTarget] = useState(0);
   const [isFirstVisit, setIsFirstVisit] = useState(false);
   const [charMetas, setCharMetas] = useState<(CharMeta | null)[]>(makeDefaultMetas());
+  const [todayExpRate, setTodayExpRate] = useState<number | null>(null);
   const presetsRef = useRef<InputValues[]>(makeDefaultPresets());
   const activePresetRef = useRef(0);
 
@@ -159,7 +160,7 @@ export default function Home() {
     const tab = PARAM_TO_TAB[params.get('tab') ?? ''];
     const initialTab = tab ?? TABS[0];
     if (tab) setActiveTab(tab);
-    document.title = `${initialTab} | MaplEFF`;
+    document.title = `${initialTab} | 하루1소재`;
 
     const savedSlots = parseInt(localStorage.getItem(NUM_SLOTS_KEY) ?? '');
     if (!isNaN(savedSlots)) setNumSlots(Math.min(Math.max(savedSlots, 1), NUM_PRESETS));
@@ -189,9 +190,13 @@ export default function Home() {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    document.title = `${presetNames[activePreset]} | ${activeTab} | 하루1소재`;
+  }, [activeTab, activePreset, presetNames]);
+
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
-    document.title = `${tab} | MaplEFF`;
+    document.title = `${tab} | 하루1소재`;
     const url = new URL(window.location.href);
     if (tab === TABS[0]) {
       url.searchParams.delete('tab');
@@ -246,12 +251,20 @@ export default function Home() {
     if (idx === activePresetRef.current) setInputs(newPresets[idx]);
 
     // charMeta 저장
+    const mpBonus = info.monsterParkBonus ?? 0;
+    const epBonus = info.epicDungeonBonus ?? 0;
     const meta: CharMeta = {
       ocid: info.ocid ?? null,
       image: info.image ?? null,
+      imageUpdatedAt: Date.now(),
       guild: info.guild ?? null,
       class: info.class ?? null,
       world: info.world ?? null,
+      monsterParkBonus: mpBonus || null,
+      epicDungeonBonus: epBonus || null,
+      monsterParkBonuses: mpBonus > 0 ? [{ name: '몬파 보약', pct: mpBonus, icon: null }] : null,
+      epicDungeonBonuses: epBonus > 0 ? [{ name: '에던 보약', pct: epBonus, icon: null }] : null,
+      skillUpdatedAt: mpBonus > 0 || epBonus > 0 ? Date.now() : null,
     };
     setCharMetas(prev => {
       const next = [...prev];
@@ -272,6 +285,15 @@ export default function Home() {
     setShowSearchModal(true);
   };
 
+  const handleMetaUpdate = (idx: number, patch: Partial<CharMeta>) => {
+    setCharMetas(prev => {
+      const next = [...prev];
+      if (next[idx]) next[idx] = { ...next[idx]!, ...patch };
+      try { localStorage.setItem(CHAR_META_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
   const handleDeleteSlot = (idx: number) => {
     if (numSlots <= 1) return;
 
@@ -279,6 +301,7 @@ export default function Home() {
     const deletedOcid = charMetas[idx]?.ocid;
     if (deletedOcid) {
       try { localStorage.removeItem(`maple-hist-past-${deletedOcid}`); } catch {}
+      try { localStorage.removeItem(`maple-hist-today-${deletedOcid}`); } catch {}
       try { localStorage.removeItem(`maple-ranking-${deletedOcid}`); } catch {}
     }
 
@@ -343,7 +366,53 @@ export default function Home() {
     try { localStorage.setItem('maple-dark-mode', String(next)); } catch {}
   };
 
-  const rankedItems = useMemo(() => calcAllItems(inputs), [inputs]);
+  const rankedItems = useMemo(
+    () => calcAllItems(inputs, charMetas[activePreset]?.monsterParkBonus ?? 0),
+    [inputs, charMetas, activePreset]
+  );
+
+  // 모든 탭에서 오늘 경험치 조회 — 세션 캐시 우선, TTL 1분 (탭 전환은 세션 플래그로 차단)
+  const currentOcid = charMetas[activePreset]?.ocid ?? null;
+  useEffect(() => {
+    if (!mounted || !currentOcid) { setTodayExpRate(null); return; }
+    if (sessionTodayFetched.has(currentOcid)) return;
+
+    const histKey = `maple-hist-today-${currentOcid}`;
+    const TTL = 60_000;
+    let abortCtrl: AbortController | null = null;
+
+    const run = async () => {
+      try {
+        const raw = localStorage.getItem(histKey);
+        if (raw) {
+          const { savedAt, data } = JSON.parse(raw);
+          if (Date.now() - savedAt < TTL) {
+            setTodayExpRate(data?.expRate ?? null);
+            sessionTodayFetched.add(currentOcid);
+            return;
+          }
+        }
+      } catch {}
+
+      abortCtrl = new AbortController();
+      const { signal } = abortCtrl;
+      try {
+        const res = await fetch(`/api/character/history?ocid=${encodeURIComponent(currentOcid)}&todayOnly=true`, { signal });
+        const arr = await res.json();
+        if (Array.isArray(arr) && arr.length > 0) {
+          const today = arr[0];
+          setTodayExpRate(today.expRate ?? null);
+          try { localStorage.setItem(histKey, JSON.stringify({ savedAt: Date.now(), data: today })); } catch {}
+        }
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return;
+      }
+      sessionTodayFetched.add(currentOcid);
+    };
+
+    run();
+    return () => { abortCtrl?.abort(); };
+  }, [mounted, currentOcid]);
 
   if (!mounted) return <div className="min-h-screen bg-gray-50 dark:bg-black" />;
 
@@ -356,15 +425,15 @@ export default function Home() {
         />
       )}
       <header className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-600 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="w-[905px] mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <button
             onClick={() => handleTabChange(TABS[0])}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
           >
             <img src="/icon.png" alt="icon" className="w-8 h-8" />
             <div className="text-left">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">MaplEFF</h1>
-              <p className="text-xs text-gray-400 dark:text-zinc-500">메이플스토리 경험치 효율 계산기</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">하루1소재</h1>
+              <p className="text-xs text-gray-400 dark:text-zinc-500">메이플스토리 경험치의 모든 것</p>
             </div>
           </button>
           <div className="flex items-center gap-3">
@@ -374,7 +443,7 @@ export default function Home() {
                   key={tab}
                   onClick={() => handleTabChange(tab)}
                   className={
-                    'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ' +
+                    'px-2.5 py-1 rounded-lg text-sm font-medium transition-colors cursor-pointer ' +
                     (activeTab === tab ? 'bg-orange-500 text-white' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100')
                   }
                 >
@@ -394,8 +463,8 @@ export default function Home() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="w-fit mx-auto">
-          {activeTab !== TABS[5] && <div className="mb-2 flex items-center gap-1.5">
+        <div className="w-[905px] mx-auto">
+          <div className="mb-2 flex items-center gap-1.5">
             <span className="text-xs text-gray-400 dark:text-zinc-500">캐릭터</span>
             {Array.from({ length: numSlots }, (_, i) => (
               isEditMode ? (
@@ -420,7 +489,7 @@ export default function Home() {
                       <circle cx="2" cy="11" r="1.2"/><circle cx="6" cy="11" r="1.2"/>
                     </svg>
                   </span>
-                  <span className="px-1.5 text-gray-700 dark:text-zinc-300 max-w-[56px] truncate font-semibold">{presetNames[i]}</span>
+                  <span className="px-1.5 text-gray-700 dark:text-zinc-300 font-semibold">{presetNames[i]}</span>
                   <button
                     onClick={() => handleDeleteSlot(i)}
 className={`px-1.5 transition-colors cursor-pointer ${numSlots === 1 ? 'text-gray-200 dark:text-zinc-700 cursor-not-allowed' : 'text-gray-400 hover:text-red-500 dark:hover:text-red-400'}`}
@@ -433,7 +502,7 @@ className={`px-1.5 transition-colors cursor-pointer ${numSlots === 1 ? 'text-gra
                   key={i}
                   onClick={() => handlePresetChange(i)}
                   className={
-                    'h-7 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer max-w-[64px] truncate border ' +
+                    'h-7 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ' +
                     (activePreset === i
                       ? 'bg-orange-500 text-white border-orange-500'
                       : 'text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700 border-gray-200 dark:border-zinc-600')
@@ -460,21 +529,22 @@ className={`px-1.5 transition-colors cursor-pointer ${numSlots === 1 ? 'text-gra
                 {isEditMode ? '완료' : '편집'}
               </button>
             )}
-          </div>}
+          </div>
           {activeTab === TABS[0] ? (
             <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 p-4">
-              <div className="flex flex-row gap-6">
-                <main className="min-w-[500px]" style={{flex: "0 0 auto"}}>
-                  {numSlots > 0 && (
-                    <div className="mb-4">
-                      <CharacterCard
-                        name={presetNames[activePreset]}
-                        level={presetsRef.current[activePreset]?.charLevel ?? inputs.charLevel}
-                        meta={charMetas[activePreset]}
-                      />
-                    </div>
-                  )}
-                  <EfficiencyTab inputs={inputs} onChange={handleChange} items={rankedItems} />
+              <div className="flex flex-row gap-4">
+                <main className="w-[560px] shrink-0">
+                  <div className="mb-4">
+                    <CharacterCard
+                      name={presetNames[activePreset]}
+                      level={presetsRef.current[activePreset]?.charLevel ?? inputs.charLevel}
+                      meta={charMetas[activePreset]}
+                      onMetaUpdate={(patch) => handleMetaUpdate(activePreset, patch)}
+                      onTodayLoaded={(rate) => setTodayExpRate(rate)}
+                      isEmpty={numSlots === 0}
+                    />
+                  </div>
+                  <EfficiencyTab inputs={inputs} onChange={handleChange} items={rankedItems} monsterParkBonus={charMetas[activePreset]?.monsterParkBonus ?? 0} />
                 </main>
                 <aside className="w-80 shrink-0 flex flex-col gap-4">
                   <InputPanel inputs={inputs} onChange={handleChange} />
@@ -483,25 +553,31 @@ className={`px-1.5 transition-colors cursor-pointer ${numSlots === 1 ? 'text-gra
               </div>
             </div>
           ) : (
-            <main className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 p-4">
-              {activeTab === TABS[1] && (
-                <ExpInfoTab charLevel={inputs.charLevel} monsterLevel={inputs.monsterLevel} huntingMobs={inputs.huntingMobs} />
-              )}
-              {activeTab === TABS[2] && (
-                <BMExpTab charLevel={inputs.charLevel} monsterLevel={inputs.monsterLevel} />
-              )}
-              {activeTab === TABS[3] && (
-                <EpicDungeonTab charLevel={inputs.charLevel} />
-              )}
-              {activeTab === TABS[4] && (
-                <HuntingGroundTab charLevel={inputs.charLevel} huntingRegion={inputs.huntingRegion} huntingGround={inputs.huntingGround} />
-              )}
-              {activeTab === TABS[5] && (
-                <InfoCenterTab />
-              )}
+            <main className="w-full bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 p-4">
+              <div>
+                {activeTab === TABS[1] && (
+                  <ExpContentsTab
+                    charLevel={inputs.charLevel}
+                    monsterLevel={inputs.monsterLevel}
+                    monsterParkBonus={charMetas[activePreset]?.monsterParkBonus ?? 0}
+                    epicDungeonBonus={charMetas[activePreset]?.epicDungeonBonus ?? 0}
+                    epicDungeonBonuses={charMetas[activePreset]?.epicDungeonBonuses?.map(b => ({ name: b.name, pct: b.pct })) ?? []}
+                    todayExpRate={todayExpRate}
+                  />
+                )}
+                {activeTab === TABS[2] && (
+                  <ExpInfoTab charLevel={inputs.charLevel} monsterLevel={inputs.monsterLevel} huntingMobs={inputs.huntingMobs} />
+                )}
+                {activeTab === TABS[3] && (
+                  <HuntingGroundTab charLevel={inputs.charLevel} huntingRegion={inputs.huntingRegion} huntingGround={inputs.huntingGround} />
+                )}
+                {activeTab === TABS[4] && (
+                  <InfoCenterTab />
+                )}
+              </div>
             </main>
           )}
-          {activeTab === TABS[5] && (
+          {activeTab === TABS[4] && (
             <div className="flex justify-center mt-4">
               <a
                 href="https://open.kakao.com/me/letin_k"

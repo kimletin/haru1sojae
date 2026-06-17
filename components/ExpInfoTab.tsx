@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from 'react';
 import { LEVEL_EXP } from '@/data/levelExp';
 import { getExpMultiplier } from '@/lib/calculator';
 import type { MobGroup } from '@/types';
+import Num from '@/components/Num';
 
 interface PenaltyRow {
   label: string;
@@ -19,12 +20,6 @@ const PENALTY_ROWS: PenaltyRow[] = [
   }),
   { label: '-40 이하', diff: null, mult: 0 },
 ];
-
-function fmtBig(n: number) {
-  if (n >= 1e12) return (n / 1e12).toFixed(2) + '조';
-  if (n >= 1e8)  return (n / 1e8).toFixed(2) + '억';
-  return n.toLocaleString('ko-KR');
-}
 
 interface Props {
   charLevel: number;
@@ -63,30 +58,28 @@ export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs }: Pro
     }
   }, [charLevel, monsterLevel]);
 
-  const TABLE_H = 'max-h-[500px]';
-
   return (
-    <div className="w-fit mx-auto">
-      <div className="flex flex-row gap-6 items-start">
+    <div>
+      <div className="flex flex-row gap-4 items-stretch">
         {/* 레벨별 필요 경험치 */}
-        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+        <div className="flex-1 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col max-h-[570px]">
           <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
             <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">레벨별 필요 경험치</h3>
           </div>
-          <div ref={leftScrollRef} className={`overflow-y-auto ${TABLE_H}`}>
-            <table className="table-fixed text-sm border-collapse">
+          <div ref={leftScrollRef} className="overflow-y-auto flex-1 min-h-0">
+            <table className="table-fixed text-sm border-collapse w-full">
               <colgroup>
+                <col style={{width:'110px'}} />
+                <col style={{width:'130px'}} />
                 <col style={{width:'100px'}} />
-                <col style={{width:'120px'}} />
-                <col style={{width:'90px'}} />
                 <col style={{width:'100px'}} />
               </colgroup>
               <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
-                  <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">레벨</th>
-                  <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">필요 경험치</th>
-                  <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">증가율</th>
-                  <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">누적 비율</th>
+                  <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-bold">레벨</th>
+                  <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-bold">필요 경험치</th>
+                  <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-bold">증가율</th>
+                  <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-bold">누적 비율</th>
                 </tr>
               </thead>
               <tbody>
@@ -99,7 +92,7 @@ export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs }: Pro
                         {lv}
                         {isMe && <span className="ml-1.5 text-xs bg-orange-500 dark:bg-orange-700 text-white px-1.5 py-0.5 rounded-full">나</span>}
                       </td>
-                      <td className={'px-5 py-1.5 text-center ' + (isMe ? 'text-orange-600' : 'text-gray-700 dark:text-zinc-300')}>{fmtBig(d.required)}</td>
+                      <td className={'px-5 py-1.5 text-center ' + (isMe ? 'text-orange-600' : 'text-gray-700 dark:text-zinc-300')}><Num n={d.required} /></td>
                       <td className={'px-5 py-1.5 text-center ' + (isMe ? 'text-orange-600' : 'text-gray-600 dark:text-zinc-400')}>{'+'+(d.increase*100).toFixed(0)+'%'}</td>
                       <td className={'px-5 py-1.5 text-center ' + (isMe ? 'text-orange-600' : 'text-gray-600 dark:text-zinc-400')}>{(d.ratio*100).toFixed(3)+'%'}</td>
                     </tr>
@@ -111,20 +104,20 @@ export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs }: Pro
         </div>
 
         {/* 경험치 패널티 */}
-        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+        <div className="w-[360px] shrink-0 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col max-h-[570px]">
           <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
             <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">경험치 패널티</h3>
           </div>
-          <div ref={rightScrollRef} className={`overflow-y-auto ${TABLE_H}`}>
-            <table className="table-fixed text-sm border-collapse">
+          <div ref={rightScrollRef} className="overflow-y-auto flex-1 min-h-0">
+            <table className="table-fixed text-sm border-collapse w-full">
               <colgroup>
-                <col style={{width:'160px'}} />
-                <col style={{width:'110px'}} />
+                <col style={{width:'50%'}} />
+                <col style={{width:'50%'}} />
               </colgroup>
               <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
-                  <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">캐릭터 - 몬스터</th>
-                  <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-medium">경험치 배율</th>
+                  <th className="text-center px-2 py-2 text-gray-600 dark:text-zinc-400 font-bold">캐릭터 - 몬스터</th>
+                  <th className="text-center px-2 py-2 text-gray-600 dark:text-zinc-400 font-bold">경험치 배율</th>
                 </tr>
               </thead>
               <tbody>
@@ -148,11 +141,11 @@ export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs }: Pro
                       ref={isFirstActive ? activePenaltyRef : undefined}
                       className={'border-b ' + (isActive ? 'bg-orange-50 dark:bg-orange-900/40 font-bold' : 'hover:bg-gray-50 dark:hover:bg-zinc-800')}
                     >
-                      <td className={'px-5 py-1.5 text-center ' + (isActive ? 'text-orange-400' : 'text-gray-700 dark:text-zinc-300')}>
+                      <td className={'px-2 py-1.5 text-center ' + (isActive ? 'text-orange-400' : 'text-gray-700 dark:text-zinc-300')}>
                         {row.label}
                         {isActive && <span className="ml-1.5 text-xs bg-orange-500 dark:bg-orange-700 text-white px-1.5 py-0.5 rounded-full">나</span>}
                       </td>
-                      <td className={'px-5 py-1.5 text-center font-semibold ' + (isActive ? 'text-orange-400' : 'text-gray-700 dark:text-zinc-300')}>
+                      <td className={'px-2 py-1.5 text-center font-semibold ' + (isActive ? 'text-orange-400' : 'text-gray-700 dark:text-zinc-300')}>
                         {row.label === '-40 이하' ? '0%' : (row.mult * 100).toFixed(0) + '%'}
                       </td>
                     </tr>

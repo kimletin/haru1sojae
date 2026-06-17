@@ -15,8 +15,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: '경험치 효율표 | MaplEFF',
+  title: '경험치 효율표 | 하루1소재',
   description: '메이플스토리 경험치 효율 계산기',
+  icons: { icon: '/icon.png' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -31,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           } catch(e) {}
         `}} />
       </head>
-      <body className={`min-h-screen bg-gray-50 text-gray-900 antialiased font-bold ${notoSansKR.className}`}>
+      <body className={`min-h-screen bg-gray-50 text-gray-900 antialiased font-bold overflow-x-hidden ${notoSansKR.className}`}>
         {children}
       </body>
     </html>

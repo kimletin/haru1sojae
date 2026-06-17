@@ -52,38 +52,24 @@ export async function GET(req: NextRequest) {
 
   const results: ({ date: string; exp: number; expRate: number; level: number } | null)[] = [];
 
-  // 오늘: date 파라미터 없이 조회
-  try {
-    const res = await fetchWithTimeout(
-      `https://open.api.nexon.com/maplestory/v1/character/basic?ocid=${encodeURIComponent(ocid)}`,
-      { headers }
-    );
-    if (res.ok) {
-      const data = await res.json();
-      results.push({ date: today, exp: data.character_exp, expRate: parseFloat(data.character_exp_rate), level: data.character_level });
-    } else {
-      results.push(null);
-    }
-  } catch {
-    results.push(null);
-  }
-  await new Promise(r => setTimeout(r, 20));
-
-  // 과거 날짜: date 파라미터로 조회
-  for (const date of pastDates) {
-    try {
-      const res = await fetchWithTimeout(
-        `https://open.api.nexon.com/maplestory/v1/character/basic?ocid=${encodeURIComponent(ocid)}&date=${date}`,
-        { headers }
-      );
-      if (!res.ok) { results.push(null); continue; }
-      const data = await res.json();
-      results.push({ date, exp: data.character_exp, expRate: parseFloat(data.character_exp_rate), level: data.character_level });
-    } catch {
-      results.push(null);
-    }
-    await new Promise(r => setTimeout(r, 20));
-  }
+  // 오늘 + 과거 6일 병렬 조회
+  const allDates = [null, ...pastDates]; // null = 오늘 (date 파라미터 없음)
+  const fetched = await Promise.all(
+    allDates.map(async (date) => {
+      const url = date
+        ? `https://open.api.nexon.com/maplestory/v1/character/basic?ocid=${encodeURIComponent(ocid)}&date=${date}`
+        : `https://open.api.nexon.com/maplestory/v1/character/basic?ocid=${encodeURIComponent(ocid)}`;
+      try {
+        const res = await fetchWithTimeout(url, { headers });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return { date: date ?? today, exp: data.character_exp, expRate: parseFloat(data.character_exp_rate), level: data.character_level };
+      } catch {
+        return null;
+      }
+    })
+  );
+  results.push(...fetched);
 
   // null 제거, 날짜 오름차순 정렬
   const valid = results
