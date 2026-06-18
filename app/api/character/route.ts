@@ -10,7 +10,7 @@ function fetchWithTimeout(url: string, options: RequestInit) {
 
 function nexonErrorMessage(status: number): { message: string; clientStatus: number } {
   switch (status) {
-    case 400: return { message: '캐릭터를 찾을 수 없습니다', clientStatus: 404 };
+    case 400: return { message: '캐릭터를 찾을 수 없습니다. API 점검 중일 수 있습니다', clientStatus: 404 };
     case 403: return { message: 'API 키가 유효하지 않습니다', clientStatus: 500 };
     case 429: return { message: 'API 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요', clientStatus: 429 };
     case 500: return { message: 'Nexon API 서버 오류입니다. 점검 중일 수 있습니다', clientStatus: 503 };

@@ -53,6 +53,7 @@ export interface CharMeta {
   monsterParkBonuses: { name: string; pct: number; icon: string | null }[] | null;
   epicDungeonBonuses: { name: string; pct: number; icon: string | null }[] | null;
   skillUpdatedAt: number | null;
+  manualExpRate: number | null;
 }
 
 export interface EfficiencyItem {

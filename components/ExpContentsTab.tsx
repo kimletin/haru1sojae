@@ -325,20 +325,24 @@ function calcVipSaunaByTarget(startLevel: number, startExpPct: number, targetLev
     const expToNext = lvReq - absExp;
     const ticksNeeded = Math.ceil(expToNext / tickExp);
     totalTicks += ticksNeeded;
-    totalGained += expToNext;
+    const actualExp = ticksNeeded * tickExp;
+    totalGained += actualExp;
+    absExp = actualExp - expToNext;
     lv += beyondJump(lv, beyond);
-    absExp = 0;
   }
+  const finalReq = LEVEL_EXP[lv]?.required ?? 1;
+  const finalPct = (absExp / finalReq) * 100;
   const totalSeconds = totalTicks * 5;
-  const gainPct = (lv - startLevel) * 100 - startExpPct;
-  return { hours: Math.floor(totalSeconds / 3600), minutes: Math.floor((totalSeconds % 3600) / 60), seconds: totalSeconds % 60, gainedExp: Math.round(totalGained), gainPct, finalLevel: lv, finalPct: 0 };
+  const gainPct = (lv - startLevel) * 100 + finalPct - startExpPct;
+  return { hours: Math.floor(totalSeconds / 3600), minutes: Math.floor((totalSeconds % 3600) / 60), seconds: totalSeconds % 60, gainedExp: Math.round(totalGained), gainPct, finalLevel: lv, finalPct };
 }
 
 function calcMekaberryByCount(startLevel: number, startExpPct: number, count: number) {
   let lv = startLevel;
   let absExp = (startExpPct / 100) * (LEVEL_EXP[lv]?.required ?? 0);
   let remaining = count;
-  let totalGained = 0;
+  let levelsGained = 0;
+  let totalGained = -absExp;
   while (remaining > 0) {
     const mekaExp = MEKABERRY_EXP[lv];
     const lvReq = LEVEL_EXP[lv]?.required;
@@ -347,19 +351,23 @@ function calcMekaberryByCount(startLevel: number, startExpPct: number, count: nu
     const countNeeded = Math.ceil(expToNext / mekaExp);
     if (remaining >= countNeeded) {
       remaining -= countNeeded;
-      totalGained += expToNext;
-      lv += 1;
-      absExp = 0;
+      totalGained += lvReq;
+      const lastExpToNext = expToNext - (countNeeded - 1) * mekaExp;
+      const progress = lastExpToNext / mekaExp;
+      const nextLv = lv + 1;
+      const nextMekaExp = MEKABERRY_EXP[nextLv] ?? mekaExp;
+      absExp = (1 - progress) * nextMekaExp;
+      lv = nextLv;
+      levelsGained++;
     } else {
-      const gained = remaining * mekaExp;
-      totalGained += gained;
-      absExp += gained;
+      absExp += remaining * mekaExp;
       remaining = 0;
     }
   }
+  totalGained += absExp;
   const finalReq = LEVEL_EXP[lv]?.required ?? 1;
   const finalPct = (absExp / finalReq) * 100;
-  const gainPct = (lv - startLevel) * 100 + finalPct - startExpPct;
+  const gainPct = levelsGained * 100 + finalPct - startExpPct;
   return { finalLevel: lv, finalPct, gainedExp: Math.round(totalGained), gainPct };
 }
 
@@ -368,27 +376,36 @@ function calcMekaberryByTarget(startLevel: number, startExpPct: number, targetLe
   let lv = startLevel;
   let absExp = (startExpPct / 100) * (LEVEL_EXP[lv]?.required ?? 0);
   let totalCount = 0;
-  let totalGained = 0;
+  let levelsGained = 0;
+  let totalGained = -absExp;
   while (lv < targetLevel) {
     const mekaExp = MEKABERRY_EXP[lv];
     const lvReq = LEVEL_EXP[lv]?.required;
     if (!mekaExp || !lvReq) break;
+    totalGained += lvReq;
     const expToNext = lvReq - absExp;
     const countNeeded = Math.ceil(expToNext / mekaExp);
     totalCount += countNeeded;
-    totalGained += expToNext;
-    lv += 1;
-    absExp = 0;
+    const lastExpToNext = expToNext - (countNeeded - 1) * mekaExp;
+    const progress = lastExpToNext / mekaExp;
+    const nextLv = lv + 1;
+    const nextMekaExp = MEKABERRY_EXP[nextLv] ?? mekaExp;
+    absExp = (1 - progress) * nextMekaExp;
+    lv = nextLv;
+    levelsGained++;
   }
-  const gainPct = (lv - startLevel) * 100 - startExpPct;
-  return { count: totalCount, gainedExp: Math.round(totalGained), gainPct, finalLevel: lv, finalPct: 0 };
+  totalGained += absExp;
+  const finalReq = LEVEL_EXP[lv]?.required ?? 1;
+  const finalPct = (absExp / finalReq) * 100;
+  const gainPct = levelsGained * 100 + finalPct - startExpPct;
+  return { count: totalCount, gainedExp: Math.round(totalGained), gainPct, finalLevel: lv, finalPct };
 }
 
 function calcBlueberryByCount(startLevel: number, startExpPct: number, count: number, beyond: boolean) {
   let lv = startLevel;
   let absExp = (startExpPct / 100) * (LEVEL_EXP[lv]?.required ?? 0);
   let remaining = count;
-  let totalGained = 0;
+  let totalGained = -absExp;
   while (remaining > 0) {
     const blueExp = BLUEBERRY_EXP[lv];
     const lvReq = LEVEL_EXP[lv]?.required;
@@ -397,16 +414,19 @@ function calcBlueberryByCount(startLevel: number, startExpPct: number, count: nu
     const countNeeded = Math.ceil(expToNext / blueExp);
     if (remaining >= countNeeded) {
       remaining -= countNeeded;
-      totalGained += expToNext;
-      lv += beyondJump(lv, beyond);
-      absExp = 0;
+      totalGained += lvReq;
+      const lastExpToNext = expToNext - (countNeeded - 1) * blueExp;
+      const progress = lastExpToNext / blueExp;
+      const nextLv = lv + beyondJump(lv, beyond);
+      const nextBlueExp = BLUEBERRY_EXP[nextLv] ?? blueExp;
+      absExp = (1 - progress) * nextBlueExp;
+      lv = nextLv;
     } else {
-      const gained = remaining * blueExp;
-      totalGained += gained;
-      absExp += gained;
+      absExp += remaining * blueExp;
       remaining = 0;
     }
   }
+  totalGained += absExp;
   const finalReq = LEVEL_EXP[lv]?.required ?? 1;
   const finalPct = (absExp / finalReq) * 100;
   const gainPct = (lv - startLevel) * 100 + finalPct - startExpPct;
@@ -418,20 +438,27 @@ function calcBlueberryByTarget(startLevel: number, startExpPct: number, targetLe
   let lv = startLevel;
   let absExp = (startExpPct / 100) * (LEVEL_EXP[lv]?.required ?? 0);
   let totalCount = 0;
-  let totalGained = 0;
+  let totalGained = -absExp;
   while (lv < targetLevel) {
     const blueExp = BLUEBERRY_EXP[lv];
     const lvReq = LEVEL_EXP[lv]?.required;
     if (!blueExp || !lvReq) break;
+    totalGained += lvReq;
     const expToNext = lvReq - absExp;
     const countNeeded = Math.ceil(expToNext / blueExp);
     totalCount += countNeeded;
-    totalGained += expToNext;
-    lv += beyondJump(lv, beyond);
-    absExp = 0;
+    const lastExpToNext = expToNext - (countNeeded - 1) * blueExp;
+    const progress = lastExpToNext / blueExp;
+    const nextLv = lv + beyondJump(lv, beyond);
+    const nextBlueExp = BLUEBERRY_EXP[nextLv] ?? blueExp;
+    absExp = (1 - progress) * nextBlueExp;
+    lv = nextLv;
   }
-  const gainPct = (lv - startLevel) * 100 - startExpPct;
-  return { count: totalCount, gainedExp: Math.round(totalGained), gainPct, finalLevel: lv, finalPct: 0 };
+  totalGained += absExp;
+  const finalReq = LEVEL_EXP[lv]?.required ?? 1;
+  const finalPct = (absExp / finalReq) * 100;
+  const gainPct = (lv - startLevel) * 100 + finalPct - startExpPct;
+  return { count: totalCount, gainedExp: Math.round(totalGained), gainPct, finalLevel: lv, finalPct };
 }
 
 function calcCouponByCount(startLevel: number, startExpPct: number, count: number, beyond: boolean) {
@@ -447,9 +474,10 @@ function calcCouponByCount(startLevel: number, startExpPct: number, count: numbe
     const couponsNeeded = Math.ceil(expToNext / couponExp);
     if (remaining >= couponsNeeded) {
       remaining -= couponsNeeded;
-      totalGained += expToNext;
+      const actualExp = couponsNeeded * couponExp;
+      totalGained += actualExp;
+      absExp = actualExp - expToNext;
       lv += beyondJump(lv, beyond);
-      absExp = 0;
     } else {
       const gained = remaining * couponExp;
       totalGained += gained;
@@ -476,12 +504,15 @@ function calcCouponByTarget(startLevel: number, startExpPct: number, targetLevel
     const expToNext = lvReq - absExp;
     const couponsNeeded = Math.ceil(expToNext / couponExp);
     totalCount += couponsNeeded;
-    totalGained += expToNext;
+    const actualExp = couponsNeeded * couponExp;
+    totalGained += actualExp;
+    absExp = actualExp - expToNext;
     lv += beyondJump(lv, beyond);
-    absExp = 0;
   }
-  const gainPct = (lv - startLevel) * 100 - startExpPct;
-  return { count: totalCount, gainedExp: Math.round(totalGained), gainPct, finalLevel: lv, finalPct: 0 };
+  const finalReq = LEVEL_EXP[lv]?.required ?? 1;
+  const finalPct = (absExp / finalReq) * 100;
+  const gainPct = (lv - startLevel) * 100 + finalPct - startExpPct;
+  return { count: totalCount, gainedExp: Math.round(totalGained), gainPct, finalLevel: lv, finalPct };
 }
 
 const MENU_ITEMS = [
@@ -502,9 +533,10 @@ interface Props {
   epicDungeonBonus?: number;
   epicDungeonBonuses?: BonusEntry[];
   todayExpRate?: number | null;
+  slotKey?: number;
 }
 
-export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBonus, epicDungeonBonus = 0, epicDungeonBonuses = [], todayExpRate }: Props) {
+export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBonus, epicDungeonBonus = 0, epicDungeonBonuses = [], todayExpRate, slotKey }: Props) {
   const myParkZone = getMonsterParkZone(charLevel);
 
   const [selected, setSelected] = useState('epicdungeon');
@@ -554,6 +586,9 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
     | { type: '목표'; gainedExp: number; gainPct: number; finalLevel: number; finalPct: number; count: number };
   const [mekaSimResult, setMekaSimResult] = useState<MekaSimResult | null>(null);
 
+  // 몬스터파크 보약 체크박스
+  const [applyParkBonus, setApplyParkBonus] = useState(false);
+
   // 블루베리 농장 시뮬레이터 state
   const [blueSimLevel, setBlueSimLevel] = useState(String(charLevel));
   const [blueSimExpPct, setBlueSimExpPct] = useState('');
@@ -598,6 +633,20 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
   useEffect(() => {
     if (monsterParkBonus > 0) setSimPotionBuff(String(monsterParkBonus));
   }, [monsterParkBonus]);
+  useEffect(() => {
+    setSimLevel(String(charLevel));
+    setVipSimLevel(String(charLevel));
+    setCouponSimLevel(String(charLevel));
+    setMekaSimLevel(String(charLevel));
+    setBlueSimLevel(String(charLevel));
+    setSimResult(null);
+    setVipSimResult(null);
+    setCouponSimResult(null);
+    setMekaSimResult(null);
+    setBlueSimResult(null);
+  // slotKey가 바뀌면 charLevel이 같아도 강제 갱신
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slotKey, charLevel]);
 
   const handleSimCalc = () => {
     const lv = parseInt(simLevel) || 0;
@@ -780,7 +829,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                   <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
                     <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">몬스터파크</h3>
                   </div>
-                  <div className="overflow-y-auto min-h-0">
+                  <div className="overflow-y-auto flex-1 min-h-0">
                     <div>
                       <table className="table-fixed w-full text-sm border-collapse">
                         <colgroup>
@@ -794,7 +843,8 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                           </tr>
                         </thead>
                         <tbody>
-                          {Object.entries(MONSTER_PARK_EXP).map(([zone, exp]) => {
+                          {Object.entries(MONSTER_PARK_EXP).map(([zone, baseExp]) => {
+                            const exp = applyParkBonus && monsterParkBonus > 0 ? Math.round(baseExp * (1 + monsterParkBonus / 100)) : baseExp;
                             const isMe = zone === myParkZone;
                             const subColor = isMe ? 'text-orange-500' : 'text-gray-400 dark:text-zinc-500';
                             return (
@@ -816,6 +866,18 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </tbody>
                       </table>
                     </div>
+                  </div>
+                  <div className="px-4 py-2 flex justify-end border-t border-gray-100 dark:border-zinc-700 shrink-0">
+                    <label className={`flex items-center gap-1.5 select-none ${monsterParkBonus > 0 ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}>
+                      <input
+                        type="checkbox"
+                        checked={applyParkBonus}
+                        onChange={e => setApplyParkBonus(e.target.checked)}
+                        disabled={monsterParkBonus === 0}
+                        className="w-3.5 h-3.5 accent-orange-500 cursor-pointer disabled:cursor-not-allowed"
+                      />
+                      <span className="text-xs text-gray-500 dark:text-zinc-400">보약 적용{monsterParkBonus > 0 ? `(+${monsterParkBonus}%)` : ''}</span>
+                    </label>
                   </div>
                 </div>
               )}
@@ -1236,12 +1298,10 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                           </div>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500 dark:text-zinc-400">달성</span>
+                          <span className="text-sm text-gray-500 dark:text-zinc-400">달성 레벨</span>
                           <div className="text-right">
                             <span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{mekaSimResult.finalLevel}</span>
-                            {mekaSimResult.type === '개수' && (
-                              <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">{mekaSimResult.finalPct.toFixed(3)}%</span>
-                            )}
+                            <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">({mekaSimResult.finalPct.toFixed(3)}%)</span>
                           </div>
                         </div>
                       </div>
@@ -1346,12 +1406,10 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                           </div>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500 dark:text-zinc-400">달성</span>
+                          <span className="text-sm text-gray-500 dark:text-zinc-400">달성 레벨</span>
                           <div className="text-right">
                             <span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{blueSimResult.finalLevel}</span>
-                            {blueSimResult.type === '개수' && (
-                              <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">{blueSimResult.finalPct.toFixed(3)}%</span>
-                            )}
+                            <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">({blueSimResult.finalPct.toFixed(3)}%)</span>
                           </div>
                         </div>
                       </div>
@@ -1373,7 +1431,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         {(() => {
                           const lv = parseInt(simLevel);
                           if (lv >= 300) return <span className="text-xs text-red-400 dark:text-red-500">300레벨 미만 입력해주세요</span>;
-                          if (lv >= 260) return <span className="text-sm font-semibold text-orange-500 dark:text-orange-400">{getMonsterParkZone(lv)}</span>;
+                          if (lv >= 260) return <span className="px-2 py-0.5 rounded bg-orange-500 text-white text-xs font-bold">{getMonsterParkZone(lv)}</span>;
                           return <span className="text-xs text-red-400 dark:text-red-500">260레벨 이상 입력해주세요</span>;
                         })()}
                       </div>

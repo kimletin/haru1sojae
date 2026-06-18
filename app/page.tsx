@@ -14,9 +14,9 @@ import CharacterSearchModal, { type CharacterInfo } from '@/components/Character
 import CharacterCard from '@/components/CharacterCard';
 import { SunIcon, MoonIcon } from '@/components/Icons';
 import type { CharMeta } from '@/types';
+import { getDefaultHunting } from '@/data/huntingGrounds';
 
 // 세션 내 오늘 경험치 조회 완료된 ocid (새로고침 시 초기화)
-const sessionTodayFetched = new Set<string>();
 
 const STORAGE_KEY = 'haru1sojae-inputs';
 const PRESETS_KEY = 'haru1sojae-presets';
@@ -45,14 +45,14 @@ function loadMetas(): (CharMeta | null)[] {
 const DEFAULT_INPUTS: InputValues = {
   waterBottleRate: 0,
   mesoMarketRate: 2280,
-  charLevel: 297,
-  monsterLevel: 298,
+  charLevel: 260,
+  monsterLevel: 260,
   dailySessions: 10,
-  mobCount: 40,
-  huntingRegion: '기어드락',
-  huntingGround: '로봇 창고 5',
-  huntingMobs: [{ level: 298, count: 40 }],
-  boosterMonsterLevel: 298,
+  mobCount: 34,
+  huntingRegion: '세르니움',
+  huntingGround: '해변 암석 지대 1',
+  huntingMobs: [{ level: 260, count: 34 }],
+  boosterMonsterLevel: 260,
   booster30min: 3,
   eternal30min: 0,
   booster1day: 6,
@@ -72,7 +72,7 @@ const DEFAULT_INPUTS: InputValues = {
   priceEcho: 40_000_000,
   priceSolErda: 7_100_000,
   useSolErda: true,
-  epicDungeonZone: '악몽선경',
+  epicDungeonZone: '하이마운틴',
   sunday: '없음',
   boosterRate: 0.5,
 };
@@ -245,7 +245,10 @@ export default function Home() {
     }
     handleNameChange(idx, info.name.slice(0, 12));
     const newPresets = [...presetsRef.current];
-    newPresets[idx] = { ...newPresets[idx], charLevel: Math.min(Math.max(info.level, 260), 300) };
+    const charLevel = Math.min(Math.max(info.level, 260), 300);
+    const { region, ground } = getDefaultHunting(charLevel);
+    const epicZone = charLevel >= 280 ? '악몽선경' : charLevel >= 270 ? '앵컴' : '하이마운틴';
+    newPresets[idx] = { ...newPresets[idx], charLevel, huntingRegion: region, huntingGround: ground, epicDungeonZone: epicZone };
     presetsRef.current = newPresets;
     savePresets(newPresets);
     if (idx === activePresetRef.current) setInputs(newPresets[idx]);
@@ -262,9 +265,10 @@ export default function Home() {
       world: info.world ?? null,
       monsterParkBonus: mpBonus || null,
       epicDungeonBonus: epBonus || null,
-      monsterParkBonuses: mpBonus > 0 ? [{ name: '몬파 보약', pct: mpBonus, icon: null }] : null,
-      epicDungeonBonuses: epBonus > 0 ? [{ name: '에픽 던전 보약', pct: epBonus, icon: null }] : null,
+      monsterParkBonuses: mpBonus > 0 ? [{ name: '보약', pct: mpBonus, icon: null }] : null,
+      epicDungeonBonuses: epBonus > 0 ? [{ name: '보약', pct: epBonus, icon: null }] : null,
       skillUpdatedAt: mpBonus > 0 || epBonus > 0 ? Date.now() : null,
+      manualExpRate: !info.ocid && info.expRate != null ? info.expRate : null,
     };
     setCharMetas(prev => {
       const next = [...prev];
@@ -296,6 +300,9 @@ export default function Home() {
   };
 
   const handleMetaUpdate = (idx: number, patch: Partial<CharMeta>) => {
+    if (idx === activePresetRef.current && patch.manualExpRate !== undefined) {
+      setTodayExpRate(patch.manualExpRate ?? null);
+    }
     setCharMetas(prev => {
       const next = [...prev];
       if (next[idx]) next[idx] = { ...next[idx]!, ...patch };
@@ -359,6 +366,13 @@ export default function Home() {
     saveNames(newNames);
     presetsRef.current = newPresets;
     savePresets(newPresets);
+    setCharMetas(prev => {
+      const next = [...prev];
+      const [m] = next.splice(from, 1);
+      next.splice(to, 0, m);
+      try { localStorage.setItem(CHAR_META_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
     let newActive = activePreset;
     if (activePreset === from) newActive = to;
     else if (from < to && activePreset > from && activePreset <= to) newActive = activePreset - 1;
@@ -381,52 +395,7 @@ export default function Home() {
     [inputs, charMetas, activePreset]
   );
 
-  // 모든 탭에서 오늘 경험치 조회 — 세션 캐시 우선, TTL 1분 (탭 전환은 세션 플래그로 차단)
   const currentOcid = charMetas[activePreset]?.ocid ?? null;
-  useEffect(() => {
-    if (!mounted || !currentOcid) { setTodayExpRate(null); return; }
-    if (sessionTodayFetched.has(currentOcid)) return;
-
-    const histKey = `maple-hist-today-${currentOcid}`;
-    const TTL = 60_000;
-    let abortCtrl: AbortController | null = null;
-
-    const run = async () => {
-      let cacheStale = false;
-      try {
-        const raw = localStorage.getItem(histKey);
-        if (raw) {
-          const { savedAt, data } = JSON.parse(raw);
-          // stale 여부 관계없이 캐시가 있으면 즉시 표시
-          if (data?.expRate != null) setTodayExpRate(data.expRate);
-          if (Date.now() - savedAt < TTL) {
-            sessionTodayFetched.add(currentOcid);
-            return;
-          }
-          cacheStale = true;
-        }
-      } catch {}
-
-      abortCtrl = new AbortController();
-      const { signal } = abortCtrl;
-      try {
-        const res = await fetch(`/api/character/history?ocid=${encodeURIComponent(currentOcid)}&todayOnly=true`, { signal });
-        const arr = await res.json();
-        if (Array.isArray(arr) && arr.length > 0) {
-          const today = arr[0];
-          setTodayExpRate(today.expRate ?? null);
-          try { localStorage.setItem(histKey, JSON.stringify({ savedAt: Date.now(), data: today })); } catch {}
-        }
-        // API 점검 등 빈 배열 반환 시 기존 캐시 유지 (덮어쓰지 않음)
-      } catch (e) {
-        if ((e as Error).name === 'AbortError') return;
-      }
-      sessionTodayFetched.add(currentOcid);
-    };
-
-    run();
-    return () => { abortCtrl?.abort(); };
-  }, [mounted, currentOcid]);
 
   if (!mounted) return <div className="min-h-screen bg-gray-50 dark:bg-black" />;
 
@@ -436,6 +405,8 @@ export default function Home() {
         <CharacterSearchModal
           onConfirm={handleCharacterConfirm}
           onClose={isFirstVisit ? undefined : () => setShowSearchModal(false)}
+          existingOcids={charMetas.filter(m => m?.ocid).map(m => m!.ocid!)}
+          existingNames={charMetas.filter(m => m?.name).map(m => m!.name)}
         />
       )}
       <header className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-600 sticky top-0 z-10 shadow-sm">
@@ -493,7 +464,9 @@ export default function Home() {
                     'flex items-center h-7 rounded-lg border text-xs transition-colors select-none ' +
                     (dragOverIndex === i && dragIndex !== i
                       ? 'border-orange-400 bg-orange-50 dark:bg-orange-900/20'
-                      : 'border-gray-200 dark:border-zinc-600 bg-gray-50 dark:bg-zinc-800')
+                      : (charMetas[i] && !charMetas[i].ocid
+                          ? 'border-dashed border-gray-300 dark:border-zinc-500 bg-gray-50 dark:bg-zinc-800'
+                          : 'border-gray-200 dark:border-zinc-600 bg-gray-50 dark:bg-zinc-800'))
                   }
                 >
                   <span className="px-1.5 cursor-grab text-gray-400 dark:text-zinc-500">
@@ -519,7 +492,9 @@ className={`px-1.5 transition-colors cursor-pointer ${numSlots === 1 ? 'text-gra
                     'h-7 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ' +
                     (activePreset === i
                       ? 'bg-orange-500 text-white border-orange-500'
-                      : 'text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700 border-gray-200 dark:border-zinc-600')
+                      : (charMetas[i] && !charMetas[i].ocid
+                          ? 'text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700 border-dashed border-gray-300 dark:border-zinc-500'
+                          : 'text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700 border-gray-200 dark:border-zinc-600'))
                   }
                 >
                   {presetNames[i]}
@@ -554,7 +529,7 @@ className={`px-1.5 transition-colors cursor-pointer ${numSlots === 1 ? 'text-gra
                       level={presetsRef.current[activePreset]?.charLevel ?? inputs.charLevel}
                       meta={charMetas[activePreset]}
                       onMetaUpdate={(patch) => handleMetaUpdate(activePreset, patch)}
-                      onTodayLoaded={(rate) => setTodayExpRate(rate)}
+                      onTodayLoaded={(rate) => setTodayExpRate(rate ?? null)}
                       isEmpty={numSlots === 0}
                     />
                   </div>
@@ -577,6 +552,7 @@ className={`px-1.5 transition-colors cursor-pointer ${numSlots === 1 ? 'text-gra
                     epicDungeonBonus={charMetas[activePreset]?.epicDungeonBonus ?? 0}
                     epicDungeonBonuses={charMetas[activePreset]?.epicDungeonBonuses?.map(b => ({ name: b.name, pct: b.pct })) ?? []}
                     todayExpRate={todayExpRate}
+                    slotKey={activePreset}
                   />
                 )}
                 {activeTab === TABS[2] && (

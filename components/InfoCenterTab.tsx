@@ -16,7 +16,7 @@ const UPDATES: UpdateEntry[] = [
     date: '2026.06.18.',
     title: 'ver.1.2.416 업데이트',
     items: [
-      '295~299 구간 메카베리 농장, VIP 사우나, MVP 리조트 경험치 업데이트',
+      '295~299 구간 메카베리 농장, VIP 사우나 경험치 업데이트',
       '에픽 던전 기본 보상 세라자르 주화 2개 → 솔 에르다 조각 15개로 변경',
       '블루베리 농장 추가',
     ],
@@ -92,7 +92,7 @@ export default function InfoCenterTab() {
             </div>
             <div>
               <p className="font-semibold text-gray-900 dark:text-zinc-100 mb-1">💡 가성비 배율 기준</p>
-              <p>가성비 배율은 VIP 사우나를 기준(100%)으로 계산됩니다. 배율이 높을수록 VIP 사우나 대비 더 효율적인 아이템입니다.</p>
+              <p>가성비 배율은 <span className="font-semibold text-orange-500">VIP 사우나</span>를 기준(100%)으로 계산됩니다. 배율이 높을수록 VIP 사우나 대비 더 효율적인 아이템입니다.</p>
             </div>
             <div>
               <p className="font-semibold text-gray-900 dark:text-zinc-100 mb-1">⚠️ 도핑류 계산 주의사항</p>

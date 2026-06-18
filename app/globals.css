@@ -1,29 +1,13 @@
 @import "tailwindcss";
 
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-
-
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
   min-width: 1000px;
 }
 
 html {
   overflow-x: auto;
+  overflow-y: scroll;
   font-size: 15px;
 }
 
@@ -58,19 +42,6 @@ table tr {
 
 input, select, textarea, button {
   font-weight: inherit;
-}
-
-select {
-  text-align: center;
-  text-align-last: center;
-}
-
-option {
-  text-align: center;
-}
-
-html {
-  overflow-y: scroll;
 }
 
 /* ── Dark mode ── */
@@ -119,10 +90,6 @@ html.dark { color-scheme: dark; }
 .dark .text-orange-800    { color: #fdba74!important; }
 .dark .text-red-800       { color: #fca5a5 !important; }
 .dark .text-amber-800     { color: #fcd34d !important; }
-
-/* 노란 입력칸 */
-.dark .bg-yellow-50       { background-color: #422006 !important; }
-.dark .border-yellow-400  { border-color: #ca8a04 !important; }
 
 /* 테이블 hover */
 .dark tr:hover            { background-color: #1e1e1e; }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CharMeta } from '@/types';
 
 interface HistoryPoint {
@@ -17,35 +17,25 @@ interface Slot {
   exp: number | null;
 }
 
-
-interface Props {
-  name: string;
-  level: number;
-  meta: CharMeta | null;
-  onMetaUpdate?: (patch: Partial<CharMeta>) => void;
-  onTodayLoaded?: (expRate: number) => void;
-  isEmpty?: boolean;
-}
-
-const HIST_PAST_KEY = (ocid: string) => `maple-hist-past-${ocid}`;
-const HIST_TODAY_KEY = (ocid: string) => `maple-hist-today-${ocid}`;
-const RANKING_KEY = (ocid: string) => `maple-ranking-${ocid}`;
-const TODAY_TTL_MS = 60 * 1000; // 1분
-
 interface Ranking {
   overall: number | null;
   world: number | null;
   class: number | null;
 }
 
-// Strict Mode 이중 호출 방지
-const activeFetches = new Set<string>();
+interface Props {
+  name: string;
+  level: number;
+  meta: CharMeta | null;
+  onMetaUpdate?: (patch: Partial<CharMeta>) => void;
+  onTodayLoaded?: (expRate: number | null) => void;
+  isEmpty?: boolean;
+}
 
-// 세션 메모리 캐시 — 탭 전환 시 재호출 방지 (페이지 새로고침 시 초기화)
-const sessionToday = new Map<string, HistoryPoint>();
-const sessionRanking = new Map<string, Ranking>();
-const sessionImage = new Map<string, string | null>();
-const sessionSkill = new Map<string, { monsterParkBonus: number; epicDungeonBonus: number; monsterParkBonuses: { name: string; pct: number }[]; epicDungeonBonuses: { name: string; pct: number }[] }>();
+const CHAR_CACHE_KEY = (ocid: string) => `maple-char-${ocid}`;
+const REFRESH_COOLDOWN = 1 * 60 * 1000; // 1분
+
+// StrictMode 이중 호출 방지 (image/skill fetch용)
 
 function kstDate(daysAgo: number): string {
   const now = new Date();
@@ -62,12 +52,7 @@ function computeSlots(points: HistoryPoint[]): Slot[] {
   const map = new Map(points.map(p => [p.date, p]));
   return getDisplayDates().map(date => {
     const p = map.get(date);
-    return {
-      date,
-      expRate: p?.expRate ?? null,
-      level: p?.level ?? null,
-      exp: p?.exp ?? null,
-    };
+    return { date, expRate: p?.expRate ?? null, level: p?.level ?? null, exp: p?.exp ?? null };
   });
 }
 
@@ -97,18 +82,123 @@ function formatExpKR(exp: number): string {
 }
 
 export default function CharacterCard({ name, level, meta, onMetaUpdate, onTodayLoaded, isEmpty }: Props) {
-  const [pastData, setPastData] = useState<HistoryPoint[]>([]);
-  const [todayData, setTodayData] = useState<HistoryPoint | null>(null);
-  const [loadingHist, setLoadingHist] = useState(false);
+  const [history, setHistory] = useState<HistoryPoint[]>([]);
   const [ranking, setRanking] = useState<Ranking | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<number | null>(null);
+  const [cooldownLeft, setCooldownLeft] = useState(0);
   const [barTooltip, setBarTooltip] = useState<{ idx: number; x: number; y: number } | null>(null);
   const [boakTooltip, setBoakTooltip] = useState<{ x: number; y: number; name: string; mp?: number; ep?: number } | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
+
+  const refreshingRef = useRef(false);
+  const lastRefreshedAtRef = useRef<number | null>(null);
+
   const hasApi = !!meta?.ocid;
+  const today = kstDate(0);
+  const todayData = history.find(p => p.date === today) ?? null;
+  const slots = computeSlots(history);
 
-  const slots = computeSlots([...pastData, ...(todayData ? [todayData] : [])]);
+  // 새로고침 — 히스토리 + 랭킹 전체 fetch
+  const doRefresh = useCallback(async () => {
+    if (!meta?.ocid || refreshingRef.current) return;
+    if (lastRefreshedAtRef.current !== null && Date.now() - lastRefreshedAtRef.current < REFRESH_COOLDOWN) return;
 
-  // 바깥 터치 시 히스토리 툴팁 닫기
+    const ocid = meta.ocid;
+    setRefreshing(true);
+
+    try {
+      const rankParams = new URLSearchParams({ ocid });
+      if (meta.world) rankParams.set('world', meta.world);
+      if (meta.class) rankParams.set('class', meta.class);
+
+      const [histData, rankData, imageData, skillData] = await Promise.all([
+        fetch(`/api/character/history?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
+        fetch(`/api/character/ranking?${rankParams}`).then(r => r.json()),
+        fetch(`/api/character?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
+        fetch(`/api/character/skill?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
+      ]);
+
+      const isSuccess = Array.isArray(histData);
+      const hist: HistoryPoint[] = isSuccess ? histData : [];
+      const rank: Ranking | null = rankData ?? null;
+      const todayPoint = hist.find(p => p.date === kstDate(0)) ?? null;
+
+      setHistory(hist);
+      setRanking(rank);
+      onTodayLoaded?.(todayPoint?.expRate ?? null);
+
+      if (isSuccess) {
+        const savedAt = Date.now();
+        setLastRefreshedAt(savedAt);
+
+        if (onMetaUpdate) {
+          const metaUpdate: Record<string, unknown> = { imageUpdatedAt: savedAt, skillUpdatedAt: savedAt };
+          if (imageData?.image !== undefined) metaUpdate.image = imageData.image;
+          if (skillData?.monsterParkBonus !== undefined) {
+            metaUpdate.monsterParkBonus = skillData.monsterParkBonus;
+            metaUpdate.epicDungeonBonus = skillData.epicDungeonBonus;
+            metaUpdate.monsterParkBonuses = skillData.monsterParkBonuses ?? [];
+            metaUpdate.epicDungeonBonuses = skillData.epicDungeonBonuses ?? [];
+          }
+          onMetaUpdate(metaUpdate);
+        }
+
+        try {
+          localStorage.setItem(CHAR_CACHE_KEY(ocid), JSON.stringify({ savedAt: Date.now(), history: hist, ranking: rank }));
+        } catch {}
+      }
+    } catch {}
+    finally {
+      setRefreshing(false);
+    }
+  }, [meta?.ocid, meta?.world, meta?.class, onTodayLoaded, onMetaUpdate]);
+
+  // ref 동기화 (렌더 중 즉시 할당)
+  refreshingRef.current = refreshing;
+  lastRefreshedAtRef.current = lastRefreshedAt;
+
+  // 쿨다운 카운트다운
+  useEffect(() => {
+    if (lastRefreshedAt === null) return;
+    const tick = () => {
+      const left = Math.max(0, REFRESH_COOLDOWN - (Date.now() - lastRefreshedAt));
+      setCooldownLeft(left);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [lastRefreshedAt]);
+
+
+  // 캐시 로드 (마운트/슬롯 전환 시) — 캐시 없으면 바로 fetch
+  useEffect(() => {
+    if (!meta?.ocid) {
+      setHistory([]); setRanking(null); setLastRefreshedAt(null);
+      onTodayLoaded?.(null);
+      return;
+    }
+    const ocid = meta.ocid;
+
+    try {
+      const raw = localStorage.getItem(CHAR_CACHE_KEY(ocid));
+      if (raw) {
+        const cache = JSON.parse(raw);
+        const hist: HistoryPoint[] = cache.history ?? cache.pastData ?? []; // pastData: 구버전 호환
+        const todayPoint = hist.find(p => p.date === kstDate(0)) ?? null;
+        setHistory(hist);
+        setRanking(cache.ranking ?? null);
+        setLastRefreshedAt(cache.savedAt ?? null);
+        onTodayLoaded?.(todayPoint?.expRate ?? null);
+      } else {
+        // 첫 추가: 즉시 fetch
+        doRefresh();
+      }
+    } catch {}
+
+  }, [meta?.ocid]);
+
+  // 바깥 터치 시 툴팁 닫기
   useEffect(() => {
     if (barTooltip === null) return;
     const handler = (e: TouchEvent | MouseEvent) => {
@@ -122,202 +212,11 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
     };
   }, [barTooltip]);
 
-  // 이미지 조회 — 세션 캐시 우선, TTL 1분 (탭 전환은 세션 캐시로 차단)
-  useEffect(() => {
-    if (!meta?.ocid || !onMetaUpdate) return;
-    const ocid = meta.ocid;
-
-    if (sessionImage.has(ocid)) return;
-    const age = meta.imageUpdatedAt ? Date.now() - meta.imageUpdatedAt : Infinity;
-    if (age < 60_000) { sessionImage.set(ocid, meta.image ?? null); return; }
-
-    const key = `${ocid}-image`;
-    if (activeFetches.has(key)) return;
-    activeFetches.add(key);
-
-    fetch(`/api/character?ocid=${encodeURIComponent(ocid)}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.image !== undefined) {
-          sessionImage.set(ocid, data.image);
-          onMetaUpdate({ image: data.image, imageUpdatedAt: Date.now() });
-        }
-      })
-      .catch(() => {})
-      .finally(() => activeFetches.delete(key));
-  }, [meta?.ocid, meta?.imageUpdatedAt]);
-
-  // 스킬 버프 조회 — 세션 캐시 우선, TTL 1분 (탭 전환은 세션 캐시로 차단)
-  useEffect(() => {
-    if (!meta?.ocid || !onMetaUpdate) return;
-    const ocid = meta.ocid;
-
-    if (sessionSkill.has(ocid)) return;
-    const age = meta.skillUpdatedAt ? Date.now() - meta.skillUpdatedAt : Infinity;
-    if (age < 60_000 && meta.monsterParkBonus !== null && meta.epicDungeonBonus !== null) {
-      sessionSkill.set(ocid, {
-        monsterParkBonus: meta.monsterParkBonus!,
-        epicDungeonBonus: meta.epicDungeonBonus!,
-        monsterParkBonuses: meta.monsterParkBonuses ?? [],
-        epicDungeonBonuses: meta.epicDungeonBonuses ?? [],
-      });
-      return;
-    }
-
-    const key = `${ocid}-skill`;
-    if (activeFetches.has(key)) return;
-    activeFetches.add(key);
-
-    fetch(`/api/character/skill?ocid=${encodeURIComponent(ocid)}`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.monsterParkBonus !== undefined && data.epicDungeonBonus !== undefined) {
-          sessionSkill.set(ocid, data);
-          onMetaUpdate({
-            monsterParkBonus: data.monsterParkBonus,
-            epicDungeonBonus: data.epicDungeonBonus,
-            monsterParkBonuses: data.monsterParkBonuses ?? [],
-            epicDungeonBonuses: data.epicDungeonBonuses ?? [],
-            skillUpdatedAt: Date.now(),
-          });
-        }
-      })
-      .catch(() => {})
-      .finally(() => activeFetches.delete(key));
-  }, [meta?.ocid, meta?.skillUpdatedAt]);
-
-  useEffect(() => {
-    if (!meta?.ocid) {
-      setPastData([]);
-      setTodayData(null);
-      setRanking(null);
-      return;
-    }
-    const ocid = meta.ocid;
-
-    // 과거 캐시 로드 (저장 날짜가 오늘과 같아야 유효, 어제 데이터 포함 여부로 완전성 체크)
-    let pastCached: HistoryPoint[] | null = null;
-    let pastCacheIncomplete = false;
-    try {
-      const raw = localStorage.getItem(HIST_PAST_KEY(ocid));
-      if (raw) {
-        const { savedDate, data } = JSON.parse(raw);
-        if (savedDate === kstDate(0)) {
-          pastCached = data;
-          pastCacheIncomplete = !data.some((p: HistoryPoint) => p.date === kstDate(1));
-        }
-      }
-    } catch {}
-
-    setPastData(pastCached ?? []);
-
-    // 세션 캐시 확인 — 탭 전환 시 재호출 방지
-    const cachedToday = sessionToday.get(ocid);
-    const cachedRanking = sessionRanking.get(ocid);
-    if (cachedToday) setTodayData(cachedToday); else setTodayData(null);
-    if (cachedRanking) setRanking(cachedRanking); else setRanking(null);
-
-    if (cachedToday && cachedRanking) return; // 세션 캐시 완전히 유효 → API 호출 불필요
-
-    // 랭킹
-    async function fetchRanking() {
-      const rankKey = `${ocid}-ranking`;
-      if (activeFetches.has(rankKey)) return;
-      activeFetches.add(rankKey);
-      try {
-        const raw = localStorage.getItem(RANKING_KEY(ocid));
-        if (raw) {
-          const { savedDate, data } = JSON.parse(raw);
-          if (savedDate === kstDate(0)) { setRanking(data); sessionRanking.set(ocid, data); return; }
-        }
-        const params = new URLSearchParams({ ocid });
-        if (meta?.world) params.set('world', meta.world);
-        if (meta?.class) params.set('class', meta.class);
-        const res = await fetch(`/api/character/ranking?${params}`);
-        const data: Ranking = await res.json();
-        setRanking(data);
-        sessionRanking.set(ocid, data);
-        try { localStorage.setItem(RANKING_KEY(ocid), JSON.stringify({ savedDate: kstDate(0), data })); } catch {}
-      } catch {} finally {
-        activeFetches.delete(rankKey);
-      }
-    }
-
-    if (!cachedRanking) fetchRanking();
-
-    // 오늘 경험치 캐시 확인 (TTL 유효 여부와 무관하게 항상 로드 — 만료된 캐시는 fallback으로 사용)
-    let todayCached: HistoryPoint | null = null;
-    let todayCacheStale = false;
-    try {
-      const raw = localStorage.getItem(HIST_TODAY_KEY(ocid));
-      if (raw) {
-        const { savedAt, data } = JSON.parse(raw);
-        todayCached = data;
-        todayCacheStale = Date.now() - savedAt >= TODAY_TTL_MS;
-      }
-    } catch {}
-
-    if (todayCached) {
-      setTodayData(todayCached);
-      if (!todayCacheStale) sessionToday.set(ocid, todayCached); // 신선한 캐시만 세션에 등록
-      onTodayLoaded?.(todayCached.expRate);
-    }
-
-    async function fetchToday() {
-      const key = `${ocid}-today`;
-      if (activeFetches.has(key)) return;
-      activeFetches.add(key);
-      try {
-        const res = await fetch(`/api/character/history?ocid=${encodeURIComponent(ocid)}&todayOnly=true`);
-        const data: HistoryPoint[] = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setTodayData(data[0]);
-          sessionToday.set(ocid, data[0]);
-          onTodayLoaded?.(data[0].expRate);
-          try { localStorage.setItem(HIST_TODAY_KEY(ocid), JSON.stringify({ savedAt: Date.now(), data: data[0] })); } catch {}
-        }
-        // API 실패(빈 배열) 시 이미 표시 중인 캐시 fallback을 그대로 유지
-      } catch {} finally {
-        activeFetches.delete(key);
-      }
-    }
-
-    async function initFull() {
-      if (activeFetches.has(ocid)) return;
-      activeFetches.add(ocid);
-      setLoadingHist(true);
-      try {
-        const res = await fetch(`/api/character/history?ocid=${encodeURIComponent(ocid)}`);
-        const data: HistoryPoint[] = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          const today = kstDate(0);
-          const past = data.filter(p => p.date !== today);
-          const todayPoint = data.find(p => p.date === today) ?? null;
-          try { localStorage.setItem(HIST_PAST_KEY(ocid), JSON.stringify({ savedDate: today, data: past })); } catch {}
-          setPastData(past);
-          if (todayPoint) {
-            setTodayData(todayPoint);
-            sessionToday.set(ocid, todayPoint);
-            onTodayLoaded?.(todayPoint.expRate);
-            try { localStorage.setItem(HIST_TODAY_KEY(ocid), JSON.stringify({ savedAt: Date.now(), data: todayPoint })); } catch {}
-          }
-        }
-        // API 점검 등으로 빈 배열 반환 시 기존 캐시 유지 (덮어쓰지 않음)
-      } finally {
-        activeFetches.delete(ocid);
-        setLoadingHist(false);
-      }
-    }
-
-    if (pastCached && !pastCacheIncomplete) {
-      if (!cachedToday && (!todayCached || todayCacheStale)) {
-        setLoadingHist(true);
-        fetchToday().finally(() => setLoadingHist(false));
-      }
-    } else if (!cachedToday) {
-      initFull();
-    }
-  }, [meta?.ocid]);
+  // 새로고침 버튼 상태
+  const canRefresh = !refreshing && cooldownLeft === 0;
+  const cooldownSec = Math.ceil(cooldownLeft / 1000);
+  const cooldownMin = Math.floor(cooldownSec / 60);
+  const cooldownRemain = `${cooldownMin}:${String(cooldownSec % 60).padStart(2, '0')}`;
 
   if (isEmpty) {
     return (
@@ -326,13 +225,11 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
           <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">캐릭터 정보</h3>
         </div>
         <div className="flex items-stretch h-[185px]">
-          {/* 좌측: 빈 캐릭터 */}
           <div className="flex flex-col px-4 flex-1 pt-1 pb-5 items-center justify-center gap-3">
             <div className="w-24 h-24 rounded-xl shrink-0 overflow-hidden bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-2xl text-gray-300 dark:text-zinc-600">?</div>
             <p className="text-sm text-gray-400 dark:text-zinc-500">캐릭터를 추가해주세요</p>
           </div>
           <div className="w-px bg-gray-100 dark:bg-zinc-700 my-4" />
-          {/* 우측: 빈 히스토리 */}
           <div className="w-[44%] shrink-0 px-5 py-2 min-w-0 flex flex-col">
             <p className="text-xs text-gray-400 dark:text-zinc-500 mb-2 mt-3">경험치 히스토리 (7일)</p>
             <div className="flex-1 flex items-center justify-center text-xs text-gray-300 dark:text-zinc-600 text-center leading-relaxed">
@@ -346,15 +243,36 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
 
   return (
     <div className="character-card bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden">
-      <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5">
+      <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2 flex items-center justify-center">
         <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">캐릭터 정보</h3>
       </div>
-      <div className="flex items-stretch h-[185px]">
+
+      <div className="relative flex items-stretch h-[185px]">
+        {hasApi && (
+          <button
+            onClick={doRefresh}
+            disabled={!canRefresh}
+            className={`absolute top-2 left-2 z-10 w-8 h-8 flex items-center justify-center rounded bg-orange-400 dark:bg-orange-500 text-white transition-colors cursor-pointer disabled:cursor-not-allowed ${refreshing ? 'opacity-40' : ''}`}
+          >
+            {refreshing ? (
+              <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
+              </svg>
+            ) : cooldownLeft > 0 ? (
+              <span className="text-[11px] font-bold tabular-nums leading-none text-white text-center">{cooldownRemain}</span>
+            ) : (
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M23 4v6h-6" />
+                <path d="M1 20v-6h6" />
+                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+              </svg>
+            )}
+          </button>
+        )}
         {/* 좌측: 캐릭터 정보 */}
         <div className="flex flex-col px-4 flex-1 pt-1 pb-5">
-          {/* 이미지 + 정보 (세로 중앙) */}
           <div className="flex items-center justify-center gap-5 flex-1">
-            {/* 이미지 */}
             <div className="w-24 h-24 rounded-xl shrink-0 overflow-hidden">
               {meta?.image ? (
                 <img src={meta.image} alt={name} className="w-full h-full object-contain scale-[3]" />
@@ -363,7 +281,6 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
               )}
             </div>
 
-            {/* 정보 */}
             <div className="min-w-0 shrink-0">
               <div className="flex items-baseline gap-1.5 mb-1.5">
                 <p className="text-base font-bold text-gray-900 dark:text-zinc-100">{name}</p>
@@ -374,7 +291,12 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
                   <span className="w-6 text-gray-400 dark:text-zinc-500 shrink-0">레벨</span>
                   <span className="text-gray-700 dark:text-zinc-300">
                     {level}
-                    {todayData && <span className="text-gray-400 dark:text-zinc-500 ml-1">({todayData.expRate.toFixed(3)}%)</span>}
+                    {todayData
+                      ? <span className="text-gray-400 dark:text-zinc-500 ml-1">({todayData.expRate.toFixed(3)}%)</span>
+                      : !hasApi && meta?.manualExpRate != null
+                        ? <span className="text-gray-400 dark:text-zinc-500 ml-1">({meta.manualExpRate.toFixed(3)}%)</span>
+                        : null
+                    }
                   </span>
                 </div>
                 {meta !== null && (
@@ -395,7 +317,6 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
                 {(() => {
                   const mpBonuses = meta?.monsterParkBonuses ?? [];
                   const epBonuses = meta?.epicDungeonBonuses ?? [];
-                  // 이름 기준으로 병합: 하나의 보약이 몬파+에픽 효과를 모두 가질 수 있음
                   const bonusMap = new Map<string, { name: string; icon?: string | null; mp?: number; ep?: number }>();
                   for (const b of mpBonuses) bonusMap.set(b.name, { name: b.name, icon: b.icon, mp: b.pct });
                   for (const b of epBonuses) {
@@ -411,20 +332,12 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
                       <div className="flex items-center gap-1 flex-wrap cursor-default">
                         {mergedBonuses.map(b => (
                           b.icon
-                            ? <img
-                                key={b.name}
-                                src={b.icon}
-                                alt={b.name}
-                                className="w-5 h-5 rounded"
+                            ? <img key={b.name} src={b.icon} alt={b.name} className="w-5 h-5 rounded"
                                 onMouseEnter={e => setBoakTooltip({ x: e.clientX, y: e.clientY, name: b.name, mp: b.mp, ep: b.ep })}
-                                onMouseLeave={() => setBoakTooltip(null)}
-                              />
-                            : <span
-                                key={b.name}
-                                className="w-5 h-5 flex items-center justify-center text-[10px] font-bold bg-orange-100 dark:bg-orange-900/40 text-orange-500 rounded"
+                                onMouseLeave={() => setBoakTooltip(null)} />
+                            : <span key={b.name} className="w-5 h-5 flex items-center justify-center text-[10px] font-bold bg-orange-100 dark:bg-orange-900/40 text-orange-500 rounded"
                                 onMouseEnter={e => setBoakTooltip({ x: e.clientX, y: e.clientY, name: b.name, mp: b.mp, ep: b.ep })}
-                                onMouseLeave={() => setBoakTooltip(null)}
-                              >보</span>
+                                onMouseLeave={() => setBoakTooltip(null)}>E</span>
                         ))}
                       </div>
                     </div>
@@ -434,7 +347,6 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
             </div>
           </div>
 
-          {/* 랭킹 — 카드 맨 아래 일렬 */}
           {ranking && (ranking.overall !== null || ranking.world !== null || ranking.class !== null) && (
             <div className="flex justify-center gap-4 text-[11px] text-gray-400 dark:text-zinc-500">
               {ranking.overall !== null && <span>종합 <span className="text-gray-800 dark:text-zinc-100">{ranking.overall.toLocaleString('ko-KR')}위</span></span>}
@@ -457,9 +369,13 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
             <div className="flex-1 flex items-center justify-center text-xs text-gray-300 dark:text-zinc-600 text-center leading-relaxed">
               수동 추가된 캐릭터는<br />히스토리를 불러올 수 없습니다
             </div>
-          ) : loadingHist ? (
+          ) : refreshing ? (
             <div className="flex-1 flex items-center justify-center text-xs text-gray-400 dark:text-zinc-500">
               불러오는 중...
+            </div>
+          ) : history.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center text-xs text-gray-400 dark:text-zinc-500 text-center leading-relaxed">
+              갱신 버튼을 눌러<br />데이터를 불러오세요
             </div>
           ) : (
             <div ref={chartRef} className="relative mt-auto pt-3 mb-1">
@@ -475,6 +391,14 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
                     <div className="w-full relative flex items-end" style={{ height: 84 }}>
                       {slot.expRate !== null ? (
                         <>
+                          {slot.level !== null && (i === 0 || slots[i - 1].level !== slot.level) && (
+                            <span
+                              className="absolute left-0 right-0 text-center text-[8px] text-gray-900 dark:text-white leading-none pointer-events-none"
+                              style={{ bottom: Math.max((slot.expRate / 100) * 84, 2) + 16 }}
+                            >
+                              {slot.level}
+                            </span>
+                          )}
                           <span
                             className="absolute left-0 right-0 text-center text-[8px] text-gray-500 dark:text-zinc-400 leading-none pointer-events-none"
                             style={{ bottom: Math.max((slot.expRate / 100) * 84, 2) + 2 }}
