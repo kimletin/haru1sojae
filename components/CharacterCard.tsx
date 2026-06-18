@@ -102,6 +102,7 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
 
   const refreshingRef = useRef(false);
   const lastRefreshedAtRef = useRef<number | null>(null);
+  const refreshedAtMap = useRef<Record<string, number>>({});
 
   const hasApi = !!meta?.ocid;
   const today = kstDate(0);
@@ -139,6 +140,7 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
 
       if (isSuccess) {
         const savedAt = Date.now();
+        refreshedAtMap.current[ocid] = savedAt;
         setLastRefreshedAt(savedAt);
         setLastUpdatedLabel('방금 전');
 
@@ -198,11 +200,16 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
         const todayPoint = hist.find(p => p.date === kstDate(0)) ?? null;
         setHistory(hist);
         setRanking(cache.ranking ?? null);
-        setLastRefreshedAt(cache.savedAt ?? null);
-        if (cache.savedAt) setLastUpdatedLabel(formatLastUpdated(cache.savedAt));
+        // 이 세션에서 새로고침한 기록이 있으면 그 시간 우선, 없으면 캐시 savedAt
+        const resolvedAt = refreshedAtMap.current[ocid] ?? cache.savedAt ?? null;
+        lastRefreshedAtRef.current = resolvedAt;
+        setLastRefreshedAt(resolvedAt);
+        if (resolvedAt) setLastUpdatedLabel(formatLastUpdated(resolvedAt));
         onTodayLoaded?.(todayPoint?.expRate ?? null);
       } else {
-        // 첫 추가: 즉시 fetch
+        // 캐시 없는 새 슬롯 — 쿨다운 리셋 후 즉시 fetch
+        lastRefreshedAtRef.current = null;
+        setLastRefreshedAt(null);
         doRefresh();
       }
     } catch {}
