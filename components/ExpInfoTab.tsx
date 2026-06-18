@@ -62,17 +62,17 @@ export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs }: Pro
     <div>
       <div className="flex flex-row gap-4 items-stretch">
         {/* 레벨별 필요 경험치 */}
-        <div className="flex-1 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col max-h-[570px]">
+        <div className="flex-[65] min-w-0 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col max-h-[570px]">
           <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
             <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">레벨별 필요 경험치</h3>
           </div>
           <div ref={leftScrollRef} className="overflow-y-auto flex-1 min-h-0">
             <table className="table-fixed text-sm border-collapse w-full">
               <colgroup>
-                <col style={{width:'110px'}} />
-                <col style={{width:'130px'}} />
-                <col style={{width:'100px'}} />
-                <col style={{width:'100px'}} />
+                <col style={{width:'25%'}} />
+                <col style={{width:'27%'}} />
+                <col style={{width:'24%'}} />
+                <col style={{width:'24%'}} />
               </colgroup>
               <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
@@ -104,7 +104,7 @@ export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs }: Pro
         </div>
 
         {/* 경험치 패널티 */}
-        <div className="w-[360px] shrink-0 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col max-h-[570px]">
+        <div className="flex-[35] min-w-0 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col max-h-[570px]">
           <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
             <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">경험치 패널티</h3>
           </div>

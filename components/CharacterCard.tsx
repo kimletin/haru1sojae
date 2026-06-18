@@ -37,6 +37,14 @@ const REFRESH_COOLDOWN = 1 * 60 * 1000; // 1분
 
 // StrictMode 이중 호출 방지 (image/skill fetch용)
 
+function formatLastUpdated(savedAt: number): string {
+  const diff = Math.floor((Date.now() - savedAt) / 1000);
+  if (diff < 60) return '방금 전';
+  if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+  return `${Math.floor(diff / 86400)}일 전`;
+}
+
 function kstDate(daysAgo: number): string {
   const now = new Date();
   const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
@@ -87,6 +95,7 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<number | null>(null);
   const [cooldownLeft, setCooldownLeft] = useState(0);
+  const [lastUpdatedLabel, setLastUpdatedLabel] = useState<string | null>(null);
   const [barTooltip, setBarTooltip] = useState<{ idx: number; x: number; y: number } | null>(null);
   const [boakTooltip, setBoakTooltip] = useState<{ x: number; y: number; name: string; mp?: number; ep?: number } | null>(null);
   const chartRef = useRef<HTMLDivElement>(null);
@@ -131,6 +140,7 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
       if (isSuccess) {
         const savedAt = Date.now();
         setLastRefreshedAt(savedAt);
+        setLastUpdatedLabel('방금 전');
 
         if (onMetaUpdate) {
           const metaUpdate: Record<string, unknown> = { imageUpdatedAt: savedAt, skillUpdatedAt: savedAt };
@@ -189,6 +199,7 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
         setHistory(hist);
         setRanking(cache.ranking ?? null);
         setLastRefreshedAt(cache.savedAt ?? null);
+        if (cache.savedAt) setLastUpdatedLabel(formatLastUpdated(cache.savedAt));
         onTodayLoaded?.(todayPoint?.expRate ?? null);
       } else {
         // 첫 추가: 즉시 fetch
@@ -197,6 +208,15 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
     } catch {}
 
   }, [meta?.ocid]);
+
+  // 최근 업데이트 라벨 실시간 갱신 (1분마다)
+  useEffect(() => {
+    if (!lastRefreshedAt) return;
+    const id = setInterval(() => {
+      setLastUpdatedLabel(formatLastUpdated(lastRefreshedAt));
+    }, 60_000);
+    return () => clearInterval(id);
+  }, [lastRefreshedAt]);
 
   // 바깥 터치 시 툴팁 닫기
   useEffect(() => {
@@ -214,9 +234,6 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
 
   // 새로고침 버튼 상태
   const canRefresh = !refreshing && cooldownLeft === 0;
-  const cooldownSec = Math.ceil(cooldownLeft / 1000);
-  const cooldownMin = Math.floor(cooldownSec / 60);
-  const cooldownRemain = `${cooldownMin}:${String(cooldownSec % 60).padStart(2, '0')}`;
 
   if (isEmpty) {
     return (
@@ -249,26 +266,29 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
 
       <div className="relative flex items-stretch h-[185px]">
         {hasApi && (
-          <button
-            onClick={doRefresh}
-            disabled={!canRefresh}
-            className={`absolute top-2 left-2 z-10 w-8 h-8 flex items-center justify-center rounded bg-orange-400 dark:bg-orange-500 text-white transition-colors cursor-pointer disabled:cursor-not-allowed ${refreshing ? 'opacity-40' : ''}`}
-          >
-            {refreshing ? (
-              <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
-              </svg>
-            ) : cooldownLeft > 0 ? (
-              <span className="text-[11px] font-bold tabular-nums leading-none text-white text-center">{cooldownRemain}</span>
-            ) : (
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M23 4v6h-6" />
-                <path d="M1 20v-6h6" />
-                <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-              </svg>
+          <div className="absolute top-2 left-2 z-10 flex items-start gap-1.5">
+            <button
+              onClick={doRefresh}
+              disabled={!canRefresh}
+              className="w-8 h-8 flex items-center justify-center rounded bg-orange-400 dark:bg-orange-500 text-white transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {refreshing ? (
+                <svg className="animate-spin w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
+                </svg>
+              ) : (
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 4v6h-6" />
+                  <path d="M1 20v-6h6" />
+                  <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+                </svg>
+              )}
+            </button>
+            {lastUpdatedLabel && !refreshing && (
+              <span className="text-[10px] text-gray-400 dark:text-zinc-500 whitespace-nowrap">최근 업데이트: {lastUpdatedLabel}</span>
             )}
-          </button>
+          </div>
         )}
         {/* 좌측: 캐릭터 정보 */}
         <div className="flex flex-col px-4 flex-1 pt-1 pb-5">
@@ -391,10 +411,10 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
                     <div className="w-full relative flex items-end" style={{ height: 84 }}>
                       {slot.expRate !== null ? (
                         <>
-                          {slot.level !== null && (i === 0 || slots[i - 1].level !== slot.level) && (
+                          {slot.level !== null && (i === 0 || slots.slice(0, i).reverse().find(s => s.level !== null)?.level !== slot.level) && (
                             <span
                               className="absolute left-0 right-0 text-center text-[8px] text-gray-900 dark:text-white leading-none pointer-events-none"
-                              style={{ bottom: Math.max((slot.expRate / 100) * 84, 2) + 16 }}
+                              style={{ bottom: Math.max((slot.expRate / 100) * 84, 2) + 12 }}
                             >
                               {slot.level}
                             </span>

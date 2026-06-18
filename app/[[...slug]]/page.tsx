@@ -156,8 +156,8 @@ export default function Home() {
   const activePresetRef = useRef(0);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tab = PARAM_TO_TAB[params.get('tab') ?? ''];
+    const slug = window.location.pathname.replace(/^\//, '');
+    const tab = PARAM_TO_TAB[slug];
     const initialTab = tab ?? TABS[0];
     if (tab) setActiveTab(tab);
     document.title = `${initialTab} | 하루1소재`;
@@ -197,13 +197,8 @@ export default function Home() {
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
     document.title = `${tab} | 하루1소재`;
-    const url = new URL(window.location.href);
-    if (tab === TABS[0]) {
-      url.searchParams.delete('tab');
-    } else {
-      url.searchParams.set('tab', TAB_PARAM[tab]);
-    }
-    window.history.replaceState({}, '', url.toString());
+    const path = tab === TABS[0] ? '/' : '/' + TAB_PARAM[tab];
+    window.history.replaceState({}, '', path);
   };
 
   const handleChange = (key: keyof InputValues, value: number | string | boolean | MobGroup[]) => {
@@ -248,7 +243,17 @@ export default function Home() {
     const charLevel = Math.min(Math.max(info.level, 260), 300);
     const { region, ground } = getDefaultHunting(charLevel);
     const epicZone = charLevel >= 280 ? '악몽선경' : charLevel >= 270 ? '앵컴' : '하이마운틴';
-    newPresets[idx] = { ...newPresets[idx], charLevel, huntingRegion: region, huntingGround: ground, epicDungeonZone: epicZone };
+    newPresets[idx] = {
+      ...newPresets[idx],
+      charLevel,
+      huntingRegion: region,
+      huntingGround: ground.name,
+      huntingMobs: ground.mobs,
+      monsterLevel: ground.mobs[0].level,
+      mobCount: ground.mobs.reduce((s, m) => s + m.count, 0),
+      boosterMonsterLevel: ground.boosterLevel ?? ground.mobs[ground.mobs.length - 1].level,
+      epicDungeonZone: epicZone,
+    };
     presetsRef.current = newPresets;
     savePresets(newPresets);
     if (idx === activePresetRef.current) setInputs(newPresets[idx]);

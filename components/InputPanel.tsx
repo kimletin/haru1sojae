@@ -28,7 +28,7 @@ function TooltipIcon({ text }: { text: React.ReactNode }) {
         className="text-xs text-gray-400 dark:text-zinc-500 border border-gray-300 dark:border-zinc-600 rounded-full w-4 h-4 flex items-center justify-center cursor-default select-none"
         onClick={() => setOpen(v => !v)}
       >?</span>
-      <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-52 bg-gray-800 text-white text-[11px] rounded-lg px-2.5 py-2 transition-opacity pointer-events-none z-50 leading-relaxed ${open ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+      <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-52 bg-gray-800 text-white text-[11px] rounded-lg px-2.5 py-1.5 transition-opacity pointer-events-none z-50 leading-relaxed shadow-lg ${open ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
         {text}
       </div>
     </div>
@@ -236,7 +236,7 @@ export default function InputPanel({ inputs, onChange }: Props) {
             <div className="flex gap-1">
               {([
                 { val: '없음',   label: '평일',   tip: null },
-                { val: '기본',   label: '기본',   tip: '+50%' },
+                { val: '기본',   label: '썬데이', tip: '+50%' },
                 { val: '스페셜', label: '스페셜', tip: '+300%' },
               ] as const).map(({ val, label, tip }) => (
                 <div key={val} className="relative group flex items-center">
@@ -252,7 +252,7 @@ export default function InputPanel({ inputs, onChange }: Props) {
                     {label}
                   </button>
                   {tip && (
-                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-16 bg-gray-800 text-white text-[11px] rounded-lg px-2.5 py-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 text-center leading-relaxed">
+                    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2.5 py-1.5 rounded-lg bg-gray-800 text-white text-[11px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg">
                       {tip}
                     </div>
                   )}

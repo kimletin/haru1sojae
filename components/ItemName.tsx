@@ -28,7 +28,7 @@ export default function ItemName({ name }: { name: string }) {
         {name.replace('(메소)', '')}
         <span className="relative group inline-flex items-center justify-center w-4 h-4 rounded bg-amber-500 text-white text-[10px] font-bold ml-0.5 shrink-0 cursor-default">
           M
-          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 bg-gray-800 text-white text-[11px] rounded-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50">
+          <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2.5 py-1.5 rounded-lg bg-gray-800 text-white text-[11px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg">
             메소
           </span>
         </span>
@@ -41,7 +41,7 @@ export default function ItemName({ name }: { name: string }) {
         {name.replace('(메포)', '')}
         <span className="relative group inline-flex items-center justify-center w-4 h-4 rounded bg-red-500 text-white text-[10px] font-bold ml-0.5 shrink-0 cursor-default">
           P
-          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 bg-gray-800 text-white text-[11px] rounded-lg whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50">
+          <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2.5 py-1.5 rounded-lg bg-gray-800 text-white text-[11px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg">
             메이플포인트
           </span>
         </span>

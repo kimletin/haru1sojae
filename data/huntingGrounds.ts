@@ -227,12 +227,12 @@ export const HUNTING_REGIONS: HuntingRegion[] = [
   },
 ];
 
-export function getDefaultHunting(charLevel: number): { region: string; ground: string } {
+export function getDefaultHunting(charLevel: number): { region: string; ground: HuntingGround } {
   // 캐릭터 레벨 이하의 몹이 있는 가장 높은 지역의 첫 번째 사냥터
   let best = HUNTING_REGIONS[0];
   for (const region of HUNTING_REGIONS) {
     const minMobLevel = Math.min(...region.grounds[0].mobs.map(g => g.level));
     if (minMobLevel <= charLevel) best = region;
   }
-  return { region: best.name, ground: best.grounds[0].name };
+  return { region: best.name, ground: best.grounds[0] };
 }

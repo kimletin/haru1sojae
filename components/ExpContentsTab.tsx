@@ -589,6 +589,11 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
   // 몬스터파크 보약 체크박스
   const [applyParkBonus, setApplyParkBonus] = useState(false);
 
+  // 몬스터파크 썬데이메이플
+  type SundayType = '평일' | '썬데이' | '스페셜';
+  const SUNDAY_MULT: Record<SundayType, number> = { '평일': 1, '썬데이': 1.5, '스페셜': 4 };
+  const [sundayType, setSundayType] = useState<SundayType>('평일');
+
   // 블루베리 농장 시뮬레이터 state
   const [blueSimLevel, setBlueSimLevel] = useState(String(charLevel));
   const [blueSimExpPct, setBlueSimExpPct] = useState('');
@@ -844,7 +849,9 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </thead>
                         <tbody>
                           {Object.entries(MONSTER_PARK_EXP).map(([zone, baseExp]) => {
-                            const exp = applyParkBonus && monsterParkBonus > 0 ? Math.round(baseExp * (1 + monsterParkBonus / 100)) : baseExp;
+                            const sundayBonus = SUNDAY_MULT[sundayType] - 1;
+                            const potionBonus = applyParkBonus && monsterParkBonus > 0 ? monsterParkBonus / 100 : 0;
+                            const exp = Math.round(baseExp * (1 + sundayBonus + potionBonus));
                             const isMe = zone === myParkZone;
                             const subColor = isMe ? 'text-orange-500' : 'text-gray-400 dark:text-zinc-500';
                             return (
@@ -867,7 +874,28 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                       </table>
                     </div>
                   </div>
-                  <div className="px-4 py-2 flex justify-end border-t border-gray-100 dark:border-zinc-700 shrink-0">
+                  <div className="px-4 py-2 flex items-center justify-between border-t border-gray-100 dark:border-zinc-700 shrink-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500 dark:text-zinc-400">썬데이</span>
+                      {(['평일', '썬데이', '스페셜'] as SundayType[]).map(t => {
+                        const tip = t === '썬데이' ? '+50%' : t === '스페셜' ? '+300%' : null;
+                        return (
+                          <div key={t} className="relative group">
+                            <button
+                              onClick={() => setSundayType(t)}
+                              className={`text-xs px-2 py-0.5 rounded border cursor-pointer transition-colors ${sundayType === t ? 'bg-orange-500 border-orange-500 text-white' : 'border-gray-300 dark:border-zinc-600 text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700'}`}
+                            >
+                              {t}
+                            </button>
+                            {tip && (
+                              <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2.5 py-1.5 rounded-lg bg-gray-800 text-white text-[11px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg">
+                                {tip}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                     <label className={`flex items-center gap-1.5 select-none ${monsterParkBonus > 0 ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}>
                       <input
                         type="checkbox"
@@ -955,7 +983,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </div>
                       </div>
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">버닝 비욘드</span>
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">버닝</span>
                         <button
                           onClick={() => setVipSimBeyond(v => !v)}
                           disabled={parseInt(vipSimLevel) >= 279}
@@ -966,7 +994,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                                 ? 'bg-orange-500 border-orange-500 text-white'
                                 : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400 dark:hover:border-orange-400'))}
                         >
-                          버닝 비욘드
+                          버닝 BEYOND
                         </button>
                       </div>
                       <div className="flex items-center justify-between gap-3">
@@ -1097,7 +1125,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </div>
                       </div>
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">버닝 비욘드</span>
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">버닝</span>
                         <button
                           onClick={() => setCouponSimBeyond(v => !v)}
                           disabled={parseInt(couponSimLevel) >= 279}
@@ -1108,7 +1136,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                                 ? 'bg-orange-500 border-orange-500 text-white'
                                 : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400 dark:hover:border-orange-400'))}
                         >
-                          버닝 비욘드
+                          버닝 BEYOND
                         </button>
                       </div>
                       <div className="flex items-center justify-between gap-3">
@@ -1332,7 +1360,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                           disabled={parseInt(blueSimLevel) >= 279}
                           className={'px-2 py-0 h-[24px] text-[12px] font-medium rounded border-2 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ' +
                             (blueSimBeyond ? 'bg-orange-500 border-orange-500 text-white' : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400')}>
-                          버닝 비욘드
+                          버닝 BEYOND
                         </button>
                       </div>
                       <div className="flex items-center justify-between gap-3">
@@ -1453,7 +1481,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </div>
                       </div>
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">버닝 비욘드</span>
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">버닝</span>
                         <button
                           onClick={() => setSimBeyond(v => !v)}
                           disabled={parseInt(simLevel) >= 279}
@@ -1464,15 +1492,15 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                                 ? 'bg-orange-500 border-orange-500 text-white'
                                 : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400 dark:hover:border-orange-400'))}
                         >
-                          버닝 비욘드
+                          버닝 BEYOND
                         </button>
                       </div>
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">썬데이 몬파</span>
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">썬데이</span>
                         <div className="flex gap-1">
                           {([
                             { val: '없음' as SundayType,   label: '평일' },
-                            { val: '기본' as SundayType,   label: '기본' },
+                            { val: '기본' as SundayType,   label: '썬데이' },
                             { val: '스페셜' as SundayType, label: '스페셜' },
                           ]).map(({ val, label }) => (
                             <button
