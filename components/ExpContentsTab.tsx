@@ -536,6 +536,9 @@ interface Props {
   slotKey?: number;
 }
 
+type SundayType = '평일' | '썬데이' | '스페셜';
+const SUNDAY_MULT: Record<SundayType, number> = { '평일': 1, '썬데이': 1.5, '스페셜': 4 };
+
 export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBonus, epicDungeonBonus = 0, epicDungeonBonuses = [], todayExpRate, slotKey }: Props) {
   const myParkZone = getMonsterParkZone(charLevel);
 
@@ -547,7 +550,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
   const [simPotionBuff, setSimPotionBuff] = useState('');
   const [simBeyond, setSimBeyond] = useState(false);
   const [simRounds, setSimRounds] = useState(7);
-  const [simSunday, setSimSunday] = useState<SundayType>('없음');
+  const [simSunday, setSimSunday] = useState<SundayType>('평일');
   const [simResult, setSimResult] = useState<{ gainedExp: number; gainPct: number; finalLevel: number; finalPct: number } | null>(null);
   const [simLoaded, setSimLoaded] = useState(false);
 
@@ -590,8 +593,6 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
   const [applyParkBonus, setApplyParkBonus] = useState(false);
 
   // 몬스터파크 썬데이메이플
-  type SundayType = '평일' | '썬데이' | '스페셜';
-  const SUNDAY_MULT: Record<SundayType, number> = { '평일': 1, '썬데이': 1.5, '스페셜': 4 };
   const [sundayType, setSundayType] = useState<SundayType>('평일');
 
   // 블루베리 농장 시뮬레이터 state
@@ -660,7 +661,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
     if (!LEVEL_EXP[lv]) return;
     const baseExp = MONSTER_PARK_EXP[getMonsterParkZone(lv)];
     if (!baseExp) return;
-    const simSundayPct = simSunday === '없음' ? 0 : simSunday === '기본' ? 50 : 300;
+    const simSundayPct = (SUNDAY_MULT[simSunday] - 1) * 100;
     const totalBonusPct = potionBuff + simSundayPct;
     const expPerRound = Math.round(baseExp * (1 + totalBonusPct / 100));
     const totalGained = expPerRound * simRounds;
@@ -877,7 +878,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                   <div className="px-4 py-2 flex items-center justify-between border-t border-gray-100 dark:border-zinc-700 shrink-0">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-500 dark:text-zinc-400">썬데이</span>
-                      {(['평일', '썬데이', '스페셜'] as SundayType[]).map(t => {
+                      {(['평일', '썬데이', '스페셜'] as const).map(t => {
                         const tip = t === '썬데이' ? '+50%' : t === '스페셜' ? '+300%' : null;
                         return (
                           <div key={t} className="relative group">
@@ -1499,9 +1500,9 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">썬데이</span>
                         <div className="flex gap-1">
                           {([
-                            { val: '없음' as SundayType,   label: '평일' },
-                            { val: '기본' as SundayType,   label: '썬데이' },
-                            { val: '스페셜' as SundayType, label: '스페셜' },
+                            { val: '평일',   label: '평일' },
+                            { val: '썬데이', label: '썬데이' },
+                            { val: '스페셜', label: '스페셜' },
                           ]).map(({ val, label }) => (
                             <button
                               key={val}
