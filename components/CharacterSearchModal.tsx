@@ -19,9 +19,11 @@ interface Props {
   onConfirm: (info: CharacterInfo) => void;
   onClose?: () => void;
   onSkip?: () => void;
+  existingOcids?: string[];
+  existingNames?: string[];
 }
 
-export default function CharacterSearchModal({ onConfirm, onClose, onSkip }: Props) {
+export default function CharacterSearchModal({ onConfirm, onClose, onSkip, existingOcids = [], existingNames = [] }: Props) {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -140,13 +142,19 @@ export default function CharacterSearchModal({ onConfirm, onClose, onSkip }: Pro
                   </div>
                 )}
               </div>
-              <button
-                onClick={() => { if (result.level < 300) onConfirm(result); }}
-                disabled={result.level >= 300}
-                className="mt-2.5 w-full py-1.5 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {result.level >= 300 ? '만렙을 축하합니다 🎉' : '추가'}
-              </button>
+              {(() => {
+                const isDuplicate = !!result.ocid && existingOcids.includes(result.ocid);
+                const isMaxLevel = result.level >= 300;
+                return (
+                  <button
+                    onClick={() => { if (!isMaxLevel && !isDuplicate) onConfirm(result); }}
+                    disabled={isMaxLevel || isDuplicate}
+                    className="mt-2.5 w-full py-1.5 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {isMaxLevel ? '만렙을 축하합니다 🎉' : isDuplicate ? '중복된 캐릭터입니다' : '추가'}
+                  </button>
+                );
+              })()}
             </div>
           </div>
         )}

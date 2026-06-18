@@ -7,13 +7,6 @@ interface Props {
   items: EfficiencyItem[];
 }
 
-const CATEGORY_COLOR: Record<EfficiencyItem['category'], string> = {
-  '30분 도핑': 'bg-green-100 text-green-700',
-  '30일 도핑': 'bg-blue-100 text-blue-700',
-  'BM':        'bg-orange-100 text-orange-700',
-  '마진':      'bg-purple-100 text-purple-700',
-};
-
 function rankColor(rank: number, total: number): string {
   const t = total <= 1 ? 0 : (rank - 1) / (total - 1);
   let r, g, b;

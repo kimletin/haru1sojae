@@ -206,23 +206,29 @@ export default function InputPanel({ inputs, onChange }: Props) {
             <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap flex-1">에픽 던전</label>
             <div className="flex gap-1">
               {([
-                { val: '하이마운틴', label: '하마' },
-                { val: '앵컴',       label: '앵컴' },
-                { val: '악몽선경',   label: '선경' },
-              ] as const).map(({ val, label }) => (
-                <button
-                  key={val}
-                  onClick={() => onChange('epicDungeonZone', val)}
-                  className={
-                    'px-2 py-0 h-[24px] text-[12px] font-medium rounded border-2 transition-colors cursor-pointer ' +
-                    (inputs.epicDungeonZone === val
-                      ? 'bg-orange-500 border-orange-500 text-white'
-                      : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400 dark:hover:border-orange-400')
-                  }
-                >
-                  {label}
-                </button>
-              ))}
+                { val: '하이마운틴', label: '하마', minLv: 260 },
+                { val: '앵컴',       label: '앵컴', minLv: 270 },
+                { val: '악몽선경',   label: '선경', minLv: 280 },
+              ] as const).map(({ val, label, minLv }) => {
+                const accessible = inputs.charLevel >= minLv;
+                return (
+                  <button
+                    key={val}
+                    onClick={() => accessible && onChange('epicDungeonZone', val)}
+                    disabled={!accessible}
+                    className={
+                      'px-2 py-0 h-[24px] text-[12px] font-medium rounded border-2 transition-colors ' +
+                      (!accessible
+                        ? 'opacity-40 cursor-not-allowed bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400'
+                        : inputs.epicDungeonZone === val
+                          ? 'bg-orange-500 border-orange-500 text-white cursor-pointer'
+                          : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400 dark:hover:border-orange-400 cursor-pointer')
+                    }
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
           </div>
           <div className="flex items-center gap-3 py-1">

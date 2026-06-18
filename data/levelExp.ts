@@ -47,4 +47,5 @@ export const LEVEL_EXP: Record<number, LevelExpData> = {
   297: { required: 1053187790325840,increase:0.1,  cumulative: 5617756192327270, ratio: 0.65982 },
   298: { required: 1158506569358420,increase:0.1,  cumulative: 6776262761685690, ratio: 0.79589 },
   299: { required: 1737759854037630,increase:0.5,  cumulative: 8514022615723330, ratio: 1       },
+  300: { required: Number.MAX_SAFE_INTEGER, increase: 0, cumulative: 0, ratio: 0 }, // 최대 레벨 (finalPct=0 보장용)
 };
