@@ -42,7 +42,7 @@ function getHuntingExpCore(charLevel: number, mobs: MobGroup[]): number {
   }, 0);
 }
 
-/** inputs에서 MobGroup[] 추출 (구버전 호환 폴백 포함) */
+/** inputs에서 MobGroup[] 추출 */
 function getMobs(inputs: InputValues): MobGroup[] {
   if (inputs.huntingMobs && inputs.huntingMobs.length > 0) return inputs.huntingMobs;
   return [{ level: inputs.monsterLevel, count: inputs.mobCount }];

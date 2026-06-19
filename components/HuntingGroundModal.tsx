@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { HUNTING_REGIONS } from '@/data/huntingGrounds';
 import type { HuntingGround } from '@/data/huntingGrounds';
 import type { MobGroup } from '@/types';
@@ -34,6 +34,15 @@ function regionLevelRange(regionName: string): string {
 }
 
 export default function HuntingGroundModal({ currentRegion, currentGround, charLevel, onConfirm, onClose }: Props) {
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, []);
+
   const [selectedRegion, setSelectedRegion] = useState(currentRegion);
 
   const region = HUNTING_REGIONS.find(r => r.name === selectedRegion) ?? HUNTING_REGIONS[0];

@@ -33,7 +33,7 @@ export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs }: Pro
     ? mobs.map(m => m.level).filter((v, i, a) => a.indexOf(v) === i)
     : [monsterLevel];
 
-  const levels = Object.keys(LEVEL_EXP).map(Number).sort((a, b) => a - b);
+  const levels = Object.keys(LEVEL_EXP).map(Number).sort((a, b) => a - b).filter(lv => lv < 300);
 
   const activeDiffs = new Set(mobLevels.map(lv => charLevel - lv));
 

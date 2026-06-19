@@ -33,7 +33,7 @@ export default function InfoCenterTab() {
 
   return (
     <div className="w-full flex flex-col">
-      <div className="flex gap-2 mb-4 shrink-0">
+      <div className="flex gap-2 mb-4 shrink-0 justify-end">
         {SECTIONS.map(s => (
           <button
             key={s}

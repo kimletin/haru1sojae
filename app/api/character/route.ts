@@ -39,7 +39,13 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: message }, { status: clientStatus });
       }
       const char = await charRes.json();
-      return NextResponse.json({ image: char.character_image ?? null });
+      return NextResponse.json({
+        image: char.character_image ?? null,
+        level: char.character_level ?? null,
+        class: char.character_class ?? null,
+        world: char.world_name ?? null,
+        guild: char.character_guild_name ?? null,
+      });
     } catch (e) {
       if (e instanceof Error && e.name === 'AbortError') {
         return NextResponse.json({ error: 'API 응답 시간이 초과됐습니다' }, { status: 504 });

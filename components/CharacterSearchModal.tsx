@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export interface CharacterInfo {
   name: string;
@@ -12,6 +12,7 @@ export interface CharacterInfo {
   guild?: string | null;
   monsterParkBonus?: number;
   epicDungeonBonus?: number;
+  treasureBonus?: number;
   expRate?: number;
 }
 
@@ -24,6 +25,15 @@ interface Props {
 }
 
 export default function CharacterSearchModal({ onConfirm, onClose, onSkip, existingOcids = [], existingNames = [] }: Props) {
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, []);
+
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

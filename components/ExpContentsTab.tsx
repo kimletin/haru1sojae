@@ -6,11 +6,14 @@ import { MONSTER_PARK_EXP, getMonsterParkZone } from '@/data/monsterPark';
 import { SUPER_EXP_COUPON } from '@/data/superExpCoupon';
 import { MEKABERRY_EXP } from '@/data/mekaberry';
 import { BLUEBERRY_EXP } from '@/data/blueberry';
-import { EXPRESS_BOOSTER_EXP } from '@/data/expressBooster';
 import { LEVEL_EXP } from '@/data/levelExp';
 import { HAIMOUNTAIN, ANGLER_COMPANY, NIGHTMARE_SANCTUARY } from '@/data/epicDungeon';
+import { MONSTER_EXP } from '@/data/monsterExp';
+import { TREASURE_MULTIPLIERS } from '@/data/treasureHunter';
+import type { TreasureDungeon } from '@/data/treasureHunter';
 import type { SundayType } from '@/types';
 import Num from '@/components/Num';
+import TooltipWrapper from '@/components/TooltipWrapper';
 
 const LEVELS = Array.from({ length: 40 }, (_, i) => i + 260);
 
@@ -37,20 +40,23 @@ function SectionTable({ title, headerColor, titleColor, rows, levelLabel, valueL
   const activeRef = useRef<HTMLTableRowElement>(null);
 
   useEffect(() => {
-    if (activeRef.current && scrollRef.current) {
-      const container = scrollRef.current;
-      const row = activeRef.current;
-      const offset = row.offsetTop - container.clientHeight / 2 + row.clientHeight / 2;
-      container.scrollTop = offset;
-    }
+    const frame = requestAnimationFrame(() => {
+      if (activeRef.current && scrollRef.current) {
+        const container = scrollRef.current;
+        const row = activeRef.current;
+        const offset = row.offsetTop - container.clientHeight / 2 + row.clientHeight / 2;
+        container.scrollTop = offset;
+      }
+    });
+    return () => cancelAnimationFrame(frame);
   }, [rows]);
 
   return (
-    <div className={'bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col ' + className}>
+    <div className={'bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col ' + className} style={{maxHeight:'664px'}}>
       <div className={'px-4 py-2.5 border-b shrink-0 ' + headerColor}>
         <h3 className={'text-sm font-semibold text-center ' + titleColor}>{title}</h3>
       </div>
-      <div ref={scrollRef} className="overflow-y-auto overflow-x-hidden flex-1 min-h-0">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         <table className="table-fixed text-sm border-collapse w-full">
           <colgroup>
             <col style={{width:'50%'}} />
@@ -107,19 +113,23 @@ interface DungeonTableProps {
   epicDungeonBonus: number;
   epicDungeonBonuses: BonusEntry[];
   scrollKey?: string;
-  fillHeight?: boolean;
 }
 
 type StageKey = 'stage0' | 'stage1' | 'stage2';
 
-function DungeonTable({ title, levels, data, metacoin, charLevel, headerColor, titleColor, badgeColor, rowBg, textColor, epicDungeonBonus, epicDungeonBonuses, scrollKey, fillHeight = true }: DungeonTableProps) {
+function DungeonTable({ title, levels, data, metacoin, charLevel, headerColor, titleColor, badgeColor, rowBg, textColor, epicDungeonBonus, epicDungeonBonuses, scrollKey }: DungeonTableProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLTableRowElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
   const [tooltip, setTooltip] = useState<{ lv: number; stage: StageKey; x: number; y: number } | null>(null);
-  const [applyBonus, setApplyBonus] = useState(false);
+  const [epicBonusInput, setEpicBonusInput] = useState(epicDungeonBonus > 0 ? String(epicDungeonBonus) : '');
 
-  const hasBonus = applyBonus && epicDungeonBonuses.length > 0;
+  useEffect(() => {
+    setEpicBonusInput(epicDungeonBonus > 0 ? String(epicDungeonBonus) : '');
+  }, [epicDungeonBonus]);
+
+  const bonusPct = parseFloat(epicBonusInput) || 0;
+  const hasBonus = bonusPct > 0 && epicDungeonBonuses.length > 0;
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -135,15 +145,11 @@ function DungeonTable({ title, levels, data, metacoin, charLevel, headerColor, t
 
   useEffect(() => {
     if (tooltip === null) return;
-    const handler = (e: TouchEvent | MouseEvent) => {
+    const handler = (e: MouseEvent) => {
       if (tableRef.current && !tableRef.current.contains(e.target as Node)) setTooltip(null);
     };
-    document.addEventListener('touchstart', handler);
     document.addEventListener('mousedown', handler);
-    return () => {
-      document.removeEventListener('touchstart', handler);
-      document.removeEventListener('mousedown', handler);
-    };
+    return () => document.removeEventListener('mousedown', handler);
   }, [tooltip]);
 
   return (
@@ -171,7 +177,8 @@ function DungeonTable({ title, levels, data, metacoin, charLevel, headerColor, t
         );
       })()}
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
+
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         <div ref={tableRef}>
           <table className="table-fixed text-sm border-collapse w-full">
             <thead className="sticky top-0 z-10">
@@ -190,7 +197,7 @@ function DungeonTable({ title, levels, data, metacoin, charLevel, headerColor, t
                 const baseColor = isMe ? textColor : 'text-gray-700 dark:text-zinc-300';
                 const subColor  = isMe ? textColor : 'text-gray-400 dark:text-zinc-500';
 
-                const bonusAmt = applyBonus ? Math.round(d.stage0 * epicDungeonBonus / 100) : 0;
+                const bonusAmt = Math.round(d.stage0 * bonusPct / 100);
                 const s0 = d.stage0 + bonusAmt;
                 const s1 = d.stage1 + bonusAmt;
                 const s2 = d.stage2 + bonusAmt;
@@ -201,7 +208,6 @@ function DungeonTable({ title, levels, data, metacoin, charLevel, headerColor, t
                 const makeHandlers = (stage: StageKey) => hasBonus ? {
                   onMouseEnter: (e: React.MouseEvent) => setTooltip({ lv, stage, x: e.clientX, y: e.clientY }),
                   onMouseLeave: () => setTooltip(null),
-                  onTouchStart: (e: React.TouchEvent) => { e.stopPropagation(); setTooltip(v => v?.lv === lv && v?.stage === stage ? null : { lv, stage, x: e.touches[0].clientX, y: e.touches[0].clientY }); },
                 } : { onMouseLeave: () => setTooltip(null) };
 
                 return (
@@ -233,18 +239,23 @@ function DungeonTable({ title, levels, data, metacoin, charLevel, headerColor, t
           </table>
         </div>
       </div>
-      <div className="px-4 py-2 flex justify-end border-t border-gray-100 dark:border-zinc-700 shrink-0">
-        <label className={`flex items-center gap-1.5 select-none ${epicDungeonBonus > 0 ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}>
-          <input
-            type="checkbox"
-            checked={applyBonus}
-            onChange={e => setApplyBonus(e.target.checked)}
-            disabled={epicDungeonBonus === 0}
-            className="w-3.5 h-3.5 accent-orange-500 cursor-pointer disabled:cursor-not-allowed"
-          />
-          <span className="text-xs text-gray-500 dark:text-zinc-400">보약 적용{epicDungeonBonus > 0 ? `(+${epicDungeonBonus}%)` : ''}</span>
-        </label>
+      <div className="px-4 py-2 flex items-center justify-end border-t border-gray-100 dark:border-zinc-700 shrink-0">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-gray-500 dark:text-zinc-400">보약</span>
+          <div className="relative flex items-center">
+            <input
+              type="text"
+              inputMode="numeric"
+              value={epicBonusInput}
+              onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); const n = parseInt(v); setEpicBonusInput(v === '' ? '' : String(Math.min(n, 200))); }}
+              className="w-14 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[22px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-4"
+              placeholder="0"
+            />
+            <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
+          </div>
+        </div>
       </div>
+
     </div>
   );
 }
@@ -259,7 +270,6 @@ const DUNGEONS = [
 
 // ─── Simulator helpers ────────────────────────────────────────────────────────
 
-const SIM_KEY = 'haru1sojae-mp-sim';
 
 function calcLevelUp(startLevel: number, startExpPct: number, gainedExp: number, beyond = false) {
   if (!LEVEL_EXP[startLevel]) return null;
@@ -522,9 +532,154 @@ const MENU_ITEMS = [
   { key: 'expcoupon',   label: '상급\nEXP 쿠폰' },
   { key: 'blueberry',   label: '블루베리\n농장' },
   { key: 'mekaberry',   label: '메카베리\n농장' },
+  { key: 'treasurehunter', label: '트레져 헌터' },
 ];
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+
+// ─── TreasureHunterTable ──────────────────────────────────────────────────────
+
+const TREASURE_LEVELS = Array.from({ length: 40 }, (_, i) => i + 260);
+const TREASURE_DUNGEONS: TreasureDungeon[] = ['폴로/프리토', '에스페시아'];
+
+function TreasureHunterTable({ monsterLevel, charLevel, treasureBonus = 0, treasureBonuses = [] }: {
+  monsterLevel: number; charLevel: number; treasureBonus?: number; treasureBonuses?: BonusEntry[];
+}) {
+  const [selectedDungeon, setSelectedDungeon] = useState<TreasureDungeon>('폴로/프리토');
+  const [bonusInput, setBonusInput] = useState(treasureBonus > 0 ? String(treasureBonus) : '');
+  const [sunday, setSunday] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const activeRef = useRef<HTMLTableRowElement>(null);
+
+  useEffect(() => {
+    setBonusInput(treasureBonus > 0 ? String(treasureBonus) : '');
+  }, [treasureBonus]);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (activeRef.current && scrollRef.current) {
+        const container = scrollRef.current;
+        const row = activeRef.current;
+        const offset = row.offsetTop - container.clientHeight / 2 + row.clientHeight / 2;
+        container.scrollTop = offset;
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [monsterLevel, selectedDungeon]);
+
+  const mult = TREASURE_MULTIPLIERS[selectedDungeon];
+  const bonusPct = parseFloat(bonusInput) || 0;
+  const sundayMult = sunday ? 3 : 1;
+
+  const calc = (lv: number, baseMult: number) => {
+    const base = (MONSTER_EXP[lv] ?? 0) * baseMult;
+    return Math.round(base * (1 + bonusPct / 100) * sundayMult);
+  };
+
+  return (
+    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col" style={{height:'664px'}}>
+      <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
+        <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">트레져 헌터</h3>
+      </div>
+      <div className="flex gap-1.5 px-3 pt-2.5 shrink-0">
+        {TREASURE_DUNGEONS.map(d => (
+          <button
+            key={d}
+            onClick={() => setSelectedDungeon(d)}
+            className={
+              'flex-1 rounded-lg text-sm font-medium transition-colors cursor-pointer py-1.5 px-3 ' +
+              (selectedDungeon === d
+                ? 'bg-orange-500 text-white border border-orange-500'
+                : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
+            }
+          >{d}</button>
+        ))}
+      </div>
+      <div ref={scrollRef} className="mt-2 flex-1 min-h-0 overflow-y-auto">
+        <table className="table-fixed text-sm border-collapse w-full">
+          <colgroup>
+            <col style={{width:'16%'}} />
+            <col style={{width:'21%'}} />
+            <col style={{width:'21%'}} />
+            <col style={{width:'21%'}} />
+            <col style={{width:'21%'}} />
+          </colgroup>
+          <thead className="sticky top-0 z-10">
+            <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
+              <th className="text-center px-2 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">몬스터 레벨</th>
+              <th className="text-center px-2 py-2 text-blue-300 font-bold">레어</th>
+              <th className="text-center px-2 py-2 text-purple-500 font-bold">에픽</th>
+              <th className="text-center px-2 py-2 text-yellow-500 font-bold">유니크</th>
+              <th className="text-center px-2 py-2 text-green-500 font-bold">레전드리</th>
+            </tr>
+          </thead>
+          <tbody>
+            {TREASURE_LEVELS.map(lv => {
+              const isMe = lv === monsterLevel;
+              const baseColor = isMe ? 'text-orange-600' : 'text-gray-700 dark:text-zinc-300';
+              const subColor  = isMe ? 'text-orange-400' : 'text-gray-400 dark:text-zinc-500';
+              const rare = calc(lv, mult.rare);
+              const epic = calc(lv, mult.epic);
+              const unique = calc(lv, mult.unique);
+              const legendary = calc(lv, mult.legendary);
+              return (
+                <tr
+                  key={lv}
+                  ref={isMe ? activeRef : undefined}
+                  className={'border-b ' + (isMe ? 'bg-orange-50 dark:bg-orange-900/40 font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-700')}
+                >
+                  <td className={'px-2 py-1.5 text-center ' + baseColor}>
+                    {lv}
+                    {isMe && <span className="ml-1 text-[9px] bg-orange-500 dark:bg-orange-700 text-white px-1 py-0.5 rounded-full">나</span>}
+                  </td>
+                  <td className={'px-2 py-1.5 text-center ' + baseColor}>
+                    <Num n={rare} />
+                    <span className={'text-xs ml-1 ' + subColor}>({pct(rare, charLevel)})</span>
+                  </td>
+                  <td className={'px-2 py-1.5 text-center ' + baseColor}>
+                    <Num n={epic} />
+                    <span className={'text-xs ml-1 ' + subColor}>({pct(epic, charLevel)})</span>
+                  </td>
+                  <td className={'px-2 py-1.5 text-center ' + baseColor}>
+                    <Num n={unique} />
+                    <span className={'text-xs ml-1 ' + subColor}>({pct(unique, charLevel)})</span>
+                  </td>
+                  <td className={'px-2 py-1.5 text-center ' + baseColor}>
+                    <Num n={legendary} />
+                    <span className={'text-xs ml-1 ' + subColor}>({pct(legendary, charLevel)})</span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+      <div className="px-4 py-2 flex items-center justify-between border-t border-gray-100 dark:border-zinc-700 shrink-0">
+        <TooltipWrapper tip="+200%">
+          <button
+            onClick={() => setSunday(s => !s)}
+            className={`text-xs px-2 py-0.5 rounded border cursor-pointer transition-colors ${sunday ? 'bg-orange-500 border-orange-500 text-white' : 'border-gray-300 dark:border-zinc-600 text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700'}`}
+          >
+            썬데이
+          </button>
+        </TooltipWrapper>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-gray-500 dark:text-zinc-400">보약</span>
+          <div className="relative flex items-center">
+            <input
+              type="text"
+              inputMode="numeric"
+              value={bonusInput}
+              onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); const n = parseInt(v); setBonusInput(v === '' ? '' : String(Math.min(n, 200))); }}
+              className="w-14 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[22px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-4"
+              placeholder="0"
+            />
+            <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface Props {
   charLevel: number;
@@ -532,16 +687,24 @@ interface Props {
   monsterParkBonus: number;
   epicDungeonBonus?: number;
   epicDungeonBonuses?: BonusEntry[];
+  treasureBonus?: number;
+  treasureBonuses?: BonusEntry[];
   todayExpRate?: number | null;
   slotKey?: number;
+  initialSelected?: string;
 }
 
 const SUNDAY_MULT: Record<SundayType, number> = { '평일': 1, '썬데이': 1.5, '스페셜': 4 };
 
-export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBonus, epicDungeonBonus = 0, epicDungeonBonuses = [], todayExpRate, slotKey }: Props) {
+export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBonus, epicDungeonBonus = 0, epicDungeonBonuses = [], treasureBonus = 0, treasureBonuses = [], todayExpRate, slotKey, initialSelected }: Props) {
   const myParkZone = getMonsterParkZone(charLevel);
 
-  const [selected, setSelected] = useState('epicdungeon');
+  const [selected, setSelected] = useState(initialSelected ?? 'epicdungeon');
+
+  useEffect(() => {
+    window.history.replaceState({}, '', '/cont/' + selected);
+  }, [selected]);
+
 
   // 시뮬레이터 state
   const [simLevel, setSimLevel] = useState(String(charLevel));
@@ -551,7 +714,6 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
   const [simRounds, setSimRounds] = useState(7);
   const [simSunday, setSimSunday] = useState<SundayType>('평일');
   const [simResult, setSimResult] = useState<{ gainedExp: number; gainPct: number; finalLevel: number; finalPct: number } | null>(null);
-  const [simLoaded, setSimLoaded] = useState(false);
 
   // VIP 사우나 시뮬레이터 state
   const [vipSimLevel, setVipSimLevel] = useState(String(charLevel));
@@ -589,7 +751,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
   const [mekaSimResult, setMekaSimResult] = useState<MekaSimResult | null>(null);
 
   // 몬스터파크 보약 체크박스
-  const [applyParkBonus, setApplyParkBonus] = useState(false);
+  const [parkBonusInput, setParkBonusInput] = useState(monsterParkBonus > 0 ? String(monsterParkBonus) : '');
 
   // 몬스터파크 썬데이메이플
   const [sundayType, setSundayType] = useState<SundayType>('평일');
@@ -606,38 +768,23 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
     | { type: '목표'; gainedExp: number; gainPct: number; finalLevel: number; finalPct: number; count: number };
   const [blueSimResult, setBlueSimResult] = useState<BlueSimResult | null>(null);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(SIM_KEY);
-      if (raw) {
-        const s = JSON.parse(raw);
-        if (s.expPct !== undefined)    setSimExpPct(s.expPct);
-        if (s.potionBuff !== undefined) setSimPotionBuff(s.potionBuff);
-        if (s.rounds !== undefined)    setSimRounds(s.rounds);
-      }
-    } catch {}
-    setSimLoaded(true);
-  }, []);
 
-  useEffect(() => {
-    if (!simLoaded) return;
-    try { localStorage.setItem(SIM_KEY, JSON.stringify({ expPct: simExpPct, potionBuff: simPotionBuff, rounds: simRounds })); } catch {}
-  }, [simExpPct, simPotionBuff, simRounds, simLoaded]);
 
 
   // CharacterCard 캐시에서 받아온 오늘 경험치 / 보약 자동 입력
   useEffect(() => {
     if (todayExpRate != null) {
-      setSimExpPct(todayExpRate.toFixed(3));
-      setVipSimExpPct(todayExpRate.toFixed(3));
-      setCouponSimExpPct(todayExpRate.toFixed(3));
-      setMekaSimExpPct(todayExpRate.toFixed(3));
-      setBlueSimExpPct(todayExpRate.toFixed(3));
+      const v = todayExpRate.toFixed(3);
+      setSimExpPct(v);
+      setVipSimExpPct(v);
+      setCouponSimExpPct(v);
+      setMekaSimExpPct(v);
+      setBlueSimExpPct(v);
     }
   }, [todayExpRate]);
   useEffect(() => {
     if (monsterParkBonus > 0) setSimPotionBuff(String(monsterParkBonus));
-  }, [monsterParkBonus]);
+  }, [monsterParkBonus, slotKey]);
   useEffect(() => {
     setSimLevel(String(charLevel));
     setVipSimLevel(String(charLevel));
@@ -652,6 +799,10 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
   // slotKey가 바뀌면 charLevel이 같아도 강제 갱신
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slotKey, charLevel]);
+
+  useEffect(() => {
+    setParkBonusInput(monsterParkBonus > 0 ? String(monsterParkBonus) : '');
+  }, [monsterParkBonus, slotKey]);
 
   const handleSimCalc = () => {
     const lv = parseInt(simLevel) || 0;
@@ -774,7 +925,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
               'aspect-square rounded-lg text-sm font-medium transition-colors cursor-pointer flex flex-col items-center justify-center whitespace-pre-line text-center ' +
               (selected === item.key
                 ? 'bg-orange-500 text-white border border-orange-500'
-                : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
+                : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
             }
           >
             {item.label}
@@ -786,7 +937,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
       <div className="flex flex-1 gap-4 items-stretch">
         {isEpic ? (
           /* 에픽 던전 — 전체 너비 사용 */
-          <div className="flex-1 flex flex-col gap-2 max-h-[570px]">
+          <div className="flex-1 flex flex-col gap-1.5" style={{height:'664px'}}>
             <div className="flex gap-1.5 shrink-0">
               {DUNGEONS.map(d => (
                 <button
@@ -796,7 +947,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                     'flex-1 rounded-lg text-sm font-medium transition-colors cursor-pointer py-2 px-3 flex flex-col items-center justify-center ' +
                     (selectedDungeon === d.name
                       ? 'bg-orange-500 text-white border border-orange-500'
-                      : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
+                      : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
                   }
                 >
                   <div className="font-semibold">{d.name}</div>
@@ -821,7 +972,6 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                 epicDungeonBonus={epicDungeonBonus}
                 epicDungeonBonuses={epicDungeonBonuses}
                 scrollKey={selected + selectedDungeon}
-                fillHeight={dungeon.minLv < 280}
               />
             </div>
           </div>
@@ -830,11 +980,11 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
             {/* 좌측 카드 */}
             <div className="flex-1">
               {selected === 'monsterpark' && (
-                <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+                <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col" style={{maxHeight:'664px'}}>
                   <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
                     <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">몬스터파크</h3>
                   </div>
-                  <div className="overflow-y-auto flex-1 min-h-0">
+                  <div className="flex-1 min-h-0 overflow-y-auto">
                     <div>
                       <table className="table-fixed w-full text-sm border-collapse">
                         <colgroup>
@@ -850,7 +1000,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         <tbody>
                           {Object.entries(MONSTER_PARK_EXP).map(([zone, baseExp]) => {
                             const sundayBonus = SUNDAY_MULT[sundayType] - 1;
-                            const potionBonus = applyParkBonus && monsterParkBonus > 0 ? monsterParkBonus / 100 : 0;
+                            const potionBonus = (parseFloat(parkBonusInput) || 0) / 100;
                             const exp = Math.round(baseExp * (1 + sundayBonus + potionBonus));
                             const isMe = zone === myParkZone;
                             const subColor = isMe ? 'text-orange-500' : 'text-gray-400 dark:text-zinc-500';
@@ -877,35 +1027,35 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                   <div className="px-4 py-2 flex items-center justify-between border-t border-gray-100 dark:border-zinc-700 shrink-0">
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-500 dark:text-zinc-400">썬데이</span>
-                      {(['평일', '썬데이', '스페셜'] as const).map(t => {
-                        const tip = t === '썬데이' ? '+50%' : t === '스페셜' ? '+300%' : null;
-                        return (
-                          <div key={t} className="relative group">
-                            <button
-                              onClick={() => setSundayType(t)}
-                              className={`text-xs px-2 py-0.5 rounded border cursor-pointer transition-colors ${sundayType === t ? 'bg-orange-500 border-orange-500 text-white' : 'border-gray-300 dark:border-zinc-600 text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700'}`}
-                            >
-                              {t}
-                            </button>
-                            {tip && (
-                              <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2.5 py-1.5 rounded-lg bg-gray-800 text-white text-[11px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-50 shadow-lg">
-                                {tip}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                      {([
+                        { val: '평일',   tip: '+0%' },
+                        { val: '썬데이', tip: '+50%' },
+                        { val: '스페셜', tip: '+300%' },
+                      ] as const).map(({ val, tip }) => (
+                        <TooltipWrapper key={val} tip={tip}>
+                          <button
+                            onClick={() => setSundayType(val)}
+                            className={`text-xs px-2 py-0.5 rounded border cursor-pointer transition-colors ${sundayType === val ? 'bg-orange-500 border-orange-500 text-white' : 'border-gray-300 dark:border-zinc-600 text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700'}`}
+                          >
+                            {val}
+                          </button>
+                        </TooltipWrapper>
+                      ))}
                     </div>
-                    <label className={`flex items-center gap-1.5 select-none ${monsterParkBonus > 0 ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}`}>
-                      <input
-                        type="checkbox"
-                        checked={applyParkBonus}
-                        onChange={e => setApplyParkBonus(e.target.checked)}
-                        disabled={monsterParkBonus === 0}
-                        className="w-3.5 h-3.5 accent-orange-500 cursor-pointer disabled:cursor-not-allowed"
-                      />
-                      <span className="text-xs text-gray-500 dark:text-zinc-400">보약 적용{monsterParkBonus > 0 ? `(+${monsterParkBonus}%)` : ''}</span>
-                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-gray-500 dark:text-zinc-400">보약</span>
+                      <div className="relative flex items-center">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={parkBonusInput}
+                          onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); const n = parseInt(v); setParkBonusInput(v === '' ? '' : String(Math.min(n, 200))); }}
+                          className="w-14 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[22px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-4"
+                          placeholder="0"
+                        />
+                        <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -917,7 +1067,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                   headerColor="bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
                   titleColor="text-gray-800 dark:text-zinc-100"
                   levelLabel="레벨"
-                  className="max-h-[570px]"
+                  className=""
                   rows={LEVELS.map(lv => ({ level: lv, value: VIP_SAUNA_EXP[lv] ?? 0, isMe: lv === charLevel, ...commonRowProps }))}
                 />
               )}
@@ -929,7 +1079,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                   headerColor="bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
                   titleColor="text-gray-800 dark:text-zinc-100"
                   levelLabel="레벨"
-                  className="max-h-[570px]"
+                  className=""
                   rows={LEVELS.map(lv => ({ level: lv, value: (SUPER_EXP_COUPON[lv] ?? 0) * 1000, isMe: lv === charLevel, ...commonRowProps }))}
                 />
               )}
@@ -940,7 +1090,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                   headerColor="bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
                   titleColor="text-gray-800 dark:text-zinc-100"
                   levelLabel="레벨"
-                  className="max-h-[570px]"
+                  className=""
                   rows={LEVELS.filter(lv => lv >= 280).map(lv => ({ level: lv, value: MEKABERRY_EXP[lv] ?? 0, isMe: lv === charLevel, ...commonRowProps }))}
                 />
               )}
@@ -951,15 +1101,24 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                   headerColor="bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
                   titleColor="text-gray-800 dark:text-zinc-100"
                   levelLabel="레벨"
-                  className="max-h-[570px]"
+                  className=""
                   rows={LEVELS.map(lv => ({ level: lv, value: BLUEBERRY_EXP[lv] ?? 0, isMe: lv === charLevel, ...commonRowProps }))}
+                />
+              )}
+
+              {selected === 'treasurehunter' && (
+                <TreasureHunterTable
+                  monsterLevel={monsterLevel}
+                  charLevel={charLevel}
+                  treasureBonus={treasureBonus}
+                  treasureBonuses={treasureBonuses}
                 />
               )}
 
             </div>
 
             {/* 시뮬레이터 카드 */}
-            <div className="flex-1 self-start bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+            {selected !== 'treasurehunter' && <div className="flex-1 self-start bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
                 <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
                   <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">시뮬레이터</h3>
                 </div>
@@ -1498,19 +1657,24 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">썬데이</span>
                         <div className="flex gap-1">
-                          {(['평일', '썬데이', '스페셜'] as const).map(t => (
-                            <button
-                              key={t}
-                              onClick={() => setSimSunday(t)}
-                              className={
-                                'px-2 py-0 h-[24px] text-[12px] font-medium rounded border-2 transition-colors cursor-pointer ' +
-                                (simSunday === t
-                                  ? 'bg-orange-500 border-orange-500 text-white'
-                                  : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400 dark:hover:border-orange-400')
-                              }
-                            >
-                              {t}
-                            </button>
+                          {([
+                            { val: '평일',   tip: '+0%' },
+                            { val: '썬데이', tip: '+50%' },
+                            { val: '스페셜', tip: '+300%' },
+                          ] as const).map(({ val, tip }) => (
+                            <TooltipWrapper key={val} tip={tip}>
+                              <button
+                                onClick={() => setSimSunday(val)}
+                                className={
+                                  'px-2 py-0 h-[24px] text-[12px] font-medium rounded border-2 transition-colors cursor-pointer ' +
+                                  (simSunday === val
+                                    ? 'bg-orange-500 border-orange-500 text-white'
+                                    : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400 dark:hover:border-orange-400')
+                                }
+                              >
+                                {val}
+                              </button>
+                            </TooltipWrapper>
                           ))}
                         </div>
                       </div>
@@ -1561,7 +1725,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                     )}
                   </>)}
                 </div>
-              </div>
+              </div>}
           </>
         )}
       </div>

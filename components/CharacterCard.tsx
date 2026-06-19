@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CharMeta } from '@/types';
+import TooltipWrapper from '@/components/TooltipWrapper';
 
 interface HistoryPoint {
   date: string;
@@ -29,13 +30,13 @@ interface Props {
   meta: CharMeta | null;
   onMetaUpdate?: (patch: Partial<CharMeta>) => void;
   onTodayLoaded?: (expRate: number | null) => void;
+  onCharLevelUpdate?: (level: number) => void;
   isEmpty?: boolean;
 }
 
 const CHAR_CACHE_KEY = (ocid: string) => `maple-char-${ocid}`;
 const REFRESH_COOLDOWN = 1 * 60 * 1000; // 1분
 
-// StrictMode 이중 호출 방지 (image/skill fetch용)
 
 function formatLastUpdated(savedAt: number): string {
   const diff = Math.floor((Date.now() - savedAt) / 1000);
@@ -89,16 +90,13 @@ function formatExpKR(exp: number): string {
   return parts.join(' ');
 }
 
-export default function CharacterCard({ name, level, meta, onMetaUpdate, onTodayLoaded, isEmpty }: Props) {
+export default function CharacterCard({ name, level, meta, onMetaUpdate, onTodayLoaded, onCharLevelUpdate, isEmpty }: Props) {
   const [history, setHistory] = useState<HistoryPoint[]>([]);
   const [ranking, setRanking] = useState<Ranking | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefreshedAt, setLastRefreshedAt] = useState<number | null>(null);
   const [cooldownLeft, setCooldownLeft] = useState(0);
   const [lastUpdatedLabel, setLastUpdatedLabel] = useState<string | null>(null);
-  const [barTooltip, setBarTooltip] = useState<{ idx: number; x: number; y: number } | null>(null);
-  const [boakTooltip, setBoakTooltip] = useState<{ x: number; y: number; name: string; mp?: number; ep?: number } | null>(null);
-  const chartRef = useRef<HTMLDivElement>(null);
 
   const refreshingRef = useRef(false);
   const lastRefreshedAtRef = useRef<number | null>(null);
@@ -147,13 +145,21 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
         if (onMetaUpdate) {
           const metaUpdate: Record<string, unknown> = { imageUpdatedAt: savedAt, skillUpdatedAt: savedAt };
           if (imageData?.image !== undefined) metaUpdate.image = imageData.image;
+          if (imageData?.class !== undefined) metaUpdate.class = imageData.class;
+          if (imageData?.world !== undefined) metaUpdate.world = imageData.world;
+          if (imageData?.guild !== undefined) metaUpdate.guild = imageData.guild;
           if (skillData?.monsterParkBonus !== undefined) {
             metaUpdate.monsterParkBonus = skillData.monsterParkBonus;
             metaUpdate.epicDungeonBonus = skillData.epicDungeonBonus;
             metaUpdate.monsterParkBonuses = skillData.monsterParkBonuses ?? [];
             metaUpdate.epicDungeonBonuses = skillData.epicDungeonBonuses ?? [];
+            metaUpdate.treasureBonus = skillData.treasureBonus;
+            metaUpdate.treasureBonuses = skillData.treasureBonuses ?? [];
           }
           onMetaUpdate(metaUpdate);
+        }
+        if (onCharLevelUpdate && imageData?.level != null) {
+          onCharLevelUpdate(imageData.level);
         }
 
         try {
@@ -196,7 +202,7 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
       const raw = localStorage.getItem(CHAR_CACHE_KEY(ocid));
       if (raw) {
         const cache = JSON.parse(raw);
-        const hist: HistoryPoint[] = cache.history ?? cache.pastData ?? []; // pastData: 구버전 호환
+        const hist: HistoryPoint[] = cache.history ?? [];
         const todayPoint = hist.find(p => p.date === kstDate(0)) ?? null;
         setHistory(hist);
         setRanking(cache.ranking ?? null);
@@ -225,19 +231,6 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
     return () => clearInterval(id);
   }, [lastRefreshedAt]);
 
-  // 바깥 터치 시 툴팁 닫기
-  useEffect(() => {
-    if (barTooltip === null) return;
-    const handler = (e: TouchEvent | MouseEvent) => {
-      if (chartRef.current && !chartRef.current.contains(e.target as Node)) setBarTooltip(null);
-    };
-    document.addEventListener('touchstart', handler);
-    document.addEventListener('mousedown', handler);
-    return () => {
-      document.removeEventListener('touchstart', handler);
-      document.removeEventListener('mousedown', handler);
-    };
-  }, [barTooltip]);
 
   // 새로고침 버튼 상태
   const canRefresh = !refreshing && cooldownLeft === 0;
@@ -255,7 +248,7 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
           </div>
           <div className="w-px bg-gray-100 dark:bg-zinc-700 my-4" />
           <div className="w-[44%] shrink-0 px-5 py-2 min-w-0 flex flex-col">
-            <p className="text-xs text-gray-400 dark:text-zinc-500 mb-2 mt-3">경험치 히스토리 (7일)</p>
+            <p className="text-xs text-gray-700 dark:text-zinc-500 mb-2 mt-3">경험치 히스토리 (7일)</p>
             <div className="flex-1 flex items-center justify-center text-xs text-gray-300 dark:text-zinc-600 text-center leading-relaxed">
               캐릭터를 추가해주세요
             </div>
@@ -344,12 +337,18 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
                 {(() => {
                   const mpBonuses = meta?.monsterParkBonuses ?? [];
                   const epBonuses = meta?.epicDungeonBonuses ?? [];
-                  const bonusMap = new Map<string, { name: string; icon?: string | null; mp?: number; ep?: number }>();
+                  const trBonuses = meta?.treasureBonuses ?? [];
+                  const bonusMap = new Map<string, { name: string; icon?: string | null; mp?: number; ep?: number; tr?: number }>();
                   for (const b of mpBonuses) bonusMap.set(b.name, { name: b.name, icon: b.icon, mp: b.pct });
                   for (const b of epBonuses) {
                     const ex = bonusMap.get(b.name);
                     if (ex) ex.ep = b.pct;
                     else bonusMap.set(b.name, { name: b.name, icon: b.icon, ep: b.pct });
+                  }
+                  for (const b of trBonuses) {
+                    const ex = bonusMap.get(b.name);
+                    if (ex) ex.tr = b.pct;
+                    else bonusMap.set(b.name, { name: b.name, icon: b.icon, tr: b.pct });
                   }
                   const mergedBonuses = Array.from(bonusMap.values());
                   if (mergedBonuses.length === 0) return null;
@@ -358,13 +357,21 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
                       <span className="w-6 text-gray-400 dark:text-zinc-500 shrink-0">보약</span>
                       <div className="flex items-center gap-1 flex-wrap cursor-default">
                         {mergedBonuses.map(b => (
-                          b.icon
-                            ? <img key={b.name} src={b.icon} alt={b.name} className="w-5 h-5 rounded"
-                                onMouseEnter={e => setBoakTooltip({ x: e.clientX, y: e.clientY, name: b.name, mp: b.mp, ep: b.ep })}
-                                onMouseLeave={() => setBoakTooltip(null)} />
-                            : <span key={b.name} className="w-5 h-5 flex items-center justify-center text-[10px] font-bold bg-orange-100 dark:bg-orange-900/40 text-orange-500 rounded"
-                                onMouseEnter={e => setBoakTooltip({ x: e.clientX, y: e.clientY, name: b.name, mp: b.mp, ep: b.ep })}
-                                onMouseLeave={() => setBoakTooltip(null)}>E</span>
+                          <TooltipWrapper
+                            key={b.name}
+                            tipClassName="!whitespace-normal leading-relaxed"
+                            tip={<>
+                              <div className="text-orange-200 font-semibold mb-0.5">{b.name}</div>
+                              {b.mp != null && <div className="text-gray-200">몬스터파크 경험치 <span className="text-orange-300">+{b.mp}%</span></div>}
+                              {b.ep != null && <div className="text-gray-200">에픽 던전 기본 보상 <span className="text-orange-300">+{b.ep}%</span></div>}
+                              {b.tr != null && <div className="text-gray-200">트레져 헌터 경험치 <span className="text-orange-300">+{b.tr}%</span></div>}
+                            </>}
+                          >
+                            {b.icon
+                              ? <img src={b.icon} alt={b.name} className="w-5 h-5 rounded block" />
+                              : <span className="w-5 h-5 flex items-center justify-center text-[10px] font-bold bg-orange-100 dark:bg-orange-900/40 text-orange-500 rounded">E</span>
+                            }
+                          </TooltipWrapper>
                         ))}
                       </div>
                     </div>
@@ -387,7 +394,7 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
 
         {/* 우측: 경험치 히스토리 */}
         <div className="w-[44%] shrink-0 px-5 py-2 min-w-0 flex flex-col">
-          <p className="text-xs text-gray-400 dark:text-zinc-500 mb-2 mt-3">
+          <p className="text-xs text-gray-700 dark:text-zinc-500 mb-2 mt-3">
             경험치 히스토리 (7일)
             {!hasApi && <span className="ml-1 text-gray-300 dark:text-zinc-600">· API 미연동</span>}
           </p>
@@ -405,15 +412,29 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
               갱신 버튼을 눌러<br />데이터를 불러오세요
             </div>
           ) : (
-            <div ref={chartRef} className="relative mt-auto pt-3 mb-1">
+            <div className="relative mt-auto pt-3 mb-1">
               <div className="flex items-end gap-0.5 h-[100px]">
-                {slots.map((slot, i) => (
-                  <div
+                {slots.map((slot, i) => {
+                  const prev = i > 0 ? slots[i - 1] : null;
+                  const deltaRate = prev?.expRate != null ? slot.expRate! - prev.expRate : 0;
+                  const deltaExp = slot.exp != null && prev?.exp != null && slot.level === prev?.level ? slot.exp - prev.exp : 0;
+                  const barTip = slot.expRate !== null ? (
+                    <>
+                      <div className="text-orange-200">{formatDateKR(slot.date)}</div>
+                      <div><span className="text-orange-300">Lv.{slot.level}</span> {slot.expRate.toFixed(3)}% <span className="text-red-400">({deltaRate >= 0 ? '+' : ''}{deltaRate.toFixed(3)}%)</span></div>
+                      <div><span className="text-gray-300">획득</span> {formatExpKR(Math.max(deltaExp, 0))}</div>
+                    </>
+                  ) : null;
+                  return (
+                  <TooltipWrapper
                     key={slot.date}
-                    className="flex flex-col items-center gap-1 flex-1 min-w-0 relative cursor-pointer"
-                    onMouseEnter={e => slot.expRate !== null && setBarTooltip({ idx: i, x: e.clientX, y: e.clientY })}
-                    onMouseLeave={() => setBarTooltip(null)}
-                    onTouchStart={e => { e.stopPropagation(); setBarTooltip(v => v?.idx === i ? null : { idx: i, x: e.touches[0].clientX, y: e.touches[0].clientY }); }}
+                    className="flex-1 min-w-0"
+                    tipClassName="!whitespace-normal leading-relaxed flex flex-col items-start"
+                    tip={barTip}
+                    followCursor
+                  >
+                  <div
+                    className="flex flex-col items-center gap-1 w-full relative cursor-pointer"
                   >
                     <div className="w-full relative flex items-end" style={{ height: 84 }}>
                       {slot.expRate !== null ? (
@@ -445,47 +466,14 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
                       {formatDate(slot.date)}
                     </span>
                   </div>
-                ))}
+                  </TooltipWrapper>
+                  );
+                })}
               </div>
             </div>
           )}
         </div>
       </div>
-
-      {/* 보약 툴팁 */}
-      {boakTooltip !== null && (
-        <div
-          style={{ position: 'fixed', left: boakTooltip.x + 14, top: boakTooltip.y + 14 }}
-          className="bg-gray-800 text-white text-[11px] rounded-lg px-2.5 py-2 z-50 pointer-events-none whitespace-nowrap leading-relaxed shadow-lg"
-        >
-          <div className="text-orange-200 font-semibold mb-0.5">{boakTooltip.name}</div>
-          {boakTooltip.mp != null && (
-            <div className="text-gray-200">몬스터파크 경험치 <span className="text-orange-300">+{boakTooltip.mp}%</span></div>
-          )}
-          {boakTooltip.ep != null && (
-            <div className="text-gray-200">에픽 던전 기본 보상 <span className="text-orange-300">+{boakTooltip.ep}%</span></div>
-          )}
-        </div>
-      )}
-
-      {/* 히스토리 바 툴팁 */}
-      {barTooltip !== null && slots[barTooltip.idx].expRate !== null && (() => {
-        const s = slots[barTooltip.idx];
-        const prev = barTooltip.idx > 0 ? slots[barTooltip.idx - 1] : null;
-        const deltaRate = prev?.expRate != null ? s.expRate! - prev.expRate : 0;
-        const deltaExp = (s.exp != null && prev?.exp != null && s.level === prev?.level)
-          ? s.exp - prev.exp : 0;
-        return (
-          <div
-            style={{ position: 'fixed', left: barTooltip.x + 14, top: barTooltip.y + 14 }}
-            className="bg-gray-800 text-white text-[10px] rounded-lg px-2.5 py-1.5 z-50 pointer-events-none leading-relaxed flex flex-col items-start whitespace-nowrap shadow-lg"
-          >
-            <div className="text-orange-200">{formatDateKR(s.date)}</div>
-            <div><span className="text-orange-300">Lv.{s.level}</span> {s.expRate!.toFixed(3)}% <span className="text-red-400">({deltaRate >= 0 ? '+' : ''}{deltaRate.toFixed(3)}%)</span></div>
-            <div><span className="text-gray-300 dark:text-zinc-400">획득</span> {formatExpKR(Math.max(deltaExp, 0))}</div>
-          </div>
-        );
-      })()}
     </div>
   );
 }

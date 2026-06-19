@@ -29,19 +29,22 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
     setSelectedRegion(huntingRegion);
   }, [huntingRegion]);
 
-  const scrollRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLTableRowElement>(null);
-
-  const region = HUNTING_REGIONS.find(r => r.name === selectedRegion)!;
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (activeRef.current && scrollRef.current) {
-      const container = scrollRef.current;
-      const row = activeRef.current;
-      const offset = row.offsetTop - container.clientHeight / 2 + row.clientHeight / 2;
-      container.scrollTop = offset;
-    }
-  }, [selectedRegion, huntingGround]);
+    const frame = requestAnimationFrame(() => {
+      if (activeRef.current && scrollRef.current) {
+        const container = scrollRef.current;
+        const row = activeRef.current;
+        const offset = row.offsetTop - container.clientHeight / 2 + row.clientHeight / 2;
+        container.scrollTop = offset;
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [selectedRegion]);
+
+  const region = HUNTING_REGIONS.find(r => r.name === selectedRegion)!;
 
   return (
     <div className="flex gap-4 items-start">
@@ -55,7 +58,7 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
               'aspect-square rounded-lg text-sm font-medium transition-colors cursor-pointer text-center flex flex-col items-center justify-center ' +
               (selectedRegion === r.name
                 ? 'bg-orange-500 text-white border border-orange-500'
-                : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
+                : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
             }
           >
             <div className="font-semibold">{r.name}</div>
@@ -67,13 +70,13 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
       </div>
 
       {/* 테이블 카드 */}
-      <div className="flex-1 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col max-h-[570px]">
+      <div className="flex-1 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden">
         <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
           <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">
             {region.name}
           </h3>
         </div>
-        <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
+        <div ref={scrollRef} className="overflow-y-auto" style={{maxHeight:'644px'}}>
           <table className="table-fixed text-sm border-collapse w-full">
             <colgroup>
               <col style={{ width: '34%' }} />
@@ -81,7 +84,7 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
               <col style={{ width: '12%' }} />
               <col style={{ width: '29%' }} />
             </colgroup>
-            <thead className="sticky top-0 z-10">
+            <thead>
               <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
                 <th className="text-center px-4 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">사냥터</th>
                 <th className="text-center px-4 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">몬스터 레벨</th>

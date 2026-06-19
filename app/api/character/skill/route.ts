@@ -15,13 +15,17 @@ export interface SkillBuffResult {
   epicDungeonBonus: number;
   monsterParkBonuses: SkillBonusEntry[];
   epicDungeonBonuses: SkillBonusEntry[];
+  treasureBonus: number;
+  treasureBonuses: SkillBonusEntry[];
 }
 
 function parseBonuses(skills: { skill_name: string; skill_effect: string | null; skill_icon: string | null }[]): SkillBuffResult {
   let monsterParkBonus = 0;
   let epicDungeonBonus = 0;
+  let treasureBonus = 0;
   const monsterParkBonuses: SkillBonusEntry[] = [];
   const epicDungeonBonuses: SkillBonusEntry[] = [];
+  const treasureBonuses: SkillBonusEntry[] = [];
 
   for (const skill of skills) {
     const effect = skill.skill_effect ?? '';
@@ -46,9 +50,19 @@ function parseBonuses(skills: { skill_name: string; skill_effect: string | null;
       epicDungeonBonus += skillEpic;
       epicDungeonBonuses.push({ name: skill.skill_name, pct: skillEpic, icon: skill.skill_icon ?? null });
     }
+
+    const treasureRegex = /트레져 헌터 경험치 획득량 (\d+)% 증가/g;
+    let skillTreasure = 0;
+    while ((match = treasureRegex.exec(effect)) !== null) {
+      skillTreasure += parseInt(match[1]);
+    }
+    if (skillTreasure > 0) {
+      treasureBonus += skillTreasure;
+      treasureBonuses.push({ name: skill.skill_name, pct: skillTreasure, icon: skill.skill_icon ?? null });
+    }
   }
 
-  return { monsterParkBonus, epicDungeonBonus, monsterParkBonuses, epicDungeonBonuses };
+  return { monsterParkBonus, epicDungeonBonus, treasureBonus, monsterParkBonuses, epicDungeonBonuses, treasureBonuses };
 }
 
 export async function GET(req: NextRequest) {

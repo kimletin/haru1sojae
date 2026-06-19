@@ -136,6 +136,27 @@ const PARAM_TO_TAB: Record<string, Tab> = Object.fromEntries(
   Object.entries(TAB_PARAM).map(([k, v]) => [v, k as Tab])
 );
 
+function kstToday(): string {
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  return kst.toISOString().slice(0, 10);
+}
+
+function loadTodayExpRateFrom(meta: CharMeta | null | undefined): number | null {
+  try {
+    if (meta?.manualExpRate != null) return meta.manualExpRate;
+    if (meta?.ocid) {
+      // CharacterCard가 저장하는 키: maple-char-${ocid}
+      const raw = localStorage.getItem(`maple-char-${meta.ocid}`);
+      if (raw) {
+        const { history } = JSON.parse(raw) as { history?: { date: string; expRate: number | null }[] };
+        const todayPoint = history?.find(p => p.date === kstToday());
+        if (todayPoint?.expRate != null) return todayPoint.expRate;
+      }
+    }
+  } catch {}
+  return null;
+}
+
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [inputs, setInputs] = useState<InputValues>(DEFAULT_INPUTS);
@@ -152,14 +173,18 @@ export default function Home() {
   const [isFirstVisit, setIsFirstVisit] = useState(false);
   const [charMetas, setCharMetas] = useState<(CharMeta | null)[]>(makeDefaultMetas());
   const [todayExpRate, setTodayExpRate] = useState<number | null>(null);
+  const [initialContentKey, setInitialContentKey] = useState<string | undefined>(undefined);
   const presetsRef = useRef<InputValues[]>(makeDefaultPresets());
   const activePresetRef = useRef(0);
 
   useEffect(() => {
     const slug = window.location.pathname.replace(/^\//, '');
-    const tab = PARAM_TO_TAB[slug];
+    const parts = slug.split('/');
+    const tabSlug = parts[0];
+    const tab = PARAM_TO_TAB[tabSlug] ?? PARAM_TO_TAB[slug];
     const initialTab = tab ?? TABS[0];
     if (tab) setActiveTab(tab);
+    if (tabSlug === 'cont' && parts[1]) setInitialContentKey(parts[1]);
     document.title = `${initialTab} | 하루1소재`;
 
     const savedSlots = parseInt(localStorage.getItem(NUM_SLOTS_KEY) ?? '');
@@ -172,7 +197,8 @@ export default function Home() {
       setShowSearchModal(true);
     }
 
-    setCharMetas(loadMetas());
+    const metas = loadMetas();
+    setCharMetas(metas);
 
     const { presets, active, names } = loadPresets();
     presetsRef.current = presets;
@@ -180,6 +206,10 @@ export default function Home() {
     setActivePreset(active);
     setPresetNames(names);
     setInputs(presets[active]);
+
+    // CharacterCard 없이도 todayExpRate 복원
+    const rate = loadTodayExpRateFrom(metas[active]);
+    if (rate != null) setTodayExpRate(rate);
 
     const saved = localStorage.getItem('maple-dark-mode');
     if (saved === 'true') {
@@ -193,6 +223,12 @@ export default function Home() {
   useEffect(() => {
     document.title = `${presetNames[activePreset]} | ${activeTab} | 하루1소재`;
   }, [activeTab, activePreset, presetNames]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const rate = loadTodayExpRateFrom(charMetas[activePreset]);
+    setTodayExpRate(rate);
+  }, [activePreset]);
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
@@ -210,6 +246,14 @@ export default function Home() {
       savePresets(newPresets);
       return next;
     });
+  };
+
+  const handleApply = (values: InputValues) => {
+    setInputs(values);
+    const newPresets = [...presetsRef.current];
+    newPresets[activePresetRef.current] = values;
+    presetsRef.current = newPresets;
+    savePresets(newPresets);
   };
 
   const handlePresetChange = (idx: number) => {
@@ -261,6 +305,7 @@ export default function Home() {
     // charMeta 저장
     const mpBonus = info.monsterParkBonus ?? 0;
     const epBonus = info.epicDungeonBonus ?? 0;
+    const trBonus = info.treasureBonus ?? 0;
     const meta: CharMeta = {
       ocid: info.ocid ?? null,
       image: info.image ?? null,
@@ -270,9 +315,11 @@ export default function Home() {
       world: info.world ?? null,
       monsterParkBonus: mpBonus || null,
       epicDungeonBonus: epBonus || null,
+      treasureBonus: trBonus || null,
       monsterParkBonuses: mpBonus > 0 ? [{ name: '보약', pct: mpBonus, icon: null }] : null,
       epicDungeonBonuses: epBonus > 0 ? [{ name: '보약', pct: epBonus, icon: null }] : null,
-      skillUpdatedAt: mpBonus > 0 || epBonus > 0 ? Date.now() : null,
+      treasureBonuses: trBonus > 0 ? [{ name: '보약', pct: trBonus, icon: null }] : null,
+      skillUpdatedAt: mpBonus > 0 || epBonus > 0 || trBonus > 0 ? Date.now() : null,
       manualExpRate: !info.ocid && info.expRate != null ? info.expRate : null,
     };
     setCharMetas(prev => {
@@ -302,6 +349,15 @@ export default function Home() {
     setSearchModalTarget(numSlots); // 아직 슬롯 추가 안 함
     setIsFirstVisit(false);
     setShowSearchModal(true);
+  };
+
+  const handleCharLevelUpdate = (idx: number, level: number) => {
+    const clamped = Math.min(Math.max(level, 260), 300);
+    const newPresets = [...presetsRef.current];
+    newPresets[idx] = { ...newPresets[idx], charLevel: clamped };
+    presetsRef.current = newPresets;
+    savePresets(newPresets);
+    if (idx === activePresetRef.current) setInputs(prev => ({ ...prev, charLevel: clamped }));
   };
 
   const handleMetaUpdate = (idx: number, patch: Partial<CharMeta>) => {
@@ -525,8 +581,7 @@ className={`px-1.5 transition-colors cursor-pointer ${numSlots === 1 ? 'text-gra
             )}
           </div>
           {activeTab === TABS[0] ? (
-            <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 p-4">
-              <div className="flex flex-row gap-4">
+            <div className="flex flex-row gap-4">
                 <main className="w-[560px] shrink-0">
                   <div className="mb-4">
                     <CharacterCard
@@ -535,27 +590,29 @@ className={`px-1.5 transition-colors cursor-pointer ${numSlots === 1 ? 'text-gra
                       meta={charMetas[activePreset]}
                       onMetaUpdate={(patch) => handleMetaUpdate(activePreset, patch)}
                       onTodayLoaded={(rate) => setTodayExpRate(rate ?? null)}
+                      onCharLevelUpdate={(level) => handleCharLevelUpdate(activePreset, level)}
                       isEmpty={numSlots === 0}
                     />
                   </div>
                   <EfficiencyTab inputs={inputs} onChange={handleChange} items={rankedItems} monsterParkBonus={charMetas[activePreset]?.monsterParkBonus ?? 0} />
                 </main>
-                <aside className="w-80 shrink-0 flex flex-col gap-4">
-                  <InputPanel inputs={inputs} onChange={handleChange} />
+                <aside className="flex-1 flex flex-col gap-4">
+                  <InputPanel inputs={inputs} onApply={handleApply} />
                   <RankingPanel items={rankedItems} />
                 </aside>
-              </div>
             </div>
           ) : (
-            <main className="w-full bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 p-4">
-              <div>
+            <div>
                 {activeTab === TABS[1] && (
                   <ExpContentsTab
+                    initialSelected={initialContentKey}
                     charLevel={inputs.charLevel}
                     monsterLevel={inputs.monsterLevel}
                     monsterParkBonus={charMetas[activePreset]?.monsterParkBonus ?? 0}
                     epicDungeonBonus={charMetas[activePreset]?.epicDungeonBonus ?? 0}
                     epicDungeonBonuses={charMetas[activePreset]?.epicDungeonBonuses?.map(b => ({ name: b.name, pct: b.pct })) ?? []}
+                    treasureBonus={charMetas[activePreset]?.treasureBonus ?? 0}
+                    treasureBonuses={charMetas[activePreset]?.treasureBonuses?.map(b => ({ name: b.name, pct: b.pct })) ?? []}
                     todayExpRate={todayExpRate}
                     slotKey={activePreset}
                   />
@@ -569,8 +626,7 @@ className={`px-1.5 transition-colors cursor-pointer ${numSlots === 1 ? 'text-gra
                 {activeTab === TABS[4] && (
                   <InfoCenterTab />
                 )}
-              </div>
-            </main>
+            </div>
           )}
           {activeTab === TABS[4] && (
             <div className="flex justify-center mt-4">

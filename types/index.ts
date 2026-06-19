@@ -52,6 +52,8 @@ export interface CharMeta {
   epicDungeonBonus: number | null;
   monsterParkBonuses: { name: string; pct: number; icon: string | null }[] | null;
   epicDungeonBonuses: { name: string; pct: number; icon: string | null }[] | null;
+  treasureBonus: number | null;
+  treasureBonuses: { name: string; pct: number; icon: string | null }[] | null;
   skillUpdatedAt: number | null;
   manualExpRate: number | null;
 }
