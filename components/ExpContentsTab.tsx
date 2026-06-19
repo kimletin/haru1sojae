@@ -10,7 +10,7 @@ import { LEVEL_EXP } from '@/data/levelExp';
 import { HAIMOUNTAIN, ANGLER_COMPANY, NIGHTMARE_SANCTUARY } from '@/data/epicDungeon';
 import { MONSTER_EXP } from '@/data/monsterExp';
 import { TREASURE_MULTIPLIERS } from '@/data/treasureHunter';
-import type { TreasureDungeon } from '@/data/treasureHunter';
+import type { TreasureBox } from '@/data/treasureHunter';
 import type { SundayType } from '@/types';
 import Num from '@/components/Num';
 import TooltipWrapper from '@/components/TooltipWrapper';
@@ -539,12 +539,15 @@ const MENU_ITEMS = [
 // ─── TreasureHunterTable ──────────────────────────────────────────────────────
 
 const TREASURE_LEVELS = Array.from({ length: 40 }, (_, i) => i + 260);
-const TREASURE_DUNGEONS: TreasureDungeon[] = ['폴로/프리토', '에스페시아'];
+const TREASURE_BOXES: TreasureBox[] = ['폴로/프리토', '에스페시아'];
+const TREASURE_BOX_META: Record<TreasureBox, { label: string; sub: string }> = {
+  '폴로/프리토': { label: '골드 트레져 박스', sub: '폴로/프리토' },
+  '에스페시아':  { label: '다이아 트레져 박스', sub: '에스페시아' },
+};
 
-function TreasureHunterTable({ monsterLevel, charLevel, treasureBonus = 0, treasureBonuses = [] }: {
-  monsterLevel: number; charLevel: number; treasureBonus?: number; treasureBonuses?: BonusEntry[];
+function TreasureHunterTable({ monsterLevel, charLevel, treasureBonus = 0, treasureBonuses = [], selectedBox }: {
+  monsterLevel: number; charLevel: number; treasureBonus?: number; treasureBonuses?: BonusEntry[]; selectedBox: TreasureBox;
 }) {
-  const [selectedDungeon, setSelectedDungeon] = useState<TreasureDungeon>('폴로/프리토');
   const [bonusInput, setBonusInput] = useState(treasureBonus > 0 ? String(treasureBonus) : '');
   const [sunday, setSunday] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -564,9 +567,9 @@ function TreasureHunterTable({ monsterLevel, charLevel, treasureBonus = 0, treas
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [monsterLevel, selectedDungeon]);
+  }, [monsterLevel, selectedBox]);
 
-  const mult = TREASURE_MULTIPLIERS[selectedDungeon];
+  const mult = TREASURE_MULTIPLIERS[selectedBox];
   const bonusPct = parseFloat(bonusInput) || 0;
   const sundayMult = sunday ? 3 : 1;
 
@@ -576,25 +579,11 @@ function TreasureHunterTable({ monsterLevel, charLevel, treasureBonus = 0, treas
   };
 
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col" style={{height:'664px'}}>
+    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col h-full">
       <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
-        <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">트레져 헌터</h3>
+        <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">{TREASURE_BOX_META[selectedBox].label}</h3>
       </div>
-      <div className="flex gap-1.5 px-3 pt-2.5 shrink-0">
-        {TREASURE_DUNGEONS.map(d => (
-          <button
-            key={d}
-            onClick={() => setSelectedDungeon(d)}
-            className={
-              'flex-1 rounded-lg text-sm font-medium transition-colors cursor-pointer py-1.5 px-3 ' +
-              (selectedDungeon === d
-                ? 'bg-orange-500 text-white border border-orange-500'
-                : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
-            }
-          >{d}</button>
-        ))}
-      </div>
-      <div ref={scrollRef} className="mt-2 flex-1 min-h-0 overflow-y-auto">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         <table className="table-fixed text-sm border-collapse w-full">
           <colgroup>
             <col style={{width:'16%'}} />
@@ -606,7 +595,7 @@ function TreasureHunterTable({ monsterLevel, charLevel, treasureBonus = 0, treas
           <thead className="sticky top-0 z-10">
             <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
               <th className="text-center px-2 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">몬스터 레벨</th>
-              <th className="text-center px-2 py-2 text-blue-300 font-bold">레어</th>
+              <th className="text-center px-2 py-2 text-blue-500 font-bold">레어</th>
               <th className="text-center px-2 py-2 text-purple-500 font-bold">에픽</th>
               <th className="text-center px-2 py-2 text-yellow-500 font-bold">유니크</th>
               <th className="text-center px-2 py-2 text-green-500 font-bold">레전드리</th>
@@ -749,6 +738,9 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
     | { type: '개수'; gainedExp: number; gainPct: number; finalLevel: number; finalPct: number }
     | { type: '목표'; gainedExp: number; gainPct: number; finalLevel: number; finalPct: number; count: number };
   const [mekaSimResult, setMekaSimResult] = useState<MekaSimResult | null>(null);
+
+  // 트레져 헌터 던전 선택
+  const [treasureBox, setTreasureBox] = useState<TreasureBox>('폴로/프리토');
 
   // 몬스터파크 보약 체크박스
   const [parkBonusInput, setParkBonusInput] = useState(monsterParkBonus > 0 ? String(monsterParkBonus) : '');
@@ -1107,12 +1099,34 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
               )}
 
               {selected === 'treasurehunter' && (
-                <TreasureHunterTable
-                  monsterLevel={monsterLevel}
-                  charLevel={charLevel}
-                  treasureBonus={treasureBonus}
-                  treasureBonuses={treasureBonuses}
-                />
+                <div className="flex-1 flex flex-col gap-1.5" style={{height:'664px'}}>
+                  <div className="flex gap-1.5 shrink-0">
+                    {TREASURE_BOXES.map(d => (
+                      <button
+                        key={d}
+                        onClick={() => setTreasureBox(d)}
+                        className={
+                          'flex-1 rounded-lg text-sm font-medium transition-colors cursor-pointer py-2 px-3 flex flex-col items-center justify-center ' +
+                          (treasureBox === d
+                            ? 'bg-orange-500 text-white border border-orange-500'
+                            : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
+                        }
+                      >
+                        <div className="font-semibold">{TREASURE_BOX_META[d].label}</div>
+                        <div className={'text-xs mt-0.5 ' + (treasureBox === d ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>{TREASURE_BOX_META[d].sub}</div>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex-1 min-h-0">
+                    <TreasureHunterTable
+                      monsterLevel={monsterLevel}
+                      charLevel={charLevel}
+                      treasureBonus={treasureBonus}
+                      treasureBonuses={treasureBonuses}
+                      selectedBox={treasureBox}
+                    />
+                  </div>
+                </div>
               )}
 
             </div>
