@@ -69,9 +69,6 @@ const DEFAULT_INPUTS: InputValues = {
   priceBloodRingMeso: 300_000_000,
   priceBoostringMeso: 450_000_000,
   priceJungpenMeso: 2_000_000_000,
-  priceEcho: 40_000_000,
-  priceSolErda: 7_100_000,
-  useSolErda: true,
   epicDungeonZone: '하이마운틴',
   sunday: '평일',
   boosterRate: 0.5,
@@ -221,8 +218,8 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    document.title = `${presetNames[activePreset]} | ${activeTab} | 하루1소재`;
-  }, [activeTab, activePreset, presetNames]);
+    document.title = `${activeTab} | 하루1소재`;
+  }, [activeTab]);
 
   useEffect(() => {
     if (!mounted) return;

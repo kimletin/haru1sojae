@@ -130,22 +130,20 @@ export function getEpicDungeonStage12Exp(zone: EpicDungeonZone, charLevel: numbe
   return data.stage2 - data.stage1;
 }
 
+/** 세라자르 주화 1개당 메소 가치 (에픽 던전 기본 보상에서 차감) */
+const SERAJAR_COIN_PRICE = 40_000_000;
+const EPIC_SERAJAR_COIN_COUNT = 4;
+
 /** 에픽 던전 메소 가격 (0→1) */
-export function getEpicDungeonStage01Price(zone: EpicDungeonZone, mesoMarketRate: number, priceSolErda: number): number {
+export function getEpicDungeonStage01Price(zone: EpicDungeonZone, mesoMarketRate: number): number {
   const metacoin = DUNGEON_METACOIN[zone]?.stage1 ?? 0;
-  return mepoToMeso(metacoin, mesoMarketRate) - priceSolErda * 15;
+  return mepoToMeso(metacoin, mesoMarketRate) - SERAJAR_COIN_PRICE * EPIC_SERAJAR_COIN_COUNT;
 }
 
 /** 에픽 던전 메소 가격 (1→2) */
-export function getEpicDungeonStage12Price(zone: EpicDungeonZone, mesoMarketRate: number, priceSolErda: number): number {
+export function getEpicDungeonStage12Price(zone: EpicDungeonZone, mesoMarketRate: number): number {
   const metacoin = DUNGEON_METACOIN[zone]?.stage2 ?? 0;
-  return mepoToMeso(metacoin, mesoMarketRate) - priceSolErda * 15;
-}
-
-/** 악몽의 메아리 경험치 */
-export function getEchoExp(monsterLevel: number): number {
-  const monsterExp = MONSTER_EXP[monsterLevel] ?? 0;
-  return monsterExp * 470 * 190;
+  return mepoToMeso(metacoin, mesoMarketRate) - SERAJAR_COIN_PRICE * EPIC_SERAJAR_COIN_COUNT;
 }
 
 /** 메카베리 농장 경험치 */
@@ -174,9 +172,8 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
 
   const stage01Exp   = getEpicDungeonStage01Exp(epicDungeonZone, charLevel);
   const stage12Exp   = getEpicDungeonStage12Exp(epicDungeonZone, charLevel);
-  const solErdaPrice = (inputs.useSolErda ?? true) ? (inputs.priceSolErda ?? 0) : 0;
-  const stage01Price = getEpicDungeonStage01Price(epicDungeonZone, mesoMarketRate, solErdaPrice);
-  const stage12Price = getEpicDungeonStage12Price(epicDungeonZone, mesoMarketRate, solErdaPrice);
+  const stage01Price = getEpicDungeonStage01Price(epicDungeonZone, mesoMarketRate);
+  const stage12Price = getEpicDungeonStage12Price(epicDungeonZone, mesoMarketRate);
 
   const parkExp   = getMonsterParkExp(charLevel, sunday, monsterParkBonus);
   const parkZone  = getMonsterParkZone(charLevel);
@@ -192,7 +189,7 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
 
   const items: EfficiencyItem[] = [
     // 30분 도핑
-    item('추가 경험치 50%',     '30분 도핑', base30 * 0.5, inputs.price50),
+    item('추경 50%',     '30분 도핑', base30 * 0.5, inputs.price50),
     item('2배 쿠폰',            '30분 도핑', base30 * 1,   inputs.price2x),
     item('3배 쿠폰',            '30분 도핑', base30 * 2,   inputs.price3x),
     item('4배 쿠폰',            '30분 도핑', base30 * 3,   inputs.price4x),
@@ -212,7 +209,7 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
     item(`몬스터파크(${parkZone})`, 'BM', parkExp, parkPrice),
     item('VIP 사우나',          'BM', vipExp, vipPrice),
     // 마진 비교
-    item('추가경험치 50%→70%',  '마진', base30 * 0.2, inputs.price70 - inputs.price50),
+    item('추경 50%→70%',  '마진', base30 * 0.2, inputs.price70 - inputs.price50),
     item('소경축비→고농축비',   '마진', base30 * 0.1, inputs.priceLargeBooster - inputs.priceSmallBooster),
   ];
 

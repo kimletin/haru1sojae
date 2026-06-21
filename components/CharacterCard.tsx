@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { CharMeta } from '@/types';
 import TooltipWrapper from '@/components/TooltipWrapper';
+import { LEVEL_EXP } from '@/data/levelExp';
 
 interface HistoryPoint {
   date: string;
@@ -88,6 +89,37 @@ function formatExpKR(exp: number): string {
   if (man > 0) parts.push(`${man}만`);
   if (rest > 0) parts.push(String(rest));
   return parts.join(' ');
+}
+
+// 두 슬롯 사이 경험치 증가량 계산 (레벨업 가로질러 반영)
+// character_exp는 현재 레벨 내 누적치라 레벨업 시 리셋되므로, levelExp 테이블로 보정한다.
+function computeDelta(prev: Slot | null, slot: Slot): { deltaRate: number; deltaExp: number } {
+  if (prev?.expRate == null || slot.expRate == null) return { deltaRate: 0, deltaExp: 0 };
+  const l1 = prev.level, l2 = slot.level;
+  const p1 = prev.expRate, p2 = slot.expRate;
+
+  // 레벨 정보가 없거나 동일 레벨: 단순 차이
+  if (l1 == null || l2 == null || l1 === l2) {
+    const deltaExp = slot.exp != null && prev.exp != null ? slot.exp - prev.exp : 0;
+    return { deltaRate: p2 - p1, deltaExp };
+  }
+
+  // 레벨이 내려간 비정상 케이스: 폴백
+  if (l2 < l1) return { deltaRate: p2 - p1, deltaExp: 0 };
+
+  // 레벨업: (어제 레벨 잔여%) + (중간 레벨 100%씩) + (오늘 레벨%)
+  const deltaRate = (100 - p1) + 100 * (l2 - l1 - 1) + p2;
+
+  let deltaExp = 0;
+  if (slot.exp != null && prev.exp != null) {
+    const req1 = LEVEL_EXP[l1]?.required;
+    if (req1 != null) {
+      deltaExp = req1 - prev.exp; // 어제 레벨 마무리분
+      for (let L = l1 + 1; L < l2; L++) deltaExp += LEVEL_EXP[L]?.required ?? 0; // 중간 레벨 전체
+      deltaExp += slot.exp; // 오늘 레벨 누적분
+    }
+  }
+  return { deltaRate, deltaExp };
 }
 
 export default function CharacterCard({ name, level, meta, onMetaUpdate, onTodayLoaded, onCharLevelUpdate, isEmpty }: Props) {
@@ -416,8 +448,7 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
               <div className="flex items-end gap-0.5 h-[100px]">
                 {slots.map((slot, i) => {
                   const prev = i > 0 ? slots[i - 1] : null;
-                  const deltaRate = prev?.expRate != null ? slot.expRate! - prev.expRate : 0;
-                  const deltaExp = slot.exp != null && prev?.exp != null && slot.level === prev?.level ? slot.exp - prev.exp : 0;
+                  const { deltaRate, deltaExp } = computeDelta(prev, slot);
                   const barTip = slot.expRate !== null ? (
                     <>
                       <div className="text-orange-200">{formatDateKR(slot.date)}</div>

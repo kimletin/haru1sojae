@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { InputValues, EfficiencyItem } from '@/types';
 import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency } from '@/lib/calculator';
 import { getMonsterParkZone } from '@/data/monsterPark';
@@ -22,25 +21,6 @@ interface TableRow {
   inputValue?: number;
   onEdit?: (v: number) => void;
   isEvent?: boolean;
-}
-
-function PriceInput({ value, onEdit }: { value: number; onEdit: (v: number) => void }) {
-  const [focused, setFocused] = useState(false);
-  const display = focused ? String(value) : value.toLocaleString('ko-KR');
-  return (
-    <input
-      type="text"
-      inputMode="numeric"
-      value={display}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      onChange={e => {
-        const raw = Number(e.target.value.replace(/,/g, ''));
-        if (!isNaN(raw)) onEdit(Math.min(raw, 9_999_999_999));
-      }}
-      className="w-[108px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-center text-[12px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-    />
-  );
 }
 
 function EffTable({ title, rows, color = 'green', headerExtra }: {
@@ -96,11 +76,7 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
               )}
               <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300 whitespace-nowrap"><Num n={row.exp} /></td>
               <td className="px-2 py-1.5 text-center">
-                {row.editable && row.onEdit ? (
-                  <PriceInput value={row.inputValue ?? 0} onEdit={row.onEdit} />
-                ) : (
-                  <span className="text-gray-700 dark:text-zinc-300">{fmtMeso(row.priceMeso)}</span>
-                )}
+                <span className="text-gray-700 dark:text-zinc-300">{fmtMeso(row.priceMeso)}</span>
               </td>
               <td className="px-2 py-1.5 text-center font-semibold text-orange-500">
                 {row.ratio > 0 ? (row.ratio * 100).toFixed(1) + '%' : '-'}
@@ -110,30 +86,6 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
         </tbody>
       </table>
     </div>
-  );
-}
-
-function InlineInput({ label, value, onChange, min = 0, max = 99 }: {
-  label: string; value: number; onChange: (v: number) => void; min?: number; max?: number;
-}) {
-  const [focused, setFocused] = useState(false);
-  const display = focused ? String(value) : value.toLocaleString('ko-KR');
-  return (
-    <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-zinc-400">
-      {label}
-      <input
-        type="text"
-        inputMode="numeric"
-        value={display}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        onChange={e => {
-          const raw = Number(e.target.value.replace(/,/g, ''));
-          if (!isNaN(raw)) onChange(Math.min(Math.max(raw, min), max));
-        }}
-        className="w-10 border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-center text-[12px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-      />
-    </label>
   );
 }
 
@@ -147,31 +99,7 @@ interface Props {
   monsterParkBonus?: number;
 }
 
-function BoosterRateInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  const [focused, setFocused] = useState(false);
-  const pct = Math.round(value * 100);
-  const display = focused ? String(pct) : pct.toLocaleString('ko-KR');
-  return (
-    <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-zinc-400">
-      보약
-      <input
-        type="text"
-        inputMode="numeric"
-        value={display}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        onChange={e => {
-          const raw = Number(e.target.value.replace(/,/g, ''));
-          if (!isNaN(raw)) onChange(Math.min(Math.max(raw, 0), 100) / 100);
-        }}
-        className="w-10 border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-center text-[12px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-      />
-      %
-    </label>
-  );
-}
-
-export default function EfficiencyTab({ inputs, onChange, monsterParkBonus = 0 }: Props) {
+export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
   const vipEff = getVipEfficiency(inputs);
   const base30 = getBase30MinExp(inputs);
   const base30d = getBase30DayExp(inputs);
@@ -184,28 +112,23 @@ export default function EfficiencyTab({ inputs, onChange, monsterParkBonus = 0 }
   });
 
   const doping30Rows: TableRow[] = [
-    { name: '추가 경험치 50%', rate: 0.5, ...effRow(base30 * 0.5, inputs.price50), editable: true, inputValue: inputs.price50, onEdit: v => onChange('price50', v) },
-    { name: '추가 경험치 70%', rate: 0.7, ...effRow(base30 * 0.7, inputs.price70), editable: true, inputValue: inputs.price70, onEdit: v => onChange('price70', v) },
-    { name: '2배 쿠폰',                  rate: 1,   ...effRow(base30 * 1,   inputs.price2x), editable: true, inputValue: inputs.price2x, onEdit: v => onChange('price2x', v) },
-    { name: '3배 쿠폰',                  rate: 2,   ...effRow(base30 * 2,   inputs.price3x), editable: true, inputValue: inputs.price3x, onEdit: v => onChange('price3x', v) },
-    { name: '4배 쿠폰',                  rate: 3,   ...effRow(base30 * 3,   inputs.price4x), editable: true, inputValue: inputs.price4x, onEdit: v => onChange('price4x', v) },
-    { name: '소경축비',             rate: 0.1, ...effRow(base30 * 0.1, inputs.priceSmallBooster), editable: true, inputValue: inputs.priceSmallBooster, onEdit: v => onChange('priceSmallBooster', v) },
-    { name: '고농축비',             rate: 0.2, ...effRow(base30 * 0.2, inputs.priceLargeBooster), editable: true, inputValue: inputs.priceLargeBooster, onEdit: v => onChange('priceLargeBooster', v) },
-    { name: '아즈모스 영약', rate: 0.2, ...effRow(base30 * 0.2, inputs.priceAzmos), editable: true, inputValue: inputs.priceAzmos, onEdit: v => onChange('priceAzmos', v) },
-  ];
-
-  const marginRows: TableRow[] = [
-    { name: '추가경험치 50%→70%', ...effRow(base30 * 0.2, inputs.price70 - inputs.price50) },
-    { name: '소경축비→고농축비', ...effRow(base30 * 0.1, inputs.priceLargeBooster - inputs.priceSmallBooster) },
+    { name: '추경 50%', rate: 0.5, ...effRow(base30 * 0.5, inputs.price50) },
+    { name: '추경 50%→70%', rate: 0.2, ...effRow(base30 * 0.2, inputs.price70 - inputs.price50) },
+    { name: '2배 쿠폰',                  rate: 1,   ...effRow(base30 * 1,   inputs.price2x) },
+    { name: '3배 쿠폰',                  rate: 2,   ...effRow(base30 * 2,   inputs.price3x) },
+    { name: '4배 쿠폰',                  rate: 3,   ...effRow(base30 * 3,   inputs.price4x) },
+    { name: '소경축비',             rate: 0.1, ...effRow(base30 * 0.1, inputs.priceSmallBooster) },
+    { name: '소경축비→고농축비', rate: 0.1, ...effRow(base30 * 0.1, inputs.priceLargeBooster - inputs.priceSmallBooster) },
+    { name: '아즈모스 영약', rate: 0.2, ...effRow(base30 * 0.2, inputs.priceAzmos) },
   ];
 
   const doping30dRows: TableRow[] = [
-    { name: '사냥 칭호',          rate: 1,    ...effRow(base30d * 1,    inputs.priceHunterTitle), editable: true, inputValue: inputs.priceHunterTitle, onEdit: v => onChange('priceHunterTitle', v) },
-    { name: '혈맹의 반지(메소)', rate: 0.1, ...effRow(base30d * 0.1, inputs.priceBloodRingMeso), editable: true, inputValue: inputs.priceBloodRingMeso, onEdit: v => onChange('priceBloodRingMeso', v) },
-    { name: '경험치 부스트링(메소)', rate: 0.15, ...effRow(base30d * 0.15, inputs.priceBoostringMeso), editable: true, inputValue: inputs.priceBoostringMeso, onEdit: v => onChange('priceBoostringMeso', v) },
-    { name: '정령의 펜던트(메소)',          rate: 0.3,  ...effRow(base30d * 0.3,  inputs.priceJungpenMeso), editable: true, inputValue: inputs.priceJungpenMeso, onEdit: v => onChange('priceJungpenMeso', v) },
+    { name: '사냥 칭호',          rate: 1,    ...effRow(base30d * 1,    inputs.priceHunterTitle) },
+    { name: '혈맹의 반지(메소)', rate: 0.1, ...effRow(base30d * 0.1, inputs.priceBloodRingMeso) },
     { name: '혈맹의 반지(메포)', rate: 0.1, ...effRow(base30d * 0.1,  mepoToMeso(5900,  inputs.mesoMarketRate)) },
+    { name: '경험치 부스트링(메소)', rate: 0.15, ...effRow(base30d * 0.15, inputs.priceBoostringMeso) },
     { name: '경험치 부스트링(메포)', rate: 0.15, ...effRow(base30d * 0.15, mepoToMeso(29900, inputs.mesoMarketRate)) },
+    { name: '정령의 펜던트(메소)',          rate: 0.3,  ...effRow(base30d * 0.3,  inputs.priceJungpenMeso) },
     { name: '정령의 펜던트(메포)',          rate: 0.3,  ...effRow(base30d * 0.3,  mepoToMeso(49900, inputs.mesoMarketRate)) },
   ];
 
@@ -215,8 +138,8 @@ export default function EfficiencyTab({ inputs, onChange, monsterParkBonus = 0 }
   const vipExp   = getVipSaunaExp(inputs.charLevel);
 
   const bmRows: TableRow[] = [
-    { name: epicName + ' 0→1단계', ...effRow(getEpicDungeonStage01Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage01Price(inputs.epicDungeonZone, inputs.mesoMarketRate, (inputs.useSolErda ?? true) ? (inputs.priceSolErda ?? 0) : 0)) },
-    { name: epicName + ' 1→2단계', ...effRow(getEpicDungeonStage12Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage12Price(inputs.epicDungeonZone, inputs.mesoMarketRate, (inputs.useSolErda ?? true) ? (inputs.priceSolErda ?? 0) : 0)) },
+    { name: epicName + ' 0→1단계', ...effRow(getEpicDungeonStage01Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage01Price(inputs.epicDungeonZone, inputs.mesoMarketRate)) },
+    { name: epicName + ' 1→2단계', ...effRow(getEpicDungeonStage12Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage12Price(inputs.epicDungeonZone, inputs.mesoMarketRate)) },
     { name: '몬스터파크(' + parkZone + ')', ...effRow(parkExp, mepoToMeso(600, inputs.mesoMarketRate)) },
     { name: 'VIP 사우나',            ...effRow(vipExp, getVipSaunaPrice(inputs.mesoMarketRate)) },
   ];
@@ -224,8 +147,6 @@ export default function EfficiencyTab({ inputs, onChange, monsterParkBonus = 0 }
   return (
     <div className="space-y-4 w-[560px]">
       <EffTable title="경험치 도핑 (30분)" rows={doping30Rows} color="green" />
-
-      <EffTable title="상위 아이템 효율" rows={marginRows} color="green" />
 
       <EffTable
         title="경험치 도핑 (30일)"

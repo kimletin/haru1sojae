@@ -33,9 +33,6 @@ export interface InputValues {
   priceBloodRingMeso: number;   // 혈맹의 반지 (메소)
   priceBoostringMeso: number;   // 부스트링 (메소)
   priceJungpenMeso: number;     // 정펜 (메소)
-  priceEcho: number;            // 악몽의 메아리
-  priceSolErda: number;         // 솔에르다 조각
-  useSolErda: boolean;          // 솔에르다 조각 가치 반영 여부
   epicDungeonZone: EpicDungeonZone;
   sunday: SundayType;
   boosterRate: number;          // 보약

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { InputValues, MobGroup } from '@/types';
 import { HUNTING_REGIONS } from '@/data/huntingGrounds';
 import HuntingGroundModal from '@/components/HuntingGroundModal';
+import PriceInfoModal from '@/components/PriceInfoModal';
 import TooltipWrapper from '@/components/TooltipWrapper';
 
 function TooltipIcon({ text }: { text: React.ReactNode }) {
@@ -22,7 +23,7 @@ interface Props {
 function toTimeStr(sessions: number): string {
   const h = Math.floor(sessions / 2);
   const m = (sessions % 2) * 30;
-  return `${h}시간 ${String(m).padStart(2, '0')}분`;
+  return `${h}시간 ${String(m).padStart(2, ' ')}분`;
 }
 
 function NumInput({ label, value, onChange, min, max, width = 'w-[96px]', unit, disabled }: {
@@ -83,6 +84,7 @@ function NumInput({ label, value, onChange, min, max, width = 'w-[96px]', unit, 
 export default function InputPanel({ inputs, onApply }: Props) {
   const [draft, setDraft] = useState<InputValues>(inputs);
   const [showGroundModal, setShowGroundModal] = useState(false);
+  const [showPriceModal, setShowPriceModal] = useState(false);
 
   useEffect(() => {
     setDraft(inputs);
@@ -108,39 +110,22 @@ export default function InputPanel({ inputs, onApply }: Props) {
       </div>
       <div className="p-4">
         <div className="flex items-center gap-3 py-1">
-          <label className="text-sm text-gray-400 dark:text-zinc-500 whitespace-nowrap flex-1">물통 시세</label>
-          <input
-            type="text"
-            value=""
-            disabled
-            className="w-[96px] text-center text-[12px] border-2 border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-400 dark:text-zinc-500 cursor-not-allowed"
+          <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap flex-1">시세 정보</label>
+          <button
+            onClick={() => setShowPriceModal(true)}
+            className="px-3 py-0 h-[24px] text-[12px] font-medium rounded border-2 bg-orange-500 border-orange-500 text-white hover:bg-orange-600 hover:border-orange-600 transition-colors cursor-pointer whitespace-nowrap shrink-0"
+          >
+            수정
+          </button>
+        </div>
+
+        {showPriceModal && (
+          <PriceInfoModal
+            values={draft}
+            onApply={patch => setDraft(prev => ({ ...prev, ...patch }))}
+            onClose={() => setShowPriceModal(false)}
           />
-        </div>
-        <NumInput label="메소마켓 시세" value={draft.mesoMarketRate} onChange={v => set('mesoMarketRate', v)} min={0} max={9999} unit="메포" />
-        <div className="flex items-center gap-3 py-1">
-          <div className="flex items-center gap-1 flex-1">
-            <label className="text-sm text-gray-700 dark:text-zinc-300 whitespace-nowrap">솔 에르다 조각 시세</label>
-            <TooltipIcon text={<>• 솔 에르다 조각을 사용할 캐릭터라면 체크박스를 활성화하세요.<br />• 에픽 던전 효율 계산에 사용됩니다.</>} />
-          </div>
-          <div className="flex items-center gap-1.5">
-            <label className="relative w-4 h-4 cursor-pointer shrink-0">
-              <input
-                type="checkbox"
-                checked={draft.useSolErda ?? true}
-                onChange={e => set('useSolErda', e.target.checked)}
-                className="absolute opacity-0 w-0 h-0"
-              />
-              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${(draft.useSolErda ?? true) ? 'bg-orange-500 border-orange-500' : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600'}`}>
-                {(draft.useSolErda ?? true) && (
-                  <svg className="w-2.5 h-2.5" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1.5 5L4 7.5L8.5 2.5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
-              </div>
-            </label>
-            <NumInput label="" value={draft.priceSolErda ?? 0} onChange={v => set('priceSolErda', v)} min={0} max={9999999} unit="메소" disabled={!(draft.useSolErda ?? true)} />
-          </div>
-        </div>
+        )}
 
         {/* 지역 / 사냥터 선택 */}
         <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
@@ -271,7 +256,7 @@ export default function InputPanel({ inputs, onApply }: Props) {
           <button
             onClick={() => onApply(draft)}
             disabled={!isDirty}
-            className={`px-4 py-1 text-[12px] font-semibold rounded border-2 transition-colors ${isDirty ? "bg-orange-500 border-orange-500 text-white hover:bg-orange-600 hover:border-orange-600 cursor-pointer" : "bg-gray-200 dark:bg-zinc-700 border-gray-200 dark:border-zinc-700 text-gray-400 dark:text-zinc-500 cursor-not-allowed"}`}
+            className={`px-3 py-0 h-[24px] text-[12px] font-semibold rounded border-2 transition-colors ${isDirty ? "bg-orange-500 border-orange-500 text-white hover:bg-orange-600 hover:border-orange-600 cursor-pointer" : "bg-gray-200 dark:bg-zinc-700 border-gray-200 dark:border-zinc-700 text-gray-400 dark:text-zinc-500 cursor-not-allowed"}`}
           >
             적용
           </button>

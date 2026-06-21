@@ -7,7 +7,8 @@ body {
 
 html {
   overflow-x: auto;
-  overflow-y: scroll;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   font-size: 15px;
 }
 
