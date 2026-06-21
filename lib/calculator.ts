@@ -6,26 +6,26 @@ import { HAIMOUNTAIN, ANGLER_COMPANY, NIGHTMARE_SANCTUARY, DUNGEON_METACOIN } fr
 
 import type { InputValues, EfficiencyItem, EpicDungeonZone, SundayType, MobGroup } from '@/types';
 
-/** 캐릭터 레벨 - 몬스터 레벨 차이에 따른 경험치 배율 */
+/** 캐릭터 레벨 - 몬스터 레벨(diff) 차이에 따른 경험치 배율 (인게임 표 기준) */
 export function getExpMultiplier(charLevel: number, monsterLevel: number): number {
   const diff = charLevel - monsterLevel;
-  if (diff >= 40) return 0.70;
-  if (diff >= 21) return (diff + 50) / 100;
-  if (diff >= 19) return 0.95;
-  if (diff >= 17) return 0.96;
-  if (diff >= 15) return 0.97;
-  if (diff >= 13) return 0.98;
-  if (diff >= 11) return 0.99;
-  if (diff === 10) return 1.00;
-  if (diff >= 5)  return 1.05;
-  if (diff >= 2)  return 1.10;
-  if (diff >= -1) return 1.20;
-  if (diff >= -4) return 1.10;
-  if (diff >= -9) return 1.05;
-  if (diff >= -20) return (110 + diff) / 100;
-  if (diff >= -35) return (diff * 4 + 154) / 100;
-  if (diff >= -39) return 0.10;
-  return 0;
+  if (diff >= 40) return 0.70;                    // 40 이상
+  if (diff >= 21) return (110 - diff) / 100;      // 39~21: 0.71~0.89 (1레벨당 0.01)
+  if (diff >= 19) return 0.95;                    // 20~19
+  if (diff >= 17) return 0.96;                    // 18~17
+  if (diff >= 15) return 0.97;                    // 16~15
+  if (diff >= 13) return 0.98;                    // 14~13
+  if (diff >= 11) return 0.99;                    // 12~11
+  if (diff === 10) return 1.00;                   // 10
+  if (diff >= 5)  return 1.05;                    // 9~5
+  if (diff >= 2)  return 1.10;                    // 4~2
+  if (diff >= -1) return 1.20;                    // 1~-1 (최대 배율)
+  if (diff >= -4) return 1.10;                    // -2~-4
+  if (diff >= -9) return 1.05;                    // -5~-9
+  if (diff >= -20) return (110 + diff) / 100;     // -10~-20: 1.00~0.90 (1레벨당 0.01)
+  if (diff >= -35) return (diff * 4 + 154) / 100; // -21~-35: 0.70~0.14 (1레벨당 0.04)
+  if (diff >= -39) return 0.10;                   // -36~-39
+  return 0;                                       // -40 이하 (몬스터에 1 데미지)
 }
 
 /** 메포 가격 → 메소 환산 */
