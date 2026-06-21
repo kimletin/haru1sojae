@@ -155,7 +155,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onBack, onS
                 >
                   <span className="text-[11px] truncate">{g.name}</span>
                   <span className={'text-[10px] shrink-0 ' + (active ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>
-                    {mobLevelLabel(g.mobs)}·{total}
+                    {mobLevelLabel(g.mobs)}
                   </span>
                 </button>
               );
