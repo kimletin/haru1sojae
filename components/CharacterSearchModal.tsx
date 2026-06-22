@@ -186,13 +186,14 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
                   {(() => {
                     const isDuplicate = !!result.ocid && existingOcids.includes(result.ocid);
                     const isMaxLevel = result.level >= 300;
+                    const isTooLow = result.level < 260;
                     return (
                       <button
                         onClick={handleNextFromSearch}
-                        disabled={isMaxLevel || isDuplicate}
+                        disabled={isMaxLevel || isDuplicate || isTooLow}
                         className="mt-2.5 w-full py-1.5 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                       >
-                        {isMaxLevel ? '만렙을 축하합니다 🎉' : isDuplicate ? '중복된 캐릭터입니다' : '다음'}
+                        {isMaxLevel ? '만렙을 축하합니다 🎉' : isDuplicate ? '중복 캐릭터입니다' : isTooLow ? 'Lv.260까지 화이팅👏' : '다음'}
                       </button>
                     );
                   })()}

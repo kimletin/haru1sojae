@@ -3,8 +3,9 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import type { InputValues, MobGroup } from '@/types';
 import { calcAllItems } from '@/lib/calculator';
-import InputPanel from '@/components/InputPanel';
+import CharacterInfoModal from '@/components/CharacterInfoModal';
 import RankingPanel from '@/components/RankingPanel';
+import InputSummaryCard from '@/components/InputSummaryCard';
 import EfficiencyTab from '@/components/EfficiencyTab';
 import ExpInfoTab from '@/components/ExpInfoTab';
 import ExpContentsTab from '@/components/ExpContentsTab';
@@ -70,11 +71,16 @@ const DEFAULT_INPUTS: InputValues = {
   priceBoostringMeso: 450_000_000,
   priceJungpenMeso: 2_000_000_000,
   epicDungeonZone: '하이마운틴',
-  sunday: '평일',
   boosterRate: 0.5,
 };
 
 const DEFAULT_NAMES = ['null', 'null', 'null', 'null', 'null', 'null'];
+
+// 구버전 프리셋의 '앵컴' 표기를 '앵글러컴퍼니'로 마이그레이션
+function migrateInputs(v: InputValues): InputValues {
+  if ((v.epicDungeonZone as string) === '앵컴') return { ...v, epicDungeonZone: '앵글러컴퍼니' };
+  return v;
+}
 
 function makeDefaultPresets(): InputValues[] {
   return Array.from({ length: NUM_PRESETS }, () => ({ ...DEFAULT_INPUTS }));
@@ -92,13 +98,13 @@ function loadPresets(): { presets: InputValues[]; active: number; names: string[
     if (savedPresets) {
       const parsed = JSON.parse(savedPresets);
       if (Array.isArray(parsed) && parsed.length === NUM_PRESETS) {
-        return { presets: parsed.map(p => p ? { ...DEFAULT_INPUTS, ...p } : { ...DEFAULT_INPUTS }), active, names };
+        return { presets: parsed.map(p => migrateInputs(p ? { ...DEFAULT_INPUTS, ...p } : { ...DEFAULT_INPUTS })), active, names };
       }
     }
     const old = localStorage.getItem(STORAGE_KEY);
     if (old) {
       const presets = makeDefaultPresets();
-      presets[0] = { ...DEFAULT_INPUTS, ...JSON.parse(old) };
+      presets[0] = migrateInputs({ ...DEFAULT_INPUTS, ...JSON.parse(old) });
       return { presets, active: 0, names };
     }
   } catch {}
@@ -166,6 +172,7 @@ export default function Home() {
   const [dropGap, setDropGap] = useState<number | null>(null); // 삽입 위치(0~numSlots)
   const [numSlots, setNumSlots] = useState(DEFAULT_NUM_SLOTS);
   const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   const [searchModalTarget, setSearchModalTarget] = useState(0);
   const [isFirstVisit, setIsFirstVisit] = useState(false);
   const [charMetas, setCharMetas] = useState<(CharMeta | null)[]>(makeDefaultMetas());
@@ -278,7 +285,7 @@ export default function Home() {
   const getInitialInputs = (level: number): InputValues => {
     const charLevel = Math.min(Math.max(level, 260), 300);
     const { region, ground } = getDefaultHunting(charLevel);
-    const epicZone = charLevel >= 280 ? '악몽선경' : charLevel >= 270 ? '앵컴' : '하이마운틴';
+    const epicZone = charLevel >= 280 ? '악몽선경' : charLevel >= 270 ? '앵글러컴퍼니' : '하이마운틴';
     return {
       ...DEFAULT_INPUTS,
       charLevel,
@@ -318,6 +325,7 @@ export default function Home() {
       guild: info.guild ?? null,
       class: info.class ?? null,
       world: info.world ?? null,
+      dateCreate: null,
       monsterParkBonus: mpBonus || null,
       epicDungeonBonus: epBonus || null,
       treasureBonus: trBonus || null,
@@ -459,7 +467,7 @@ export default function Home() {
   if (!mounted) return <div className="min-h-screen bg-gray-50 dark:bg-black" />;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-black overflow-hidden">
       {showSearchModal && (
         <CharacterSearchModal
           onConfirm={handleCharacterConfirm}
@@ -469,7 +477,15 @@ export default function Home() {
           existingNames={presetNames}
         />
       )}
-      <header className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-600 sticky top-0 z-10 shadow-sm">
+      {showInfoModal && (
+        <CharacterInfoModal
+          charName={presetNames[activePreset]}
+          initialInputs={inputs}
+          onApply={handleApply}
+          onClose={() => setShowInfoModal(false)}
+        />
+      )}
+      <header className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-600 shrink-0 z-10 shadow-sm">
         <div className="w-[905px] mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <button
             onClick={() => handleTabChange(TABS[0])}
@@ -507,6 +523,7 @@ export default function Home() {
         </div>
       </header>
 
+      <div id="app-scroll" className="flex-1 min-h-0 overflow-y-auto bg-gray-50 dark:bg-black" style={{ scrollbarGutter: 'stable' }}>
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="w-[905px] mx-auto">
           <div className="mb-2 flex items-center gap-1.5">
@@ -614,7 +631,7 @@ export default function Home() {
                   <EfficiencyTab inputs={inputs} onChange={handleChange} items={rankedItems} monsterParkBonus={charMetas[activePreset]?.monsterParkBonus ?? 0} />
                 </main>
                 <aside className="flex-1 flex flex-col gap-4">
-                  <InputPanel inputs={inputs} onApply={handleApply} />
+                  <InputSummaryCard inputs={inputs} meta={charMetas[activePreset]} onEditInfo={() => setShowInfoModal(true)} />
                   <RankingPanel items={rankedItems} />
                 </aside>
             </div>
@@ -664,6 +681,7 @@ export default function Home() {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

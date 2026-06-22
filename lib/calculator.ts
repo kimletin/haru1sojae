@@ -110,7 +110,7 @@ export function getMonsterParkExp(
 /** 에픽 던전 데이터 조회 */
 function getEpicDungeonTable(zone: EpicDungeonZone) {
   if (zone === '하이마운틴') return HAIMOUNTAIN;
-  if (zone === '앵컴') return ANGLER_COMPANY;
+  if (zone === '앵글러컴퍼니') return ANGLER_COMPANY;
   return NIGHTMARE_SANCTUARY;
 }
 
@@ -167,15 +167,14 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
     return { name, category, exp, priceMeso, efficiency, ratio: vipEff > 0 ? efficiency / vipEff : 0 };
   };
 
-  const { epicDungeonZone, charLevel, mesoMarketRate, sunday } = inputs;
-  const epicName = epicDungeonZone === '앵컴' ? '앵글러컴퍼니' : epicDungeonZone;
+  const { epicDungeonZone, charLevel, mesoMarketRate } = inputs;
+  const epicName = epicDungeonZone;
 
   const stage01Exp   = getEpicDungeonStage01Exp(epicDungeonZone, charLevel);
   const stage12Exp   = getEpicDungeonStage12Exp(epicDungeonZone, charLevel);
   const stage01Price = getEpicDungeonStage01Price(epicDungeonZone, mesoMarketRate);
   const stage12Price = getEpicDungeonStage12Price(epicDungeonZone, mesoMarketRate);
 
-  const parkExp   = getMonsterParkExp(charLevel, sunday, monsterParkBonus);
   const parkZone  = getMonsterParkZone(charLevel);
   const parkPrice = mepoToMeso(600, mesoMarketRate);
 
@@ -189,14 +188,14 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
 
   const items: EfficiencyItem[] = [
     // 30분 도핑
-    item('추경 50%',     '30분 도핑', base30 * 0.5, inputs.price50),
+    item('추가경험치 50%',     '30분 도핑', base30 * 0.5, inputs.price50),
     item('2배 쿠폰',            '30분 도핑', base30 * 1,   inputs.price2x),
     item('3배 쿠폰',            '30분 도핑', base30 * 2,   inputs.price3x),
     item('4배 쿠폰',            '30분 도핑', base30 * 3,   inputs.price4x),
     item('소경축비',            '30분 도핑', base30 * 0.1, inputs.priceSmallBooster),
     item('아즈모스 영약',       '30분 도핑', base30 * 0.2, inputs.priceAzmos),
     // 30일 도핑
-    item('사냥 칭호',           '30일 도핑', base30d * 1,    inputs.priceHunterTitle),
+    item('부티크 사냥 칭호',           '30일 도핑', base30d * 1,    inputs.priceHunterTitle),
     item('혈맹의 반지(메소)',    '30일 도핑', base30d * 0.1,  inputs.priceBloodRingMeso),
     item('경험치 부스트링(메소)',       '30일 도핑', base30d * 0.15, inputs.priceBoostringMeso),
     item('정령의 펜던트(메소)',           '30일 도핑', base30d * 0.3,  inputs.priceJungpenMeso),
@@ -206,10 +205,12 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
     // BM
     item(`${epicName} 0→1단계`, 'BM', stage01Exp, stage01Price),
     item(`${epicName} 1→2단계`, 'BM', stage12Exp, stage12Price),
-    item(`몬스터파크(${parkZone})`, 'BM', parkExp, parkPrice),
+    item(`몬스터파크(${parkZone}) 일반`, 'BM', getMonsterParkExp(charLevel, '일반', monsterParkBonus), parkPrice),
+    item(`몬스터파크(${parkZone}) 썬데이`, 'BM', getMonsterParkExp(charLevel, '썬데이', monsterParkBonus), parkPrice),
+    item(`몬스터파크(${parkZone}) 스페셜`, 'BM', getMonsterParkExp(charLevel, '스페셜', monsterParkBonus), parkPrice),
     item('VIP 사우나',          'BM', vipExp, vipPrice),
     // 마진 비교
-    item('추경 50%→70%',  '마진', base30 * 0.2, inputs.price70 - inputs.price50),
+    item('추가경험치 50%→70%',  '마진', base30 * 0.2, inputs.price70 - inputs.price50),
     item('소경축비→고농축비',   '마진', base30 * 0.1, inputs.priceLargeBooster - inputs.priceSmallBooster),
   ];
 

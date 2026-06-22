@@ -683,7 +683,7 @@ interface Props {
   initialSelected?: string;
 }
 
-const SUNDAY_MULT: Record<SundayType, number> = { '평일': 1, '썬데이': 1.5, '스페셜': 4 };
+const SUNDAY_MULT: Record<SundayType, number> = { '일반': 1, '썬데이': 1.5, '스페셜': 4 };
 
 export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBonus, epicDungeonBonus = 0, epicDungeonBonuses = [], treasureBonus = 0, treasureBonuses = [], todayExpRate, slotKey, initialSelected }: Props) {
   const myParkZone = getMonsterParkZone(charLevel);
@@ -701,7 +701,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
   const [simPotionBuff, setSimPotionBuff] = useState('');
   const [simBeyond, setSimBeyond] = useState(false);
   const [simRounds, setSimRounds] = useState(7);
-  const [simSunday, setSimSunday] = useState<SundayType>('평일');
+  const [simSunday, setSimSunday] = useState<SundayType>('일반');
   const [simResult, setSimResult] = useState<{ gainedExp: number; gainPct: number; finalLevel: number; finalPct: number } | null>(null);
 
   // VIP 사우나 시뮬레이터 state
@@ -746,7 +746,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
   const [parkBonusInput, setParkBonusInput] = useState(monsterParkBonus > 0 ? String(monsterParkBonus) : '');
 
   // 몬스터파크 썬데이메이플
-  const [sundayType, setSundayType] = useState<SundayType>('평일');
+  const [sundayType, setSundayType] = useState<SundayType>('일반');
 
   // 블루베리 농장 시뮬레이터 state
   const [blueSimLevel, setBlueSimLevel] = useState(String(charLevel));
@@ -1020,7 +1020,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-gray-500 dark:text-zinc-400">썬데이</span>
                       {([
-                        { val: '평일',   tip: '+0%' },
+                        { val: '일반',   tip: '+0%' },
                         { val: '썬데이', tip: '+50%' },
                         { val: '스페셜', tip: '+300%' },
                       ] as const).map(({ val, tip }) => (
@@ -1672,7 +1672,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">썬데이</span>
                         <div className="flex gap-1">
                           {([
-                            { val: '평일',   tip: '+0%' },
+                            { val: '일반',   tip: '+0%' },
                             { val: '썬데이', tip: '+50%' },
                             { val: '스페셜', tip: '+300%' },
                           ] as const).map(({ val, tip }) => (

@@ -45,10 +45,10 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
       </div>
       <table className="table-fixed w-full text-sm border-collapse">
         <colgroup>
-          <col style={{width: hasRate ? '150px' : '200px'}} />
+          <col style={{width: hasRate ? '180px' : '240px'}} />
           {hasRate && <col style={{width:'60px'}} />}
           <col style={{width:'100px'}} />
-          <col style={{width:'140px'}} />
+          <col style={{width:'110px'}} />
           <col style={{width:'110px'}} />
         </colgroup>
         <thead>
@@ -112,8 +112,8 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
   });
 
   const doping30Rows: TableRow[] = [
-    { name: '추경 50%', rate: 0.5, ...effRow(base30 * 0.5, inputs.price50) },
-    { name: '추경 50%→70%', rate: 0.2, ...effRow(base30 * 0.2, inputs.price70 - inputs.price50) },
+    { name: '추가경험치 50%', rate: 0.5, ...effRow(base30 * 0.5, inputs.price50) },
+    { name: '추가경험치 50%→70%', rate: 0.2, ...effRow(base30 * 0.2, inputs.price70 - inputs.price50) },
     { name: '2배 쿠폰',                  rate: 1,   ...effRow(base30 * 1,   inputs.price2x) },
     { name: '3배 쿠폰',                  rate: 2,   ...effRow(base30 * 2,   inputs.price3x) },
     { name: '4배 쿠폰',                  rate: 3,   ...effRow(base30 * 3,   inputs.price4x) },
@@ -123,7 +123,7 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
   ];
 
   const doping30dRows: TableRow[] = [
-    { name: '사냥 칭호',          rate: 1,    ...effRow(base30d * 1,    inputs.priceHunterTitle) },
+    { name: '부티크 사냥 칭호',          rate: 1,    ...effRow(base30d * 1,    inputs.priceHunterTitle) },
     { name: '혈맹의 반지(메소)', rate: 0.1, ...effRow(base30d * 0.1, inputs.priceBloodRingMeso) },
     { name: '혈맹의 반지(메포)', rate: 0.1, ...effRow(base30d * 0.1,  mepoToMeso(5900,  inputs.mesoMarketRate)) },
     { name: '경험치 부스트링(메소)', rate: 0.15, ...effRow(base30d * 0.15, inputs.priceBoostringMeso) },
@@ -132,16 +132,18 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
     { name: '정령의 펜던트(메포)',          rate: 0.3,  ...effRow(base30d * 0.3,  mepoToMeso(49900, inputs.mesoMarketRate)) },
   ];
 
-  const epicName = inputs.epicDungeonZone === '앵컴' ? '앵글러컴퍼니' : inputs.epicDungeonZone;
+  const epicName = inputs.epicDungeonZone;
   const parkZone = getMonsterParkZone(inputs.charLevel);
-  const parkExp  = getMonsterParkExp(inputs.charLevel, inputs.sunday, monsterParkBonus);
+  const parkPrice = mepoToMeso(600, inputs.mesoMarketRate);
   const vipExp   = getVipSaunaExp(inputs.charLevel);
 
   const bmRows: TableRow[] = [
     { name: epicName + ' 0→1단계', ...effRow(getEpicDungeonStage01Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage01Price(inputs.epicDungeonZone, inputs.mesoMarketRate)) },
     { name: epicName + ' 1→2단계', ...effRow(getEpicDungeonStage12Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage12Price(inputs.epicDungeonZone, inputs.mesoMarketRate)) },
-    { name: '몬스터파크(' + parkZone + ')', ...effRow(parkExp, mepoToMeso(600, inputs.mesoMarketRate)) },
-    { name: 'VIP 사우나',            ...effRow(vipExp, getVipSaunaPrice(inputs.mesoMarketRate)) },
+    { name: '몬스터파크(' + parkZone + ') 일반',   ...effRow(getMonsterParkExp(inputs.charLevel, '일반', monsterParkBonus), parkPrice) },
+    { name: '몬스터파크(' + parkZone + ') 썬데이', ...effRow(getMonsterParkExp(inputs.charLevel, '썬데이', monsterParkBonus), parkPrice) },
+    { name: '몬스터파크(' + parkZone + ') 스페셜', ...effRow(getMonsterParkExp(inputs.charLevel, '스페셜', monsterParkBonus), parkPrice) },
+    { name: 'VIP 사우나 (1시간)',            ...effRow(vipExp, getVipSaunaPrice(inputs.mesoMarketRate)) },
   ];
 
   return (

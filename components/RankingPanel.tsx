@@ -42,7 +42,7 @@ export default function RankingPanel({ items }: Props) {
         {items.map((item, i) => (
           <div
             key={item.name}
-            className="flex items-center gap-2 px-4 py-2 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-zinc-700"
+            className="flex items-center gap-2 px-4 h-[36px] transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-zinc-700"
           >
             <RankBadge rank={i + 1} />
             <span className="text-sm text-gray-800 dark:text-zinc-200 flex-1 flex items-center gap-0.5 min-w-0"><ItemName name={item.name} /></span>

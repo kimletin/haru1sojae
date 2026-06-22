@@ -32,6 +32,7 @@ interface Props {
   onMetaUpdate?: (patch: Partial<CharMeta>) => void;
   onTodayLoaded?: (expRate: number | null) => void;
   onCharLevelUpdate?: (level: number) => void;
+  onEditInfo?: () => void;
   isEmpty?: boolean;
 }
 
@@ -91,6 +92,12 @@ function formatExpKR(exp: number): string {
   return parts.join(' ');
 }
 
+// "2026-06-22T..." → "26.06.22"
+function formatCreateDate(s: string): string {
+  if (s.length < 10) return s;
+  return `${s.slice(2, 4)}.${s.slice(5, 7)}.${s.slice(8, 10)}`;
+}
+
 // 두 슬롯 사이 경험치 증가량 계산 (레벨업 가로질러 반영)
 // character_exp는 현재 레벨 내 누적치라 레벨업 시 리셋되므로, levelExp 테이블로 보정한다.
 function computeDelta(prev: Slot | null, slot: Slot): { deltaRate: number; deltaExp: number } {
@@ -122,7 +129,7 @@ function computeDelta(prev: Slot | null, slot: Slot): { deltaRate: number; delta
   return { deltaRate, deltaExp };
 }
 
-export default function CharacterCard({ name, level, meta, onMetaUpdate, onTodayLoaded, onCharLevelUpdate, isEmpty }: Props) {
+export default function CharacterCard({ name, level, meta, onMetaUpdate, onTodayLoaded, onCharLevelUpdate, onEditInfo, isEmpty }: Props) {
   const [history, setHistory] = useState<HistoryPoint[]>([]);
   const [ranking, setRanking] = useState<Ranking | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -183,6 +190,7 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
           if (imageData.class !== undefined) metaUpdate.class = imageData.class;
           if (imageData.world !== undefined) metaUpdate.world = imageData.world;
           if (imageData.guild !== undefined) metaUpdate.guild = imageData.guild;
+          if (imageData.dateCreate !== undefined) metaUpdate.dateCreate = imageData.dateCreate;
         }
         if (skillOk) {
           metaUpdate.skillUpdatedAt = Date.now();
@@ -293,11 +301,14 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
   if (isEmpty) {
     return (
       <div className="character-card bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden">
-        <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5">
+        <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 relative">
           <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">캐릭터 정보</h3>
+          {onEditInfo && (
+            <button onClick={onEditInfo} className="absolute right-2.5 top-1/2 -translate-y-1/2 px-2.5 h-[24px] text-[11px] font-medium rounded border-2 bg-orange-500 border-orange-500 text-white hover:bg-orange-600 hover:border-orange-600 transition-colors cursor-pointer whitespace-nowrap">정보 수정</button>
+          )}
         </div>
         <div className="flex items-stretch h-[185px]">
-          <div className="flex flex-col px-4 flex-1 pt-1 pb-5 items-center justify-center gap-3">
+          <div className="flex flex-col px-4 flex-1 min-w-0 pt-1 pb-5 items-center justify-center gap-3">
             <div className="w-24 h-24 rounded-xl shrink-0 overflow-hidden bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-2xl text-gray-300 dark:text-zinc-600">?</div>
             <p className="text-sm text-gray-400 dark:text-zinc-500">캐릭터를 추가해주세요</p>
           </div>
@@ -315,8 +326,11 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
 
   return (
     <div className="character-card bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden">
-      <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2 flex items-center justify-center">
+      <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2 flex items-center justify-center relative">
         <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">캐릭터 정보</h3>
+        {onEditInfo && (
+          <button onClick={onEditInfo} className="absolute right-2.5 top-1/2 -translate-y-1/2 px-2.5 h-[24px] text-[11px] font-medium rounded border-2 bg-orange-500 border-orange-500 text-white hover:bg-orange-600 hover:border-orange-600 transition-colors cursor-pointer whitespace-nowrap">정보 수정</button>
+        )}
       </div>
 
       <div className="relative flex items-stretch h-[185px]">
@@ -346,7 +360,7 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
           </div>
         )}
         {/* 좌측: 캐릭터 정보 */}
-        <div className="flex flex-col px-4 flex-1 pt-1 pb-5">
+        <div className="flex flex-col px-4 flex-1 min-w-0 pt-1 pb-5">
           <div className="flex items-center justify-center gap-5 flex-1">
             <div className="w-24 h-24 rounded-xl shrink-0 overflow-hidden">
               {meta?.image ? (
@@ -389,49 +403,12 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
                     <span className="text-gray-700 dark:text-zinc-300">{meta.class}</span>
                   </div>
                 )}
-                {(() => {
-                  const mpBonuses = meta?.monsterParkBonuses ?? [];
-                  const epBonuses = meta?.epicDungeonBonuses ?? [];
-                  const trBonuses = meta?.treasureBonuses ?? [];
-                  const bonusMap = new Map<string, { name: string; icon?: string | null; mp?: number; ep?: number; tr?: number }>();
-                  for (const b of mpBonuses) bonusMap.set(b.name, { name: b.name, icon: b.icon, mp: b.pct });
-                  for (const b of epBonuses) {
-                    const ex = bonusMap.get(b.name);
-                    if (ex) ex.ep = b.pct;
-                    else bonusMap.set(b.name, { name: b.name, icon: b.icon, ep: b.pct });
-                  }
-                  for (const b of trBonuses) {
-                    const ex = bonusMap.get(b.name);
-                    if (ex) ex.tr = b.pct;
-                    else bonusMap.set(b.name, { name: b.name, icon: b.icon, tr: b.pct });
-                  }
-                  const mergedBonuses = Array.from(bonusMap.values());
-                  if (mergedBonuses.length === 0) return null;
-                  return (
-                    <div className="flex gap-2 items-center mt-0.5">
-                      <span className="w-6 text-gray-400 dark:text-zinc-500 shrink-0">보약</span>
-                      <div className="flex items-center gap-1 flex-wrap cursor-default">
-                        {mergedBonuses.map(b => (
-                          <TooltipWrapper
-                            key={b.name}
-                            tipClassName="!whitespace-normal leading-relaxed"
-                            tip={<>
-                              <div className="text-orange-200 font-semibold mb-0.5">{b.name}</div>
-                              {b.mp != null && <div className="text-gray-200">몬스터파크 경험치 <span className="text-orange-300">+{b.mp}%</span></div>}
-                              {b.ep != null && <div className="text-gray-200">에픽 던전 기본 보상 <span className="text-orange-300">+{b.ep}%</span></div>}
-                              {b.tr != null && <div className="text-gray-200">트레져 헌터 경험치 <span className="text-orange-300">+{b.tr}%</span></div>}
-                            </>}
-                          >
-                            {b.icon
-                              ? <img src={b.icon} alt={b.name} className="w-5 h-5 rounded block" />
-                              : <span className="w-5 h-5 flex items-center justify-center text-[10px] font-bold bg-orange-100 dark:bg-orange-900/40 text-orange-500 rounded">E</span>
-                            }
-                          </TooltipWrapper>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
+                {meta?.dateCreate && (
+                  <div className="flex gap-2">
+                    <span className="w-6 text-gray-400 dark:text-zinc-500 shrink-0">생성</span>
+                    <span className="text-gray-700 dark:text-zinc-300">{formatCreateDate(meta.dateCreate)}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -449,8 +426,8 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
 
         {/* 우측: 경험치 히스토리 */}
         <div className="w-[44%] shrink-0 px-5 py-2 min-w-0 flex flex-col">
-          <p className="text-xs text-gray-700 dark:text-zinc-500 mb-2 mt-3">
-            경험치 히스토리 (7일)
+          <p className="text-xs text-gray-700 dark:text-zinc-500 mb-2 mt-5 px-2">
+            경험치 히스토리(7일)
             {!hasApi && <span className="ml-1 text-gray-300 dark:text-zinc-600">· API 미연동</span>}
           </p>
 
@@ -467,8 +444,8 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
               갱신 버튼을 눌러<br />데이터를 불러오세요
             </div>
           ) : (
-            <div className="relative mt-auto pt-3 mb-1">
-              <div className="flex items-end gap-0.5 h-[100px]">
+            <div className="relative mt-auto pt-3 mb-3 px-2">
+              <div className="flex items-end gap-1 h-[100px] justify-between">
                 {slots.map((slot, i) => {
                   const prev = i > 0 ? slots[i - 1] : null;
                   const { deltaRate, deltaExp } = computeDelta(prev, slot);
@@ -482,7 +459,7 @@ export default function CharacterCard({ name, level, meta, onMetaUpdate, onToday
                   return (
                   <TooltipWrapper
                     key={slot.date}
-                    className="flex-1 min-w-0"
+                    className="flex-1 min-w-0 max-w-[30px]"
                     tipClassName="!whitespace-normal leading-relaxed flex flex-col items-start"
                     tip={barTip}
                     followCursor

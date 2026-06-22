@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
         class: char.character_class ?? null,
         world: char.world_name ?? null,
         guild: char.character_guild_name ?? null,
+        dateCreate: char.character_date_create ?? null,
       });
     } catch (e) {
       if (e instanceof Error && e.name === 'AbortError') {

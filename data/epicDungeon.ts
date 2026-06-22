@@ -1,6 +1,6 @@
 // 에픽 던전 레벨별 누적 경험치 데이터
 // [0단계, 7500메포단계, 22500메포단계] (하이마운틴)
-// [0단계, 10000메포단계, 30000메포단계] (앵컴)
+// [0단계, 10000메포단계, 30000메포단계] (앵글러컴퍼니)
 // [0단계, 12500메포단계, 37500메포단계] (악몽선경)
 
 export interface EpicDungeonData {
@@ -11,7 +11,7 @@ export interface EpicDungeonData {
 
 export const DUNGEON_METACOIN: Record<string, { stage1: number; stage2: number }> = {
   하이마운틴: { stage1: 7500,  stage2: 22500 },
-  앵컴:       { stage1: 10000, stage2: 30000 },
+  앵글러컴퍼니: { stage1: 10000, stage2: 30000 },
   악몽선경:   { stage1: 12500, stage2: 37500 },
 };
 

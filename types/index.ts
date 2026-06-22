@@ -1,5 +1,5 @@
-export type EpicDungeonZone = '하이마운틴' | '앵컴' | '악몽선경';
-export type SundayType = '평일' | '썬데이' | '스페셜';
+export type EpicDungeonZone = '하이마운틴' | '앵글러컴퍼니' | '악몽선경';
+export type SundayType = '일반' | '썬데이' | '스페셜';
 
 export interface MobGroup {
   level: number;
@@ -34,7 +34,6 @@ export interface InputValues {
   priceBoostringMeso: number;   // 부스트링 (메소)
   priceJungpenMeso: number;     // 정펜 (메소)
   epicDungeonZone: EpicDungeonZone;
-  sunday: SundayType;
   boosterRate: number;          // 보약
 }
 
@@ -45,6 +44,7 @@ export interface CharMeta {
   guild: string | null;
   class: string | null;
   world: string | null;
+  dateCreate: string | null;    // 캐릭터 생성일 (Nexon character_date_create)
   monsterParkBonus: number | null;
   epicDungeonBonus: number | null;
   monsterParkBonuses: { name: string; pct: number; icon: string | null }[] | null;
