@@ -34,6 +34,7 @@ export interface InputValues {
   priceBoostringMeso: number;   // 부스트링 (메소)
   priceJungpenMeso: number;     // 정펜 (메소)
   epicDungeonZone: EpicDungeonZone;
+  monsterParkZone: string;      // 선택된 몬스터파크 지역
   boosterRate: number;          // 보약
 }
 

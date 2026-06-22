@@ -26,9 +26,7 @@ interface Props {
 }
 
 function toTimeStr(sessions: number): string {
-  const h = Math.floor(sessions / 2);
-  const m = (sessions % 2) * 30;
-  return `${h}시간 ${m}분`;
+  return `${sessions / 2}시간`;
 }
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
@@ -62,6 +60,7 @@ export default function InputSummaryCard({ inputs, meta, onEditInfo }: Props) {
           <Row label="30분 평균 부스터" value={`VIP/HEXA ${inputs.booster30min}개 · 영겁 ${inputs.eternal30min}개`} />
           <Row label="1일 평균 부스터" value={`VIP/HEXA ${inputs.booster1day}개 · 영겁 ${inputs.eternal1day}개`} />
           <Row label="에픽 던전" value={inputs.epicDungeonZone} />
+          <Row label="몬스터파크" value={inputs.monsterParkZone} />
           <Row label="사냥터" value={`${inputs.huntingRegion} · ${inputs.huntingGround}`} />
         </div>
       </div>
@@ -72,9 +71,9 @@ export default function InputSummaryCard({ inputs, meta, onEditInfo }: Props) {
           <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">보약 정보</h3>
         </div>
         <div className="py-3">
-          {bonuses.length > 0 && (
-            <div className="flex items-center gap-2 px-4 py-1.5 text-sm">
-              <span className="text-gray-800 dark:text-zinc-200 shrink-0 whitespace-nowrap">보약 목록</span>
+          <div className="flex items-center gap-2 px-4 py-1.5 text-sm">
+            <span className="text-gray-800 dark:text-zinc-200 shrink-0 whitespace-nowrap">보약 리스트</span>
+            {bonuses.length > 0 ? (
               <div className="flex items-center justify-end gap-1.5 flex-wrap flex-1 min-w-0 cursor-default">
                 {bonuses.map(b => (
                   <TooltipWrapper
@@ -94,9 +93,11 @@ export default function InputSummaryCard({ inputs, meta, onEditInfo }: Props) {
                   </TooltipWrapper>
                 ))}
               </div>
-            </div>
-          )}
-          {bonuses.length > 0 && <div className="border-t border-gray-100 dark:border-zinc-700 my-2" />}
+            ) : (
+              <span className="text-gray-500 dark:text-zinc-500 flex-1 min-w-0 text-right">-</span>
+            )}
+          </div>
+          <div className="border-t border-gray-100 dark:border-zinc-700 my-2" />
           <Row label="몬스터파크 추가 경험치" value={bonusText(meta?.monsterParkBonus)} />
           <Row label="에픽 던전 기본 보상" value={bonusText(meta?.epicDungeonBonus)} />
           <Row label="트레져 헌터 추가 경험치" value={bonusText(meta?.treasureBonus)} />

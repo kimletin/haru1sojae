@@ -1,7 +1,7 @@
 import { MONSTER_EXP } from '@/data/monsterExp';
 import { VIP_SAUNA_EXP } from '@/data/vipSauna';
 import { MEKABERRY_EXP } from '@/data/mekaberry';
-import { MONSTER_PARK_EXP, getMonsterParkZone } from '@/data/monsterPark';
+import { MONSTER_PARK_EXP } from '@/data/monsterPark';
 import { HAIMOUNTAIN, ANGLER_COMPANY, NIGHTMARE_SANCTUARY, DUNGEON_METACOIN } from '@/data/epicDungeon';
 
 import type { InputValues, EfficiencyItem, EpicDungeonZone, SundayType, MobGroup } from '@/types';
@@ -97,11 +97,10 @@ export function getVipEfficiency(inputs: InputValues): number {
 
 /** 몬스터파크 경험치 (썬데이/보약 적용) */
 export function getMonsterParkExp(
-  charLevel: number,
+  zone: string,
   sunday: SundayType,
   monsterParkBonus: number = 0  // API에서 받은 % 값
 ): number {
-  const zone = getMonsterParkZone(charLevel);
   const base = MONSTER_PARK_EXP[zone] ?? 0;
   const sundayBonus = sunday === '썬데이' ? 0.5 : sunday === '스페셜' ? 3.0 : 0;
   return base * (1 + sundayBonus + monsterParkBonus / 100);
@@ -175,7 +174,7 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
   const stage01Price = getEpicDungeonStage01Price(epicDungeonZone, mesoMarketRate);
   const stage12Price = getEpicDungeonStage12Price(epicDungeonZone, mesoMarketRate);
 
-  const parkZone  = getMonsterParkZone(charLevel);
+  const parkZone  = inputs.monsterParkZone;
   const parkPrice = mepoToMeso(600, mesoMarketRate);
 
   const vipExp   = getVipSaunaExp(charLevel);
@@ -205,9 +204,9 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
     // BM
     item(`${epicName} 0→1단계`, 'BM', stage01Exp, stage01Price),
     item(`${epicName} 1→2단계`, 'BM', stage12Exp, stage12Price),
-    item(`몬스터파크(${parkZone}) 일반`, 'BM', getMonsterParkExp(charLevel, '일반', monsterParkBonus), parkPrice),
-    item(`몬스터파크(${parkZone}) 썬데이`, 'BM', getMonsterParkExp(charLevel, '썬데이', monsterParkBonus), parkPrice),
-    item(`몬스터파크(${parkZone}) 스페셜`, 'BM', getMonsterParkExp(charLevel, '스페셜', monsterParkBonus), parkPrice),
+    item(`몬스터파크(${parkZone}) 일반`, 'BM', getMonsterParkExp(parkZone, '일반', monsterParkBonus), parkPrice),
+    item(`몬스터파크(${parkZone}) 썬데이`, 'BM', getMonsterParkExp(parkZone, '썬데이', monsterParkBonus), parkPrice),
+    item(`몬스터파크(${parkZone}) 스페셜`, 'BM', getMonsterParkExp(parkZone, '스페셜', monsterParkBonus), parkPrice),
     item('VIP 사우나',          'BM', vipExp, vipPrice),
     // 마진 비교
     item('추가경험치 50%→70%',  '마진', base30 * 0.2, inputs.price70 - inputs.price50),

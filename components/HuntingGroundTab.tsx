@@ -12,14 +12,14 @@ interface Props {
 }
 
 const REGION_LEVEL_RANGE: Record<string, string> = {
-  '세르니움':   'Lv.260~264',
-  '아르크스':   'Lv.265~269',
-  '오디움':     'Lv.270~274',
-  '도원경':     'Lv.275~279',
-  '아르테리아': 'Lv.280~284',
-  '카르시온':   'Lv.285~289',
-  '탈라하트':   'Lv.290~294',
-  '기어드락':   'Lv.295~299',
+  '세르니움':   'Lv.260-264',
+  '아르크스':   'Lv.265-269',
+  '오디움':     'Lv.270-274',
+  '도원경':     'Lv.275-279',
+  '아르테리아': 'Lv.280-284',
+  '카르시온':   'Lv.285-289',
+  '탈라하트':   'Lv.290-294',
+  '기어드락':   'Lv.295-299',
 };
 
 export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGround }: Props) {

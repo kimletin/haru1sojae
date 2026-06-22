@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { InputValues } from '@/types';
 import { HUNTING_REGIONS } from '@/data/huntingGrounds';
 import type { HuntingGround, HuntingRegion } from '@/data/huntingGrounds';
+import { MONSTER_PARK_ZONES } from '@/data/monsterPark';
 import TooltipWrapper from '@/components/TooltipWrapper';
 
 interface Props {
@@ -16,9 +17,7 @@ interface Props {
 }
 
 function toTimeStr(sessions: number): string {
-  const h = Math.floor(sessions / 2);
-  const m = (sessions % 2) * 30;
-  return `${h}시간 ${String(m).padStart(2, ' ')}분`;
+  return `${sessions / 2}시간`;
 }
 
 function regionMinLevel(region: HuntingRegion): number {
@@ -29,7 +28,7 @@ function regionLevelRange(region: HuntingRegion): string {
   const levels = region.grounds.flatMap(g => g.mobs.map(m => m.level));
   const min = Math.min(...levels);
   const max = Math.max(...levels);
-  return min === max ? `${min}` : `${min}~${max}`;
+  return min === max ? `${min}` : `${min}-${max}`;
 }
 
 function mobLevelLabel(mobs: { level: number; count: number }[]): string {
@@ -129,19 +128,22 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
           </div>
         </div>
 
-        {/* 2열: 일 평균 재획 + 부스터 + 에픽 던전 */}
+        {/* 2열: 사냥(일 평균 재획) + 부스터 + 에픽 던전 + 몬스터파크 */}
         <div className="min-w-0 border-l border-gray-100 dark:border-zinc-700 pl-4">
-          <p className={sectionLabel}>일 평균 재획</p>
-          <div className="flex items-center justify-center gap-1.5 py-5 mb-1">
-            <span className="text-base font-semibold text-gray-700 dark:text-zinc-100 w-[84px] text-center">{toTimeStr(d.dailySessions)}</span>
-            <button
-              onClick={() => set('dailySessions', Math.min(48, d.dailySessions + 1))}
-              className="w-6 h-6 flex items-center justify-center text-[11px] text-gray-500 dark:text-zinc-400 hover:text-orange-500 cursor-pointer border border-gray-300 dark:border-zinc-600 rounded hover:border-orange-400"
-            >▲</button>
-            <button
-              onClick={() => set('dailySessions', Math.max(1, d.dailySessions - 1))}
-              className="w-6 h-6 flex items-center justify-center text-[11px] text-gray-500 dark:text-zinc-400 hover:text-orange-500 cursor-pointer border border-gray-300 dark:border-zinc-600 rounded hover:border-orange-400"
-            >▼</button>
+          <p className={sectionLabel}>사냥</p>
+          <div className="flex items-center gap-2 py-0.5">
+            <label className="text-xs whitespace-nowrap flex-1 text-gray-700 dark:text-zinc-300">일 평균 재획</label>
+            <div className="flex items-center gap-0.5">
+              <span className="text-xs font-semibold text-gray-700 dark:text-zinc-100">{toTimeStr(d.dailySessions)}</span>
+              <button
+                onClick={() => set('dailySessions', Math.min(48, d.dailySessions + 1))}
+                className="w-5 h-5 flex items-center justify-center text-[10px] text-gray-500 dark:text-zinc-400 hover:text-orange-500 cursor-pointer border border-gray-300 dark:border-zinc-600 rounded hover:border-orange-400"
+              >▲</button>
+              <button
+                onClick={() => set('dailySessions', Math.max(1, d.dailySessions - 1))}
+                className="w-5 h-5 flex items-center justify-center text-[10px] text-gray-500 dark:text-zinc-400 hover:text-orange-500 cursor-pointer border border-gray-300 dark:border-zinc-600 rounded hover:border-orange-400"
+              >▼</button>
+            </div>
           </div>
 
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-1 pt-2">
@@ -183,7 +185,35 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
                     }
                   >
                     <span className="font-medium leading-tight text-center px-0.5">{label}</span>
-                    <span className={'text-[9px] mt-0.5 ' + (d.epicDungeonZone === val ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>Lv.{minLv}~</span>
+                    <span className={'text-[9px] mt-0.5 ' + (d.epicDungeonZone === val ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>Lv.{minLv}-</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
+            <p className={sectionLabel}>몬스터파크</p>
+            <div className="grid grid-cols-3 gap-1">
+              {MONSTER_PARK_ZONES.map(({ zone, minLevel }) => {
+                const accessible = d.charLevel >= minLevel;
+                const active = d.monsterParkZone === zone;
+                return (
+                  <button
+                    key={zone}
+                    onClick={() => accessible && set('monsterParkZone', zone)}
+                    disabled={!accessible}
+                    className={
+                      'py-1.5 flex flex-col items-center justify-center rounded border-2 text-[10px] transition-colors ' +
+                      (!accessible
+                        ? 'opacity-40 cursor-not-allowed bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400'
+                        : active
+                          ? 'bg-orange-500 border-orange-500 text-white cursor-pointer'
+                          : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400 cursor-pointer')
+                    }
+                  >
+                    <span className="font-medium leading-tight text-center px-0.5">{zone}</span>
+                    <span className={'text-[9px] mt-0.5 ' + (active ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>Lv.{minLevel}-</span>
                   </button>
                 );
               })}
@@ -214,7 +244,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
                     }
                   >
                     <span className="text-[10px] font-medium leading-tight text-center px-0.5">{r.name}</span>
-                    <span className={'text-[8px] mt-0.5 ' + (active ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>{regionLevelRange(r)}</span>
+                    <span className={'text-[9px] mt-0.5 ' + (active ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>Lv.{regionLevelRange(r)}</span>
                   </button>
                 );
               })}

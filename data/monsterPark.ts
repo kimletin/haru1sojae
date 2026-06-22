@@ -9,6 +9,17 @@ export const MONSTER_PARK_EXP: Record<string, number> = {
   탈라하트:  218575316000,
 };
 
+// 몬스터파크 구역별 입장 최소 레벨 (선택 UI/기본값 공용)
+export const MONSTER_PARK_ZONES: { zone: string; minLevel: number }[] = [
+  { zone: '세르니움',   minLevel: 260 },
+  { zone: '아르크스',   minLevel: 265 },
+  { zone: '오디움',     minLevel: 270 },
+  { zone: '도원경',     minLevel: 275 },
+  { zone: '아르테리아', minLevel: 280 },
+  { zone: '카르시온',   minLevel: 285 },
+  { zone: '탈라하트',   minLevel: 290 },
+];
+
 // 캐릭터 레벨별 몬스터파크 구역 결정
 export function getMonsterParkZone(charLevel: number): string {
   if (charLevel >= 290) return '탈라하트';

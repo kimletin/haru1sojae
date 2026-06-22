@@ -16,6 +16,7 @@ import CharacterCard from '@/components/CharacterCard';
 import { SunIcon, MoonIcon } from '@/components/Icons';
 import type { CharMeta } from '@/types';
 import { getDefaultHunting } from '@/data/huntingGrounds';
+import { getMonsterParkZone } from '@/data/monsterPark';
 
 // 세션 내 오늘 경험치 조회 완료된 ocid (새로고침 시 초기화)
 
@@ -71,6 +72,7 @@ const DEFAULT_INPUTS: InputValues = {
   priceBoostringMeso: 450_000_000,
   priceJungpenMeso: 2_000_000_000,
   epicDungeonZone: '하이마운틴',
+  monsterParkZone: '세르니움',
   boosterRate: 0.5,
 };
 
@@ -78,7 +80,8 @@ const DEFAULT_NAMES = ['null', 'null', 'null', 'null', 'null', 'null'];
 
 // 구버전 프리셋의 '앵컴' 표기를 '앵글러컴퍼니'로 마이그레이션
 function migrateInputs(v: InputValues): InputValues {
-  if ((v.epicDungeonZone as string) === '앵컴') return { ...v, epicDungeonZone: '앵글러컴퍼니' };
+  if ((v.epicDungeonZone as string) === '앵컴') v = { ...v, epicDungeonZone: '앵글러컴퍼니' };
+  if (!v.monsterParkZone) v = { ...v, monsterParkZone: getMonsterParkZone(v.charLevel) };
   return v;
 }
 
@@ -296,6 +299,7 @@ export default function Home() {
       mobCount: ground.mobs.reduce((s, m) => s + m.count, 0),
       boosterMonsterLevel: ground.boosterLevel ?? ground.mobs[ground.mobs.length - 1].level,
       epicDungeonZone: epicZone,
+      monsterParkZone: getMonsterParkZone(charLevel),
     };
   };
 

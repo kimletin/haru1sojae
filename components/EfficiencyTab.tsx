@@ -2,7 +2,6 @@
 
 import { InputValues, EfficiencyItem } from '@/types';
 import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency } from '@/lib/calculator';
-import { getMonsterParkZone } from '@/data/monsterPark';
 import Num from '@/components/Num';
 
 function fmtMeso(n: number): string {
@@ -133,16 +132,16 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
   ];
 
   const epicName = inputs.epicDungeonZone;
-  const parkZone = getMonsterParkZone(inputs.charLevel);
+  const parkZone = inputs.monsterParkZone;
   const parkPrice = mepoToMeso(600, inputs.mesoMarketRate);
   const vipExp   = getVipSaunaExp(inputs.charLevel);
 
   const bmRows: TableRow[] = [
     { name: epicName + ' 0→1단계', ...effRow(getEpicDungeonStage01Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage01Price(inputs.epicDungeonZone, inputs.mesoMarketRate)) },
     { name: epicName + ' 1→2단계', ...effRow(getEpicDungeonStage12Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage12Price(inputs.epicDungeonZone, inputs.mesoMarketRate)) },
-    { name: '몬스터파크(' + parkZone + ') 일반',   ...effRow(getMonsterParkExp(inputs.charLevel, '일반', monsterParkBonus), parkPrice) },
-    { name: '몬스터파크(' + parkZone + ') 썬데이', ...effRow(getMonsterParkExp(inputs.charLevel, '썬데이', monsterParkBonus), parkPrice) },
-    { name: '몬스터파크(' + parkZone + ') 스페셜', ...effRow(getMonsterParkExp(inputs.charLevel, '스페셜', monsterParkBonus), parkPrice) },
+    { name: '몬스터파크(' + parkZone + ') 일반',   ...effRow(getMonsterParkExp(parkZone, '일반', monsterParkBonus), parkPrice) },
+    { name: '몬스터파크(' + parkZone + ') 썬데이', ...effRow(getMonsterParkExp(parkZone, '썬데이', monsterParkBonus), parkPrice) },
+    { name: '몬스터파크(' + parkZone + ') 스페셜', ...effRow(getMonsterParkExp(parkZone, '스페셜', monsterParkBonus), parkPrice) },
     { name: 'VIP 사우나 (1시간)',            ...effRow(vipExp, getVipSaunaPrice(inputs.mesoMarketRate)) },
   ];
 

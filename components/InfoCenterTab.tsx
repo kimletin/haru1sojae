@@ -39,7 +39,9 @@ export default function InfoCenterTab() {
             onClick={() => setActiveSection(s)}
             className={
               'px-4 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer ' +
-              (activeSection === s ? 'bg-orange-500 text-white' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700')
+              (activeSection === s
+                ? 'bg-orange-500 text-white border border-orange-500'
+                : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
             }
           >
             {s}
