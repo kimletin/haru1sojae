@@ -130,7 +130,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
 
         {/* 2열: 사냥(일 평균 재획) + 부스터 + 에픽 던전 + 몬스터파크 */}
         <div className="min-w-0 border-l border-gray-100 dark:border-zinc-700 pl-4">
-          <p className={sectionLabel}>사냥</p>
+          <p className={sectionLabel}>사냥 시간</p>
           <div className="flex items-center gap-2 py-0.5">
             <label className="text-xs whitespace-nowrap flex-1 text-gray-700 dark:text-zinc-300">일 평균 재획</label>
             <div className="flex items-center gap-0.5">

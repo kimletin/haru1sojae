@@ -691,8 +691,8 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
   const [selected, setSelected] = useState(initialSelected ?? 'epicdungeon');
 
   useEffect(() => {
-    window.history.replaceState({}, '', '/cont/' + selected);
-  }, [selected]);
+    window.history.replaceState({}, '', '/cont');
+  }, []);
 
 
   // 시뮬레이터 state
