@@ -23,86 +23,24 @@ function pct(exp: number, level: number) {
   return '+' + ((exp / req) * 100).toFixed(3) + '%';
 }
 
-// ─── SectionTable ────────────────────────────────────────────────────────────
+// ─── 공용 표 타입 ───────────────────────────────────────────────────────────
 
-interface SectionTableProps {
+interface ExpTableProps {
   title: string;
   headerColor: string;
   titleColor: string;
   rows: { level: number; value: number; isMe: boolean; badgeColor: string; textColor: string; rowBg: string }[];
   levelLabel: string;
   valueLabel?: string;
-  className?: string;
-  fullHeight?: boolean;
-}
-
-function SectionTable({ title, headerColor, titleColor, rows, levelLabel, valueLabel = '경험치', className = '', fullHeight = false }: SectionTableProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const activeRef = useRef<HTMLTableRowElement>(null);
-
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      if (activeRef.current && scrollRef.current) {
-        const container = scrollRef.current;
-        const row = activeRef.current;
-        const offset = row.offsetTop - container.clientHeight / 2 + row.clientHeight / 2;
-        container.scrollTop = offset;
-      }
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [rows]);
-
-  return (
-    <div className={'bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col ' + (fullHeight ? 'h-full ' : '') + className} style={fullHeight ? undefined : {maxHeight:'664px'}}>
-      <div className={'px-4 py-2.5 border-b shrink-0 ' + headerColor}>
-        <h3 className={'text-sm font-semibold text-center ' + titleColor}>{title}</h3>
-      </div>
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
-        <table className="table-fixed text-sm border-collapse w-full">
-          <colgroup>
-            <col style={{width:'50%'}} />
-            <col style={{width:'50%'}} />
-          </colgroup>
-          <thead className="sticky top-0 z-10">
-            <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
-              <th className="text-center px-3 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">{levelLabel}</th>
-              <th className="text-center px-3 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">{valueLabel}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(row => {
-              const subColor = row.isMe ? row.textColor : 'text-gray-400 dark:text-zinc-500';
-              return (
-                <tr
-                  key={row.level}
-                  ref={row.isMe ? activeRef : undefined}
-                  className={'border-b ' + (row.isMe ? row.rowBg + ' font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-700')}
-                >
-                  <td className={'px-3 py-1.5 text-center ' + (row.isMe ? row.textColor : 'text-gray-700 dark:text-zinc-300')}>
-                    {row.level}
-                    {row.isMe && <span className={'ml-1.5 text-xs text-white px-1.5 py-0.5 rounded-full ' + row.badgeColor}>나</span>}
-                  </td>
-                  <td className={'px-3 py-1.5 text-center ' + (row.isMe ? row.textColor : 'text-gray-700 dark:text-zinc-300')}>
-                    <Num n={row.value} />
-                    <span className={'text-xs ml-1 ' + subColor}>({pct(row.value, row.level)})</span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
 }
 
 // ─── SplitTable (스크롤 없이 2열로 나눠 표시) ──────────────────────────────────
-function SplitTable({ title, headerColor, titleColor, rows, levelLabel, valueLabel = '경험치' }: SectionTableProps) {
+function SplitTable({ title, headerColor, titleColor, rows, levelLabel, valueLabel = '경험치' }: ExpTableProps) {
   const half = Math.ceil(rows.length / 2);
   const left = rows.slice(0, half);
   const right = rows.slice(half);
 
-  const cells = (row: SectionTableProps['rows'][number] | undefined, borderLeft: boolean) => {
+  const cells = (row: ExpTableProps['rows'][number] | undefined, borderLeft: boolean) => {
     const bl = borderLeft ? 'border-l border-gray-200 dark:border-zinc-600 ' : '';
     if (!row) return (<><td className={bl + 'px-3 py-1.5'} /><td className="px-3 py-1.5" /></>);
     const meBg = row.isMe ? row.rowBg + ' font-bold ' : '';
