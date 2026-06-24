@@ -471,6 +471,47 @@ function calcBlueberryByTarget(startLevel: number, startExpPct: number, targetLe
   return { count: totalCount, gainedExp: Math.round(totalGained), gainPct, finalLevel: lv, finalPct };
 }
 
+// 누적 경험치 변환 (260레벨 기준) — 역산 시뮬레이터 공용
+const REV_BASE_LEVEL = 260;
+function cumExpOf(level: number, pct: number): number {
+  let sum = 0;
+  for (let l = REV_BASE_LEVEL; l < level; l++) sum += LEVEL_EXP[l]?.required ?? 0;
+  sum += (pct / 100) * (LEVEL_EXP[level]?.required ?? 0);
+  return sum;
+}
+// 목표에 정확히 도달하는 "가장 낮은 시작 레벨"과 그 경험치%를 찾음.
+// 버닝비욘드는 레벨을 건너뛰어(278→280) 도달 위치가 시작에 대해 단조롭지 않으므로,
+// 레벨을 낮은 쪽부터 스캔하고 각 레벨 내부에서만 이분탐색(레벨 내부는 단조)한다.
+function findStartForTarget(
+  targetLevel: number,
+  forward: (startLevel: number, startPct: number) => { finalLevel: number; finalPct: number },
+): { startLevel: number; startPct: number } | null {
+  const targetCum = cumExpOf(targetLevel, 0);
+  const fcum = (L: number, p: number) => {
+    const r = forward(L, p);
+    return cumExpOf(r.finalLevel, r.finalPct);
+  };
+  for (let L = REV_BASE_LEVEL; L < targetLevel; L++) {
+    if (!LEVEL_EXP[L]) continue;
+    const f0 = fcum(L, 0);
+    const fTop = fcum(L, 100 * (1 - 1e-12));
+    if (f0 <= targetCum && targetCum <= fTop) {
+      let lo = 0, hi = 100;
+      for (let i = 0; i < 60; i++) {
+        const mid = (lo + hi) / 2;
+        if (fcum(L, mid) >= targetCum) hi = mid; else lo = mid;
+      }
+      return { startLevel: L, startPct: hi };
+    }
+  }
+  return null;
+}
+
+// 역산 시뮬레이터 결과 (공용)
+type RevStartResult =
+  | { ok: true; startLevel: number; startPct: number; targetLevel: number }
+  | { ok: false; msg: string };
+
 function calcCouponByCount(startLevel: number, startExpPct: number, count: number, beyond: boolean) {
   let lv = startLevel;
   let absExp = (startExpPct / 100) * (LEVEL_EXP[lv]?.required ?? 0);
@@ -717,6 +758,13 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
     | { type: '목표'; gainedExp: number; gainPct: number; finalLevel: number; finalPct: number; hours: number; minutes: number; seconds: number };
   const [vipSimResult, setVipSimResult] = useState<VipSimResult | null>(null);
 
+  // VIP 사우나 역산 시뮬레이터 state
+  const [vipRevTarget, setVipRevTarget] = useState('');
+  const [vipRevHours, setVipRevHours] = useState('');
+  const [vipRevMinutes, setVipRevMinutes] = useState('');
+  const [vipRevBeyond, setVipRevBeyond] = useState(false);
+  const [vipRevResult, setVipRevResult] = useState<RevStartResult | null>(null);
+
   const [couponSimLevel, setCouponSimLevel] = useState(String(charLevel));
   const [couponSimExpPct, setCouponSimExpPct] = useState('');
   const [couponSimBeyond, setCouponSimBeyond] = useState(false);
@@ -728,6 +776,12 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
     | { type: '목표'; gainedExp: number; gainPct: number; finalLevel: number; finalPct: number; count: number };
   const [couponSimResult, setCouponSimResult] = useState<CouponSimResult | null>(null);
 
+  // 상급 경험치 쿠폰 역산 시뮬레이터 state
+  const [couponRevTarget, setCouponRevTarget] = useState('');
+  const [couponRevCount, setCouponRevCount] = useState('');
+  const [couponRevBeyond, setCouponRevBeyond] = useState(false);
+  const [couponRevResult, setCouponRevResult] = useState<RevStartResult | null>(null);
+
   // 메카베리 농장 시뮬레이터 state
   const [mekaSimLevel, setMekaSimLevel] = useState(String(charLevel));
   const [mekaSimExpPct, setMekaSimExpPct] = useState('');
@@ -738,6 +792,11 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
     | { type: '개수'; gainedExp: number; gainPct: number; finalLevel: number; finalPct: number }
     | { type: '목표'; gainedExp: number; gainPct: number; finalLevel: number; finalPct: number; count: number };
   const [mekaSimResult, setMekaSimResult] = useState<MekaSimResult | null>(null);
+
+  // 메카베리 역산 시뮬레이터 state
+  const [mekaRevTarget, setMekaRevTarget] = useState('');
+  const [mekaRevCount, setMekaRevCount] = useState('');
+  const [mekaRevResult, setMekaRevResult] = useState<RevStartResult | null>(null);
 
   // 트레져 헌터 던전 선택
   const [treasureBox, setTreasureBox] = useState<TreasureBox>('폴로/프리토');
@@ -759,6 +818,15 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
     | { type: '개수'; gainedExp: number; gainPct: number; finalLevel: number; finalPct: number }
     | { type: '목표'; gainedExp: number; gainPct: number; finalLevel: number; finalPct: number; count: number };
   const [blueSimResult, setBlueSimResult] = useState<BlueSimResult | null>(null);
+
+  // 블루베리 역산(목표 레벨 -> 시작 시점) 시뮬레이터 state
+  const [blueRevTarget, setBlueRevTarget] = useState('');
+  const [blueRevCount, setBlueRevCount] = useState('');
+  const [blueRevBeyond, setBlueRevBeyond] = useState(false);
+  type BlueRevResult =
+    | { ok: true; startLevel: number; startPct: number; targetLevel: number }
+    | { ok: false; msg: string };
+  const [blueRevResult, setBlueRevResult] = useState<BlueRevResult | null>(null);
 
 
 
@@ -788,6 +856,10 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
     setCouponSimResult(null);
     setMekaSimResult(null);
     setBlueSimResult(null);
+    setBlueRevResult(null);
+    setMekaRevResult(null);
+    setCouponRevResult(null);
+    setVipRevResult(null);
   // slotKey가 바뀌면 charLevel이 같아도 강제 갱신
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slotKey, charLevel]);
@@ -834,6 +906,21 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
     }
   };
 
+  const handleVipRevCalc = () => {
+    const targetLv = parseInt(vipRevTarget);
+    const hours = parseInt(vipRevHours) || 0;
+    const minutes = parseInt(vipRevMinutes) || 0;
+    const totalSeconds = hours * 3600 + minutes * 60;
+    if (!targetLv || targetLv < 261 || targetLv > 300) return;
+    if (totalSeconds <= 0) return;
+    const res = findStartForTarget(targetLv, (sl, sp) => {
+      const r = calcVipSaunaByTime(sl, sp, totalSeconds, vipRevBeyond);
+      return { finalLevel: r.finalLevel, finalPct: r.finalPct };
+    });
+    if (!res) { setVipRevResult({ ok: false, msg: '시간이 너무 길어요 (260레벨 이전 필요)' }); return; }
+    setVipRevResult({ ok: true, startLevel: res.startLevel, startPct: res.startPct, targetLevel: targetLv });
+  };
+
   const handleCouponSimCalc = () => {
     const lv = parseInt(couponSimLevel) || 0;
     const expPct = Math.min(100, Math.max(0, parseFloat(couponSimExpPct) || 0));
@@ -850,6 +937,16 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
       if (!res) return;
       setCouponSimResult({ type: '목표', gainedExp: res.gainedExp, gainPct: res.gainPct, finalLevel: res.finalLevel, finalPct: res.finalPct, count: res.count });
     }
+  };
+
+  const handleCouponRevCalc = () => {
+    const targetLv = parseInt(couponRevTarget);
+    const count = parseInt(couponRevCount);
+    if (!targetLv || targetLv < 261 || targetLv > 300) return;
+    if (!count || count < 1 || count > 99999) return;
+    const res = findStartForTarget(targetLv, (sl, sp) => calcCouponByCount(sl, sp, count, couponRevBeyond));
+    if (!res) { setCouponRevResult({ ok: false, msg: '재화가 너무 많아요 (260레벨 이전 필요)' }); return; }
+    setCouponRevResult({ ok: true, startLevel: res.startLevel, startPct: res.startPct, targetLevel: targetLv });
   };
 
   const handleMekaSimCalc = () => {
@@ -870,6 +967,16 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
     }
   };
 
+  const handleMekaRevCalc = () => {
+    const targetLv = parseInt(mekaRevTarget);
+    const count = parseInt(mekaRevCount);
+    if (!targetLv || targetLv < 281 || targetLv > 300) return;
+    if (!count || count < 1 || count > 99) return;
+    const res = findStartForTarget(targetLv, (sl, sp) => calcMekaberryByCount(sl, sp, count));
+    if (!res) { setMekaRevResult({ ok: false, msg: '재화가 너무 많아요 (280레벨 이전 필요)' }); return; }
+    setMekaRevResult({ ok: true, startLevel: res.startLevel, startPct: res.startPct, targetLevel: targetLv });
+  };
+
   const handleBlueSimCalc = () => {
     const lv = parseInt(blueSimLevel) || 0;
     const expPct = Math.min(100, Math.max(0, parseFloat(blueSimExpPct) || 0));
@@ -886,6 +993,16 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
       if (!res) return;
       setBlueSimResult({ type: '목표', gainedExp: res.gainedExp, gainPct: res.gainPct, finalLevel: res.finalLevel, finalPct: res.finalPct, count: res.count });
     }
+  };
+
+  const handleBlueRevCalc = () => {
+    const targetLv = parseInt(blueRevTarget);
+    const count = parseInt(blueRevCount);
+    if (!targetLv || targetLv < 261 || targetLv > 300) return;
+    if (!count || count < 1 || count > 99) return;
+    const res = findStartForTarget(targetLv, (sl, sp) => calcBlueberryByCount(sl, sp, count, blueRevBeyond));
+    if (!res) { setBlueRevResult({ ok: false, msg: '재화가 너무 많아요 (260레벨 이전 필요)' }); return; }
+    setBlueRevResult({ ok: true, startLevel: res.startLevel, startPct: res.startPct, targetLevel: targetLv });
   };
 
   const defaultDungeon =[...DUNGEONS].reverse().find(d => charLevel >= d.minLv)?.name ?? DUNGEONS[0].name;
@@ -1132,15 +1249,17 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
             </div>
 
             {/* 시뮬레이터 카드 */}
-            {selected !== 'treasurehunter' && <div className="flex-1 self-start bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+            {selected !== 'treasurehunter' && <div className="flex-1 self-start flex flex-col gap-4">
+              <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
                 <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
                   <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">시뮬레이터</h3>
                 </div>
                 <div className="p-4 flex flex-col gap-3">
                   {selected === 'vipsauna' && (<>
+                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">현재 레벨·경험치와 잠수 시간(또는 목표 레벨)을 입력하면 도달 레벨을 계산합니다.</p>
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">레벨</span>
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 레벨</span>
                         <div className="relative flex items-center">
                           <input type="text" inputMode="numeric" value={vipSimLevel} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setVipSimLevel(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
                             placeholder="0" />
@@ -1236,53 +1355,38 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </button>
                       );
                     })()}
-                    {vipSimResult && (
-                      <div className="mt-1 flex flex-col gap-2.5 border-t border-gray-100 dark:border-zinc-700 pt-3">
-                        {vipSimResult.type === '시간' && (<>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500 dark:text-zinc-400">획득 경험치</span>
-                            <div className="text-right">
-                              <Num n={vipSimResult.gainedExp} className="font-bold text-orange-600 dark:text-orange-400" />
-                              <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(+{vipSimResult.gainPct.toFixed(3)}%)</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500 dark:text-zinc-400">달성</span>
-                            <div className="text-right">
-                              <span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{vipSimResult.finalLevel}</span>
-                              <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">{vipSimResult.finalPct.toFixed(3)}%</span>
-                            </div>
-                          </div>
-                        </>)}
-                        {vipSimResult.type === '목표' && (<>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500 dark:text-zinc-400">소요 시간</span>
-                            <span className="font-bold text-gray-800 dark:text-zinc-100">
-                              {vipSimResult.hours > 0 ? `${vipSimResult.hours}시간 ` : ''}{vipSimResult.minutes > 0 ? `${vipSimResult.minutes}분 ` : ''}{vipSimResult.seconds > 0 ? `${vipSimResult.seconds}초` : (vipSimResult.hours === 0 && vipSimResult.minutes === 0 ? '0초' : '')}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500 dark:text-zinc-400">획득 경험치</span>
-                            <div className="text-right">
-                              <Num n={vipSimResult.gainedExp} className="font-bold text-orange-600 dark:text-orange-400" />
-                              <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(+{vipSimResult.gainPct.toFixed(3)}%)</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500 dark:text-zinc-400">달성</span>
-                            <div className="text-right">
-                              <span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{vipSimResult.finalLevel}</span>
-                              <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">{vipSimResult.finalPct.toFixed(3)}%</span>
-                            </div>
-                          </div>
-                        </>)}
+                    <div className="mt-1 flex flex-col gap-2.5 border-t border-gray-100 dark:border-zinc-700 pt-3">
+                      {vipSimMode === '목표' && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-500 dark:text-zinc-400">소요 시간</span>
+                          {vipSimResult && vipSimResult.type === '목표'
+                            ? <span className="font-bold text-gray-800 dark:text-zinc-100">{vipSimResult.hours > 0 ? `${vipSimResult.hours}시간 ` : ''}{vipSimResult.minutes > 0 ? `${vipSimResult.minutes}분 ` : ''}{vipSimResult.seconds > 0 ? `${vipSimResult.seconds}초` : (vipSimResult.hours === 0 && vipSimResult.minutes === 0 ? '0초' : '')}</span>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">획득 경험치</span>
+                        <div className="text-right">
+                          {vipSimResult
+                            ? <><Num n={vipSimResult.gainedExp} className="font-bold text-orange-600 dark:text-orange-400" /><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(+{vipSimResult.gainPct.toFixed(3)}%)</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
                       </div>
-                    )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">달성</span>
+                        <div className="text-right">
+                          {vipSimResult
+                            ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{vipSimResult.finalLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">{vipSimResult.finalPct.toFixed(3)}%</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
+                      </div>
+                    </div>
                   </>)}
                   {selected === 'expcoupon' && (<>
+                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">현재 레벨·경험치와 개수(또는 목표 레벨)를 입력하면 도달 레벨을 계산합니다.</p>
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">레벨</span>
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 레벨</span>
                         <div className="relative flex items-center">
                           <input type="text" inputMode="numeric" value={couponSimLevel} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setCouponSimLevel(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
                             placeholder="0" />
@@ -1358,7 +1462,8 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                       else if (lv < 260 || lv > 299) reason = '레벨이 올바르지 않아요';
                       else if (couponSimExpPct !== '' && (isNaN(expPct) || expPct < 0 || expPct > 100)) reason = '경험치%가 올바르지 않아요';
                       else if (couponSimMode === '개수') {
-                        if (couponSimCount === '' || isNaN(count) || count < 1 || count > 99999) reason = '개수를 입력해주세요';
+                        if (couponSimCount === '' || isNaN(count)) reason = '개수를 입력해주세요';
+                        else if (count < 1 || count > 99999) reason = '개수가 올바르지 않아요';
                       } else if (couponSimMode === '목표') {
                         if (couponSimTarget === '' || isNaN(target)) reason = '목표 레벨을 입력해주세요';
                         else if (target <= lv || target > 300) reason = '목표 레벨이 올바르지 않아요';
@@ -1369,51 +1474,38 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </button>
                       );
                     })()}
-                    {couponSimResult && (
-                      <div className="mt-1 flex flex-col gap-2.5 border-t border-gray-100 dark:border-zinc-700 pt-3">
-                        {couponSimResult.type === '개수' && (<>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500 dark:text-zinc-400">획득 경험치</span>
-                            <div className="text-right">
-                              <Num n={couponSimResult.gainedExp} className="font-bold text-orange-600 dark:text-orange-400" />
-                              <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(+{couponSimResult.gainPct.toFixed(3)}%)</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500 dark:text-zinc-400">달성</span>
-                            <div className="text-right">
-                              <span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{couponSimResult.finalLevel}</span>
-                              <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">{couponSimResult.finalPct.toFixed(3)}%</span>
-                            </div>
-                          </div>
-                        </>)}
-                        {couponSimResult.type === '목표' && (<>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500 dark:text-zinc-400">사용 개수</span>
-                            <span className="font-bold text-gray-800 dark:text-zinc-100">{couponSimResult.count.toLocaleString()}개</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500 dark:text-zinc-400">획득 경험치</span>
-                            <div className="text-right">
-                              <Num n={couponSimResult.gainedExp} className="font-bold text-orange-600 dark:text-orange-400" />
-                              <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(+{couponSimResult.gainPct.toFixed(3)}%)</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500 dark:text-zinc-400">달성</span>
-                            <div className="text-right">
-                              <span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{couponSimResult.finalLevel}</span>
-                              <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">{couponSimResult.finalPct.toFixed(3)}%</span>
-                            </div>
-                          </div>
-                        </>)}
+                    <div className="mt-1 flex flex-col gap-2.5 border-t border-gray-100 dark:border-zinc-700 pt-3">
+                      {couponSimMode === '목표' && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-500 dark:text-zinc-400">사용 개수</span>
+                          {couponSimResult && couponSimResult.type === '목표'
+                            ? <span className="font-bold text-gray-800 dark:text-zinc-100">{couponSimResult.count.toLocaleString()}개</span>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">획득 경험치</span>
+                        <div className="text-right">
+                          {couponSimResult
+                            ? <><Num n={couponSimResult.gainedExp} className="font-bold text-orange-600 dark:text-orange-400" /><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(+{couponSimResult.gainPct.toFixed(3)}%)</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
                       </div>
-                    )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">달성</span>
+                        <div className="text-right">
+                          {couponSimResult
+                            ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{couponSimResult.finalLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">{couponSimResult.finalPct.toFixed(3)}%</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
+                      </div>
+                    </div>
                   </>)}
                   {selected === 'mekaberry' && (<>
+                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">현재 레벨·경험치와 개수(또는 목표 레벨)를 입력하면 도달 레벨을 계산합니다.</p>
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">레벨</span>
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 레벨</span>
                         <div className="relative flex items-center">
                           <input type="text" inputMode="numeric" value={mekaSimLevel} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setMekaSimLevel(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
                             placeholder="280" />
@@ -1468,7 +1560,8 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                       else if (mekaSimExpPct !== '' && (isNaN(expPct) || expPct < 0 || expPct > 100)) reason = '경험치%가 올바르지 않아요';
                       else if (mekaSimMode === '개수') {
                         const count = parseInt(mekaSimCount);
-                        if (mekaSimCount === '' || isNaN(count) || count < 1 || count > 99) reason = '개수를 입력해주세요';
+                        if (mekaSimCount === '' || isNaN(count)) reason = '개수를 입력해주세요';
+                        else if (count < 1 || count > 99) reason = '개수가 올바르지 않아요';
                       } else {
                         const targetLv = parseInt(mekaSimTarget);
                         if (mekaSimTarget === '' || isNaN(targetLv)) reason = '목표 레벨을 입력해주세요';
@@ -1480,38 +1573,40 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </button>
                       );
                     })()}
-                    {mekaSimResult && (
-                      <div className="mt-1 flex flex-col gap-2.5 border-t border-gray-100 dark:border-zinc-700 pt-3">
-                        {mekaSimResult.type === '목표' && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500 dark:text-zinc-400">필요 개수</span>
-                            <div className="text-right">
-                              <span className="font-bold text-gray-800 dark:text-zinc-100">{mekaSimResult.count.toLocaleString()}</span>
-                              <span className="ml-1 text-sm text-gray-500 dark:text-zinc-400">개</span>
-                            </div>
-                          </div>
-                        )}
+                    <div className="mt-1 flex flex-col gap-2.5 border-t border-gray-100 dark:border-zinc-700 pt-3">
+                      {mekaSimMode === '목표' && (
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500 dark:text-zinc-400">획득 경험치</span>
+                          <span className="text-sm text-gray-500 dark:text-zinc-400">필요 개수</span>
                           <div className="text-right">
-                            <Num n={mekaSimResult.gainedExp} className="font-bold text-orange-600 dark:text-orange-400" />
-                            <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(+{mekaSimResult.gainPct.toFixed(3)}%)</span>
+                            {mekaSimResult && mekaSimResult.type === '목표'
+                              ? <><span className="font-bold text-gray-800 dark:text-zinc-100">{mekaSimResult.count.toLocaleString()}</span><span className="ml-1 text-sm text-gray-500 dark:text-zinc-400">개</span></>
+                              : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
                           </div>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500 dark:text-zinc-400">달성 레벨</span>
-                          <div className="text-right">
-                            <span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{mekaSimResult.finalLevel}</span>
-                            <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">({mekaSimResult.finalPct.toFixed(3)}%)</span>
-                          </div>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">획득 경험치</span>
+                        <div className="text-right">
+                          {mekaSimResult
+                            ? <><Num n={mekaSimResult.gainedExp} className="font-bold text-orange-600 dark:text-orange-400" /><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(+{mekaSimResult.gainPct.toFixed(3)}%)</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
                         </div>
                       </div>
-                    )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">달성 레벨</span>
+                        <div className="text-right">
+                          {mekaSimResult
+                            ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{mekaSimResult.finalLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">({mekaSimResult.finalPct.toFixed(3)}%)</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
+                      </div>
+                    </div>
                   </>)}
                   {selected === 'blueberry' && (<>
+                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">현재 레벨·경험치와 개수(또는 목표 레벨)를 입력하면 도달 레벨을 계산합니다.</p>
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">레벨</span>
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 레벨</span>
                         <div className="relative flex items-center">
                           <input type="text" inputMode="numeric" value={blueSimLevel} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setBlueSimLevel(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
                             placeholder="260" />
@@ -1576,7 +1671,8 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                       else if (blueSimExpPct !== '' && (isNaN(expPct) || expPct < 0 || expPct > 100)) reason = '경험치%가 올바르지 않아요';
                       else if (blueSimMode === '개수') {
                         const count = parseInt(blueSimCount);
-                        if (blueSimCount === '' || isNaN(count) || count < 1 || count > 99) reason = '개수를 입력해주세요';
+                        if (blueSimCount === '' || isNaN(count)) reason = '개수를 입력해주세요';
+                        else if (count < 1 || count > 99) reason = '개수가 올바르지 않아요';
                       } else {
                         const targetLv = parseInt(blueSimTarget);
                         if (blueSimTarget === '' || isNaN(targetLv)) reason = '목표 레벨을 입력해주세요';
@@ -1588,39 +1684,41 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </button>
                       );
                     })()}
-                    {blueSimResult && (
-                      <div className="mt-1 flex flex-col gap-2.5 border-t border-gray-100 dark:border-zinc-700 pt-3">
-                        {blueSimResult.type === '목표' && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-500 dark:text-zinc-400">필요 개수</span>
-                            <div className="text-right">
-                              <span className="font-bold text-gray-800 dark:text-zinc-100">{blueSimResult.count.toLocaleString()}</span>
-                              <span className="ml-1 text-sm text-gray-500 dark:text-zinc-400">개</span>
-                            </div>
-                          </div>
-                        )}
+                    <div className="mt-1 flex flex-col gap-2.5 border-t border-gray-100 dark:border-zinc-700 pt-3">
+                      {blueSimMode === '목표' && (
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500 dark:text-zinc-400">획득 경험치</span>
+                          <span className="text-sm text-gray-500 dark:text-zinc-400">필요 개수</span>
                           <div className="text-right">
-                            <Num n={blueSimResult.gainedExp} className="font-bold text-orange-600 dark:text-orange-400" />
-                            <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(+{blueSimResult.gainPct.toFixed(3)}%)</span>
+                            {blueSimResult && blueSimResult.type === '목표'
+                              ? <><span className="font-bold text-gray-800 dark:text-zinc-100">{blueSimResult.count.toLocaleString()}</span><span className="ml-1 text-sm text-gray-500 dark:text-zinc-400">개</span></>
+                              : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
                           </div>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500 dark:text-zinc-400">달성 레벨</span>
-                          <div className="text-right">
-                            <span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{blueSimResult.finalLevel}</span>
-                            <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">({blueSimResult.finalPct.toFixed(3)}%)</span>
-                          </div>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">획득 경험치</span>
+                        <div className="text-right">
+                          {blueSimResult
+                            ? <><Num n={blueSimResult.gainedExp} className="font-bold text-orange-600 dark:text-orange-400" /><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(+{blueSimResult.gainPct.toFixed(3)}%)</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
                         </div>
                       </div>
-                    )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">달성 레벨</span>
+                        <div className="text-right">
+                          {blueSimResult
+                            ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{blueSimResult.finalLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">({blueSimResult.finalPct.toFixed(3)}%)</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
+                      </div>
+                    </div>
                   </>)}
                   {selected === 'monsterpark' && (<>
+                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">현재 레벨·경험치와 입장 횟수를 입력하면 도달 레벨을 계산합니다.</p>
                     {/* 정보 행 */}
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">레벨</span>
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 레벨</span>
                         <div className="relative flex items-center">
                           <input type="text" inputMode="numeric" value={simLevel} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setSimLevel(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
                             placeholder="0" />
@@ -1719,26 +1817,314 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </button>
                       );
                     })()}
-                    {simResult && (
-                      <div className="mt-1 flex flex-col gap-2.5 border-t border-gray-100 dark:border-zinc-700 pt-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500 dark:text-zinc-400">획득 경험치</span>
-                          <div className="text-right">
-                            <Num n={simResult.gainedExp} className="font-bold text-orange-600 dark:text-orange-400" />
-                            <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(+{simResult.gainPct.toFixed(3)}%)</span>
-                          </div>
+                    <div className="mt-1 flex flex-col gap-2.5 border-t border-gray-100 dark:border-zinc-700 pt-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">획득 경험치</span>
+                        <div className="text-right">
+                          {simResult
+                            ? <><Num n={simResult.gainedExp} className="font-bold text-orange-600 dark:text-orange-400" /><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(+{simResult.gainPct.toFixed(3)}%)</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500 dark:text-zinc-400">달성</span>
-                          <div className="text-right">
-                            <span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{simResult.finalLevel}</span>
-                            <span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">{simResult.finalPct.toFixed(3)}%</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">달성</span>
+                        <div className="text-right">
+                          {simResult
+                            ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{simResult.finalLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">{simResult.finalPct.toFixed(3)}%</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
+                      </div>
+                    </div>
+                  </>)}
+                </div>
+              </div>
+              {selected === 'mekaberry' && (
+                <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+                  <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
+                    <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">목표 레벨 역산</h3>
+                  </div>
+                  <div className="p-4 flex flex-col gap-3">
+                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">목표 레벨과 개수를 입력하면, 어느 시점부터 사용하면 되는지 알려줍니다.</p>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">목표 레벨</span>
+                        <div className="relative flex items-center">
+                          <input type="text" inputMode="numeric" value={mekaRevTarget} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setMekaRevTarget(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
+                            placeholder="290" />
+                          <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">레벨</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">개수</span>
+                        <div className="relative flex items-center">
+                          <input type="text" inputMode="numeric" value={mekaRevCount} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setMekaRevCount(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-5"
+                            placeholder="0" />
+                          <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">개</span>
+                        </div>
+                      </div>
+                    </div>
+                    {(() => {
+                      const targetLv = parseInt(mekaRevTarget);
+                      const count = parseInt(mekaRevCount);
+                      let reason: string | null = null;
+                      if (mekaRevTarget === '' || isNaN(targetLv)) reason = '목표 레벨을 입력해주세요';
+                      else if (targetLv < 281 || targetLv > 300) reason = '목표 레벨이 올바르지 않아요';
+                      else if (mekaRevCount === '' || isNaN(count)) reason = '개수를 입력해주세요';
+                      else if (count < 1 || count > 99) reason = '개수가 올바르지 않아요';
+                      return (
+                        <button onClick={handleMekaRevCalc} disabled={!!reason} className="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                          {reason ?? '계산하기'}
+                        </button>
+                      );
+                    })()}
+                    <div className="mt-1 flex flex-col gap-2.5 border-t border-gray-100 dark:border-zinc-700 pt-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">사용 시작</span>
+                        <div className="text-right">
+                          {mekaRevResult?.ok
+                            ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{mekaRevResult.startLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">({mekaRevResult.startPct.toFixed(3)}%)</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">도달</span>
+                        <div className="text-right">
+                          {mekaRevResult?.ok
+                            ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{mekaRevResult.targetLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(0.000%)</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
+                      </div>
+                      {mekaRevResult && !mekaRevResult.ok && (
+                        <p className="text-xs text-red-500 text-center">{mekaRevResult.msg}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {selected === 'expcoupon' && (
+                <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+                  <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
+                    <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">목표 레벨 역산</h3>
+                  </div>
+                  <div className="p-4 flex flex-col gap-3">
+                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">목표 레벨과 개수를 입력하면, 어느 시점부터 사용하면 되는지 알려줍니다.</p>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">목표 레벨</span>
+                        <div className="relative flex items-center">
+                          <input type="text" inputMode="numeric" value={couponRevTarget} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setCouponRevTarget(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
+                            placeholder="280" />
+                          <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">레벨</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">개수</span>
+                        <div className="relative flex items-center">
+                          <input type="text" inputMode="numeric" value={couponRevCount} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setCouponRevCount(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-5"
+                            placeholder="0" />
+                          <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">개</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">버닝</span>
+                        <button
+                          onClick={() => setCouponRevBeyond(v => !v)}
+                          className={'px-2 py-0 h-[24px] text-[12px] font-medium rounded border-2 transition-colors cursor-pointer ' +
+                            (couponRevBeyond ? 'bg-orange-500 border-orange-500 text-white' : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400')}>
+                          버닝 BEYOND
+                        </button>
+                      </div>
+                    </div>
+                    {(() => {
+                      const targetLv = parseInt(couponRevTarget);
+                      const count = parseInt(couponRevCount);
+                      let reason: string | null = null;
+                      if (couponRevTarget === '' || isNaN(targetLv)) reason = '목표 레벨을 입력해주세요';
+                      else if (targetLv < 261 || targetLv > 300) reason = '목표 레벨이 올바르지 않아요';
+                      else if (couponRevCount === '' || isNaN(count)) reason = '개수를 입력해주세요';
+                      else if (count < 1 || count > 99999) reason = '개수가 올바르지 않아요';
+                      return (
+                        <button onClick={handleCouponRevCalc} disabled={!!reason} className="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                          {reason ?? '계산하기'}
+                        </button>
+                      );
+                    })()}
+                    <div className="mt-1 flex flex-col gap-2.5 border-t border-gray-100 dark:border-zinc-700 pt-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">사용 시작</span>
+                        <div className="text-right">
+                          {couponRevResult?.ok
+                            ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{couponRevResult.startLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">({couponRevResult.startPct.toFixed(3)}%)</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">도달</span>
+                        <div className="text-right">
+                          {couponRevResult?.ok
+                            ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{couponRevResult.targetLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(0.000%)</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
+                      </div>
+                      {couponRevResult && !couponRevResult.ok && (
+                        <p className="text-xs text-red-500 text-center">{couponRevResult.msg}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {selected === 'vipsauna' && (
+                <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+                  <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
+                    <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">목표 레벨 역산</h3>
+                  </div>
+                  <div className="p-4 flex flex-col gap-3">
+                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">목표 레벨과 잠수 시간을 입력하면, 어느 시점부터 사용하면 되는지 알려줍니다.</p>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">목표 레벨</span>
+                        <div className="relative flex items-center">
+                          <input type="text" inputMode="numeric" value={vipRevTarget} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setVipRevTarget(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
+                            placeholder="280" />
+                          <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">레벨</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">잠수 시간</span>
+                        <div className="flex items-center gap-1">
+                          <div className="relative flex items-center">
+                            <input type="text" inputMode="numeric" value={vipRevHours} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setVipRevHours(v); }} className="w-[60px] text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
+                              placeholder="0" />
+                            <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">시간</span>
+                          </div>
+                          <div className="relative flex items-center">
+                            <input type="text" inputMode="numeric" value={vipRevMinutes} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setVipRevMinutes(v); }} className="w-[44px] text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-5"
+                              placeholder="0" />
+                            <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">분</span>
                           </div>
                         </div>
                       </div>
-                    )}
-                  </>)}
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">버닝</span>
+                        <button
+                          onClick={() => setVipRevBeyond(v => !v)}
+                          className={'px-2 py-0 h-[24px] text-[12px] font-medium rounded border-2 transition-colors cursor-pointer ' +
+                            (vipRevBeyond ? 'bg-orange-500 border-orange-500 text-white' : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400')}>
+                          버닝 BEYOND
+                        </button>
+                      </div>
+                    </div>
+                    {(() => {
+                      const targetLv = parseInt(vipRevTarget);
+                      const h = parseInt(vipRevHours);
+                      const m = parseInt(vipRevMinutes);
+                      let reason: string | null = null;
+                      if (vipRevTarget === '' || isNaN(targetLv)) reason = '목표 레벨을 입력해주세요';
+                      else if (targetLv < 261 || targetLv > 300) reason = '목표 레벨이 올바르지 않아요';
+                      else if ((vipRevHours !== '' && (isNaN(h) || h < 0 || h > 999)) || (vipRevMinutes !== '' && (isNaN(m) || m < 0 || m > 59))) reason = '시간이 올바르지 않아요';
+                      else if ((h || 0) === 0 && (m || 0) === 0) reason = '시간을 입력해주세요';
+                      return (
+                        <button onClick={handleVipRevCalc} disabled={!!reason} className="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                          {reason ?? '계산하기'}
+                        </button>
+                      );
+                    })()}
+                    <div className="mt-1 flex flex-col gap-2.5 border-t border-gray-100 dark:border-zinc-700 pt-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">사용 시작</span>
+                        <div className="text-right">
+                          {vipRevResult?.ok
+                            ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{vipRevResult.startLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">({vipRevResult.startPct.toFixed(3)}%)</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">도달</span>
+                        <div className="text-right">
+                          {vipRevResult?.ok
+                            ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{vipRevResult.targetLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(0.000%)</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
+                      </div>
+                      {vipRevResult && !vipRevResult.ok && (
+                        <p className="text-xs text-red-500 text-center">{vipRevResult.msg}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
+              )}
+              {selected === 'blueberry' && (
+                <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+                  <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
+                    <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">목표 레벨 역산</h3>
+                  </div>
+                  <div className="p-4 flex flex-col gap-3">
+                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">목표 레벨과 개수를 입력하면, 어느 시점부터 사용하면 되는지 알려줍니다.</p>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">목표 레벨</span>
+                        <div className="relative flex items-center">
+                          <input type="text" inputMode="numeric" value={blueRevTarget} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setBlueRevTarget(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
+                            placeholder="280" />
+                          <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">레벨</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">개수</span>
+                        <div className="relative flex items-center">
+                          <input type="text" inputMode="numeric" value={blueRevCount} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setBlueRevCount(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-5"
+                            placeholder="0" />
+                          <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">개</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">버닝</span>
+                        <button
+                          onClick={() => setBlueRevBeyond(v => !v)}
+                          className={'px-2 py-0 h-[24px] text-[12px] font-medium rounded border-2 transition-colors cursor-pointer ' +
+                            (blueRevBeyond ? 'bg-orange-500 border-orange-500 text-white' : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400')}>
+                          버닝 BEYOND
+                        </button>
+                      </div>
+                    </div>
+                    {(() => {
+                      const targetLv = parseInt(blueRevTarget);
+                      const count = parseInt(blueRevCount);
+                      let reason: string | null = null;
+                      if (blueRevTarget === '' || isNaN(targetLv)) reason = '목표 레벨을 입력해주세요';
+                      else if (targetLv < 261 || targetLv > 300) reason = '목표 레벨이 올바르지 않아요';
+                      else if (blueRevCount === '' || isNaN(count)) reason = '개수를 입력해주세요';
+                      else if (count < 1 || count > 99) reason = '개수가 올바르지 않아요';
+                      return (
+                        <button onClick={handleBlueRevCalc} disabled={!!reason} className="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                          {reason ?? '계산하기'}
+                        </button>
+                      );
+                    })()}
+                    <div className="mt-1 flex flex-col gap-2.5 border-t border-gray-100 dark:border-zinc-700 pt-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">사용 시작</span>
+                        <div className="text-right">
+                          {blueRevResult?.ok
+                            ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{blueRevResult.startLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">({blueRevResult.startPct.toFixed(3)}%)</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">도달</span>
+                        <div className="text-right">
+                          {blueRevResult?.ok
+                            ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{blueRevResult.targetLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(0.000%)</span></>
+                            : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
+                        </div>
+                      </div>
+                      {blueRevResult && !blueRevResult.ok && (
+                        <p className="text-xs text-red-500 text-center">{blueRevResult.msg}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
               </div>}
           </>
         )}
