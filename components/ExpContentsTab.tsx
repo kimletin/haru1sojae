@@ -576,6 +576,9 @@ const MENU_ITEMS = [
   { key: 'treasurehunter', label: '트레져 헌터' },
 ];
 
+// 경험치 콘텐츠 서브탭 키 (URL 검증용)
+export const CONTENT_KEYS = MENU_ITEMS.map(m => m.key);
+
 
 // ─── TreasureHunterTable ──────────────────────────────────────────────────────
 

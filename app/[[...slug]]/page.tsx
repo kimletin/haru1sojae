@@ -8,9 +8,10 @@ import RankingPanel from '@/components/RankingPanel';
 import InputSummaryCard from '@/components/InputSummaryCard';
 import EfficiencyTab from '@/components/EfficiencyTab';
 import ExpInfoTab from '@/components/ExpInfoTab';
-import ExpContentsTab from '@/components/ExpContentsTab';
+import ExpContentsTab, { CONTENT_KEYS } from '@/components/ExpContentsTab';
 import HuntingGroundTab from '@/components/HuntingGroundTab';
 import InfoCenterTab from '@/components/InfoCenterTab';
+import PrivacyTab from '@/components/PrivacyTab';
 import CharacterSearchModal, { type CharacterInfo } from '@/components/CharacterSearchModal';
 import CharacterCard from '@/components/CharacterCard';
 import { SunIcon, MoonIcon } from '@/components/Icons';
@@ -181,6 +182,8 @@ export default function Home() {
   const [charMetas, setCharMetas] = useState<(CharMeta | null)[]>(makeDefaultMetas());
   const [todayExpRate, setTodayExpRate] = useState<number | null>(null);
   const [initialContentKey, setInitialContentKey] = useState<string | undefined>(undefined);
+  const [notFound, setNotFound] = useState(false);
+  const [isPrivacy, setIsPrivacy] = useState(false);
   const presetsRef = useRef<InputValues[]>(makeDefaultPresets());
   const activePresetRef = useRef(0);
 
@@ -192,12 +195,22 @@ export default function Home() {
     // 첫 방문(캐시 없음)이면 어느 탭으로 들어와도 효율표 탭으로 redirect
     const isNew = !localStorage.getItem(PRESETS_KEY) && !localStorage.getItem(STORAGE_KEY);
 
-    const tab = isNew ? null : (PARAM_TO_TAB[tabSlug] ?? PARAM_TO_TAB[slug]);
+    let tab = isNew ? null : (PARAM_TO_TAB[tabSlug] ?? PARAM_TO_TAB[slug]);
+    // 서브 경로 검증: /cont/<유효키>만 허용, 그 외 추가 경로는 잘못된 주소로 처리
+    if (tab && parts.length > 1) {
+      if (tabSlug === 'cont' && parts.length === 2 && CONTENT_KEYS.includes(parts[1])) {
+        setInitialContentKey(parts[1]);
+      } else {
+        tab = null;
+      }
+    }
     const initialTab = tab ?? TABS[0];
     if (tab) setActiveTab(tab);
-    if (tab && tabSlug === 'cont' && parts[1]) setInitialContentKey(parts[1]);
     document.title = `${initialTab} | 하루1소재`;
     if (isNew) window.history.replaceState({}, '', '/');
+    else if (slug === 'privacy') { setIsPrivacy(true); document.title = '개인정보처리방침 | 하루1소재'; }
+    // 알 수 없는 주소(유효한 탭이 아니고 루트도 아님)면 404 처리
+    else if (!tab && slug !== '') setNotFound(true);
 
     const savedSlots = parseInt(localStorage.getItem(NUM_SLOTS_KEY) ?? '');
     if (!isNaN(savedSlots)) setNumSlots(Math.min(Math.max(savedSlots, 1), NUM_PRESETS));
@@ -242,10 +255,20 @@ export default function Home() {
   }, [activePreset]);
 
   const handleTabChange = (tab: Tab) => {
+    setNotFound(false);
+    setIsPrivacy(false);
     setActiveTab(tab);
     document.title = `${tab} | 하루1소재`;
     const path = tab === TABS[0] ? '/' : '/' + TAB_PARAM[tab];
     window.history.replaceState({}, '', path);
+  };
+
+  const goPrivacy = () => {
+    setNotFound(false);
+    setIsPrivacy(true);
+    document.title = '개인정보처리방침 | 하루1소재';
+    window.history.replaceState({}, '', '/privacy');
+    document.getElementById('app-scroll')?.scrollTo(0, 0);
   };
 
   const handleChange = (key: keyof InputValues, value: number | string | boolean | MobGroup[]) => {
@@ -509,7 +532,7 @@ export default function Home() {
                   onClick={() => handleTabChange(tab)}
                   className={
                     'px-2.5 py-1 rounded-lg text-sm font-medium transition-colors cursor-pointer ' +
-                    (activeTab === tab ? 'bg-orange-500 text-white' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100')
+                    (activeTab === tab && !notFound && !isPrivacy ? 'bg-orange-500 text-white' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100')
                   }
                 >
                   {tab}
@@ -528,6 +551,24 @@ export default function Home() {
       </header>
 
       <div id="app-scroll" className="flex-1 min-h-0 overflow-y-auto bg-gray-50 dark:bg-black" style={{ scrollbarGutter: 'stable' }}>
+      <div className="min-h-full flex flex-col">
+      <div className="flex-1">
+      {notFound ? (
+        <div className="flex flex-col items-center justify-center gap-4 text-center px-4 py-24">
+          <p className="text-6xl font-bold text-gray-800 dark:text-zinc-100">404</p>
+          <p className="text-sm text-gray-500 dark:text-zinc-400">페이지를 찾을 수 없습니다.</p>
+          <button
+            onClick={() => { setNotFound(false); handleTabChange(TABS[0]); }}
+            className="mt-2 px-5 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold transition-colors cursor-pointer"
+          >메인으로</button>
+        </div>
+      ) : isPrivacy ? (
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="w-[905px] mx-auto">
+          <PrivacyTab />
+        </div>
+      </div>
+      ) : (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="w-[905px] mx-auto">
           <div className="mb-2 flex items-center gap-1.5">
@@ -666,25 +707,24 @@ export default function Home() {
                 )}
             </div>
           )}
-          {activeTab === TABS[4] && (
-            <div className="flex justify-center mt-4">
-              <a
-                href="https://open.kakao.com/me/letin_k"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex"
-                title="카카오톡 문의"
-              >
-                <div className="w-9 h-9 rounded-[9px] bg-gray-300 group-hover:bg-yellow-400 transition-colors flex items-center justify-center">
-                  <svg width="24" height="20" viewBox="0 0 24 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <ellipse cx="12" cy="9" rx="12" ry="9" className="fill-gray-500 group-hover:fill-[#3A1D1D] transition-colors"/>
-                    <polygon points="3,18 7,13 5,19.5" className="fill-gray-500 group-hover:fill-[#3A1D1D] transition-colors"/>
-                  </svg>
-                </div>
-              </a>
-            </div>
-          )}
         </div>
+      </div>
+      )}
+      </div>
+      <footer className="bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-600 shrink-0">
+        <div className="w-[905px] mx-auto px-4 py-6 flex flex-col items-center gap-2.5 text-center">
+          <div className="flex items-center gap-2 text-xs">
+            <a href="https://open.kakao.com/me/letin_k" target="_blank" rel="noopener noreferrer" className="text-gray-600 dark:text-zinc-300 hover:text-orange-500 transition-colors">문의하기</a>
+            <span className="text-gray-300 dark:text-zinc-600">|</span>
+            <a href="/privacy" onClick={(e) => { e.preventDefault(); goPrivacy(); }} className="text-gray-600 dark:text-zinc-300 hover:text-orange-500 transition-colors">개인정보처리방침</a>
+          </div>
+          <div className="flex flex-col leading-relaxed">
+            <p className="text-[11px] text-gray-400 dark:text-zinc-500">Data based on NEXON OPEN API</p>
+            <p className="text-[11px] text-gray-400 dark:text-zinc-500">This site is not an official site of NEXON and does not provide any warranty.</p>
+          </div>
+          <p className="text-xs text-gray-400 dark:text-zinc-500">© 2026 하루1소재. All rights reserved.</p>
+        </div>
+      </footer>
       </div>
       </div>
     </div>
