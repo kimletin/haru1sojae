@@ -76,7 +76,7 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
             {region.name}
           </h3>
         </div>
-        <div ref={scrollRef} className="overflow-y-scroll" style={{maxHeight:'644px'}}>
+        <div ref={scrollRef} className="overflow-y-auto" style={{maxHeight:'644px'}}>
           <table className="table-fixed text-sm border-collapse w-full">
             <colgroup>
               <col style={{ width: '34%' }} />

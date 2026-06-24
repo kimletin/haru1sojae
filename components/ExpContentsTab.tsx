@@ -33,9 +33,10 @@ interface SectionTableProps {
   levelLabel: string;
   valueLabel?: string;
   className?: string;
+  fullHeight?: boolean;
 }
 
-function SectionTable({ title, headerColor, titleColor, rows, levelLabel, valueLabel = '경험치', className = '' }: SectionTableProps) {
+function SectionTable({ title, headerColor, titleColor, rows, levelLabel, valueLabel = '경험치', className = '', fullHeight = false }: SectionTableProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLTableRowElement>(null);
 
@@ -52,11 +53,11 @@ function SectionTable({ title, headerColor, titleColor, rows, levelLabel, valueL
   }, [rows]);
 
   return (
-    <div className={'bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col ' + className} style={{maxHeight:'664px'}}>
+    <div className={'bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col ' + (fullHeight ? 'h-full ' : '') + className} style={fullHeight ? undefined : {maxHeight:'664px'}}>
       <div className={'px-4 py-2.5 border-b shrink-0 ' + headerColor}>
         <h3 className={'text-sm font-semibold text-center ' + titleColor}>{title}</h3>
       </div>
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-scroll">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         <table className="table-fixed text-sm border-collapse w-full">
           <colgroup>
             <col style={{width:'50%'}} />
@@ -64,8 +65,8 @@ function SectionTable({ title, headerColor, titleColor, rows, levelLabel, valueL
           </colgroup>
           <thead className="sticky top-0 z-10">
             <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
-              <th className="text-center px-3 py-2 text-gray-600 dark:text-zinc-400 font-bold">{levelLabel}</th>
-              <th className="text-center px-3 py-2 text-gray-600 dark:text-zinc-400 font-bold">{valueLabel}</th>
+              <th className="text-center px-3 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">{levelLabel}</th>
+              <th className="text-center px-3 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">{valueLabel}</th>
             </tr>
           </thead>
           <tbody>
@@ -91,6 +92,63 @@ function SectionTable({ title, headerColor, titleColor, rows, levelLabel, valueL
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+// ─── SplitTable (스크롤 없이 2열로 나눠 표시) ──────────────────────────────────
+function SplitTable({ title, headerColor, titleColor, rows, levelLabel, valueLabel = '경험치' }: SectionTableProps) {
+  const half = Math.ceil(rows.length / 2);
+  const left = rows.slice(0, half);
+  const right = rows.slice(half);
+
+  const cells = (row: SectionTableProps['rows'][number] | undefined, borderLeft: boolean) => {
+    const bl = borderLeft ? 'border-l border-gray-200 dark:border-zinc-600 ' : '';
+    if (!row) return (<><td className={bl + 'px-3 py-1.5'} /><td className="px-3 py-1.5" /></>);
+    const meBg = row.isMe ? row.rowBg + ' font-bold ' : '';
+    const txt = row.isMe ? row.textColor : 'text-gray-700 dark:text-zinc-300';
+    const sub = row.isMe ? row.textColor : 'text-gray-400 dark:text-zinc-500';
+    return (
+      <>
+        <td className={bl + meBg + 'px-3 py-1.5 text-center ' + txt}>
+          {row.level}
+          {row.isMe && <span className={'ml-1.5 text-xs text-white px-1.5 py-0.5 rounded-full ' + row.badgeColor}>나</span>}
+        </td>
+        <td className={meBg + 'px-3 py-1.5 text-center ' + txt}>
+          <Num n={row.value} />
+          <span className={'text-xs ml-1 ' + sub}>({pct(row.value, row.level)})</span>
+        </td>
+      </>
+    );
+  };
+
+  return (
+    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+      <div className={'px-4 py-2.5 border-b shrink-0 ' + headerColor}>
+        <h3 className={'text-sm font-semibold text-center ' + titleColor}>{title}</h3>
+      </div>
+      <table className="table-fixed text-sm border-collapse w-full">
+        <colgroup>
+          <col style={{width:'15%'}} /><col style={{width:'35%'}} />
+          <col style={{width:'15%'}} /><col style={{width:'35%'}} />
+        </colgroup>
+        <thead>
+          <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
+            <th className="text-center px-3 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">{levelLabel}</th>
+            <th className="text-center px-3 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">{valueLabel}</th>
+            <th className="text-center px-3 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap border-l border-gray-200 dark:border-zinc-600">{levelLabel}</th>
+            <th className="text-center px-3 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">{valueLabel}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {left.map((row, i) => (
+            <tr key={row.level} className="border-b hover:bg-gray-50 dark:hover:bg-gray-700">
+              {cells(row, false)}
+              {cells(right[i], true)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
@@ -178,7 +236,7 @@ function DungeonTable({ title, levels, data, metacoin, charLevel, headerColor, t
       })()}
 
 
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-scroll">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         <div ref={tableRef}>
           <table className="table-fixed text-sm border-collapse w-full">
             <thead className="sticky top-0 z-10">
@@ -627,7 +685,7 @@ function TreasureHunterTable({ monsterLevel, charLevel, treasureBonus = 0, treas
       <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
         <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">{TREASURE_BOX_META[selectedBox].label}</h3>
       </div>
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-scroll">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         <table className="table-fixed text-sm border-collapse w-full">
           <colgroup>
             <col style={{width:'16%'}} />
@@ -1024,6 +1082,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
   };
 
   const isEpic = selected === 'epicdungeon';
+  const newLayout = ['blueberry', 'vipsauna', 'expcoupon', 'mekaberry'].includes(selected);
 
   return (
     <div className="flex gap-4 items-stretch">
@@ -1046,7 +1105,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
       </div>
 
       {/* 우측 콘텐츠 */}
-      <div className="flex flex-1 gap-4 items-stretch">
+      <div className={'flex flex-1 gap-4 ' + (newLayout ? 'flex-col-reverse' : selected === 'monsterpark' ? 'flex-row-reverse' : 'items-stretch')}>
         {isEpic ? (
           /* 에픽 던전 — 전체 너비 사용 */
           <div className="flex-1 flex flex-col gap-1.5" style={{height:'664px'}}>
@@ -1090,13 +1149,13 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
         ) : (
           <>
             {/* 좌측 카드 */}
-            <div className="flex-1">
+            <div className={(newLayout ? '' : 'flex-1 ') + 'flex flex-col'}>
               {selected === 'monsterpark' && (
                 <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col" style={{maxHeight:'664px'}}>
                   <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
                     <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">몬스터파크</h3>
                   </div>
-                  <div className="flex-1 min-h-0 overflow-y-scroll">
+                  <div className="flex-1 min-h-0 overflow-y-auto">
                     <div>
                       <table className="table-fixed w-full text-sm border-collapse">
                         <colgroup>
@@ -1173,53 +1232,49 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
               )}
 
               {selected === 'vipsauna' && (
-                <SectionTable
+                <SplitTable
                   title="VIP 사우나"
                   valueLabel="1시간 당 경험치"
                   headerColor="bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
                   titleColor="text-gray-800 dark:text-zinc-100"
                   levelLabel="레벨"
-                  className=""
                   rows={LEVELS.map(lv => ({ level: lv, value: VIP_SAUNA_EXP[lv] ?? 0, isMe: lv === charLevel, ...commonRowProps }))}
                 />
               )}
 
               {selected === 'expcoupon' && (
-                <SectionTable
+                <SplitTable
                   title="상급 EXP 쿠폰"
                   valueLabel="1000개 당 경험치"
                   headerColor="bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
                   titleColor="text-gray-800 dark:text-zinc-100"
                   levelLabel="레벨"
-                  className=""
                   rows={LEVELS.map(lv => ({ level: lv, value: (SUPER_EXP_COUPON[lv] ?? 0) * 1000, isMe: lv === charLevel, ...commonRowProps }))}
                 />
               )}
 
               {selected === 'mekaberry' && (
-                <SectionTable
+                <SplitTable
                   title="메카베리 농장"
                   headerColor="bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
                   titleColor="text-gray-800 dark:text-zinc-100"
                   levelLabel="레벨"
-                  className=""
                   rows={LEVELS.filter(lv => lv >= 280).map(lv => ({ level: lv, value: MEKABERRY_EXP[lv] ?? 0, isMe: lv === charLevel, ...commonRowProps }))}
                 />
               )}
 
               {selected === 'blueberry' && (
-                <SectionTable
+                <SplitTable
                   title="블루베리 농장"
                   headerColor="bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
                   titleColor="text-gray-800 dark:text-zinc-100"
                   levelLabel="레벨"
-                  className=""
                   rows={LEVELS.map(lv => ({ level: lv, value: BLUEBERRY_EXP[lv] ?? 0, isMe: lv === charLevel, ...commonRowProps }))}
                 />
               )}
 
               {selected === 'treasurehunter' && (
-                <div className="flex-1 flex flex-col gap-1.5" style={{height:'664px'}}>
+                <div className="flex flex-col gap-1.5" style={{height:'664px'}}>
                   <div className="flex gap-1.5 shrink-0">
                     {TREASURE_BOXES.map(d => (
                       <button
@@ -1252,14 +1307,14 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
             </div>
 
             {/* 시뮬레이터 카드 */}
-            {selected !== 'treasurehunter' && <div className="flex-1 self-start flex flex-col gap-4">
-              <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+            {selected !== 'treasurehunter' && <div className={newLayout ? 'flex gap-4 items-stretch' : 'flex-1 self-start flex flex-col gap-4'}>
+              <div className={'bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col' + (newLayout ? ' flex-1' : '')}>
                 <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
                   <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">시뮬레이터</h3>
                 </div>
                 <div className="p-4 flex flex-col gap-3">
                   {selected === 'vipsauna' && (<>
-                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">현재 레벨·경험치와 잠수 시간(또는 목표 레벨)을 입력하면 도달 레벨을 계산합니다.</p>
+                    <p className="text-[10px] text-gray-400 dark:text-zinc-500 leading-relaxed">현재 레벨·경험치와 잠수 시간(또는 목표 레벨)을 입력하면 도달 레벨을 계산합니다.</p>
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 레벨</span>
@@ -1376,7 +1431,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500 dark:text-zinc-400">달성</span>
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">달성 레벨</span>
                         <div className="text-right">
                           {vipSimResult
                             ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{vipSimResult.finalLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">{vipSimResult.finalPct.toFixed(3)}%</span></>
@@ -1386,7 +1441,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                     </div>
                   </>)}
                   {selected === 'expcoupon' && (<>
-                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">현재 레벨·경험치와 개수(또는 목표 레벨)를 입력하면 도달 레벨을 계산합니다.</p>
+                    <p className="text-[10px] text-gray-400 dark:text-zinc-500 leading-relaxed">현재 레벨·경험치와 개수(또는 목표 레벨)를 입력하면 도달 레벨을 계산합니다.</p>
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 레벨</span>
@@ -1495,7 +1550,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500 dark:text-zinc-400">달성</span>
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">달성 레벨</span>
                         <div className="text-right">
                           {couponSimResult
                             ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{couponSimResult.finalLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">{couponSimResult.finalPct.toFixed(3)}%</span></>
@@ -1505,7 +1560,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                     </div>
                   </>)}
                   {selected === 'mekaberry' && (<>
-                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">현재 레벨·경험치와 개수(또는 목표 레벨)를 입력하면 도달 레벨을 계산합니다.</p>
+                    <p className="text-[10px] text-gray-400 dark:text-zinc-500 leading-relaxed">현재 레벨·경험치와 개수(또는 목표 레벨)를 입력하면 도달 레벨을 계산합니다.</p>
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 레벨</span>
@@ -1606,7 +1661,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                     </div>
                   </>)}
                   {selected === 'blueberry' && (<>
-                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">현재 레벨·경험치와 개수(또는 목표 레벨)를 입력하면 도달 레벨을 계산합니다.</p>
+                    <p className="text-[10px] text-gray-400 dark:text-zinc-500 leading-relaxed">현재 레벨·경험치와 개수(또는 목표 레벨)를 입력하면 도달 레벨을 계산합니다.</p>
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 레벨</span>
@@ -1717,7 +1772,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                     </div>
                   </>)}
                   {selected === 'monsterpark' && (<>
-                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">현재 레벨·경험치와 입장 횟수를 입력하면 도달 레벨을 계산합니다.</p>
+                    <p className="text-[10px] text-gray-400 dark:text-zinc-500 leading-relaxed">현재 레벨·경험치와 입장 횟수를 입력하면 도달 레벨을 계산합니다.</p>
                     {/* 정보 행 */}
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
@@ -1830,7 +1885,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500 dark:text-zinc-400">달성</span>
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">달성 레벨</span>
                         <div className="text-right">
                           {simResult
                             ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{simResult.finalLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">{simResult.finalPct.toFixed(3)}%</span></>
@@ -1842,12 +1897,12 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                 </div>
               </div>
               {selected === 'mekaberry' && (
-                <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+                <div className="flex-1 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
                   <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
                     <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">목표 레벨 역산</h3>
                   </div>
-                  <div className="p-4 flex flex-col gap-3">
-                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">목표 레벨과 개수를 입력하면, 어느 시점부터 사용하면 되는지 알려줍니다.</p>
+                  <div className="p-4 flex flex-col gap-3 flex-1">
+                    <p className="text-[10px] text-gray-400 dark:text-zinc-500 leading-relaxed">목표 레벨과 개수를 입력하면, 어느 시점부터 사용하면 되는지 알려줍니다.</p>
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">목표 레벨</span>
@@ -1875,7 +1930,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                       else if (mekaRevCount === '' || isNaN(count)) reason = '개수를 입력해주세요';
                       else if (count < 1 || count > 99) reason = '개수가 올바르지 않아요';
                       return (
-                        <button onClick={handleMekaRevCalc} disabled={!!reason} className="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                        <button onClick={handleMekaRevCalc} disabled={!!reason} className="mt-auto w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
                           {reason ?? '계산하기'}
                         </button>
                       );
@@ -1890,7 +1945,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500 dark:text-zinc-400">도달</span>
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">도달 레벨</span>
                         <div className="text-right">
                           {mekaRevResult?.ok
                             ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{mekaRevResult.targetLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(0.000%)</span></>
@@ -1905,12 +1960,12 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                 </div>
               )}
               {selected === 'expcoupon' && (
-                <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+                <div className="flex-1 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
                   <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
                     <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">목표 레벨 역산</h3>
                   </div>
-                  <div className="p-4 flex flex-col gap-3">
-                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">목표 레벨과 개수를 입력하면, 어느 시점부터 사용하면 되는지 알려줍니다.</p>
+                  <div className="p-4 flex flex-col gap-3 flex-1">
+                    <p className="text-[10px] text-gray-400 dark:text-zinc-500 leading-relaxed">목표 레벨과 개수를 입력하면, 어느 시점부터 사용하면 되는지 알려줍니다.</p>
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">목표 레벨</span>
@@ -1947,7 +2002,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                       else if (couponRevCount === '' || isNaN(count)) reason = '개수를 입력해주세요';
                       else if (count < 1 || count > 99999) reason = '개수가 올바르지 않아요';
                       return (
-                        <button onClick={handleCouponRevCalc} disabled={!!reason} className="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                        <button onClick={handleCouponRevCalc} disabled={!!reason} className="mt-auto w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
                           {reason ?? '계산하기'}
                         </button>
                       );
@@ -1962,7 +2017,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500 dark:text-zinc-400">도달</span>
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">도달 레벨</span>
                         <div className="text-right">
                           {couponRevResult?.ok
                             ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{couponRevResult.targetLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(0.000%)</span></>
@@ -1977,12 +2032,12 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                 </div>
               )}
               {selected === 'vipsauna' && (
-                <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+                <div className="flex-1 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
                   <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
                     <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">목표 레벨 역산</h3>
                   </div>
-                  <div className="p-4 flex flex-col gap-3">
-                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">목표 레벨과 잠수 시간을 입력하면, 어느 시점부터 사용하면 되는지 알려줍니다.</p>
+                  <div className="p-4 flex flex-col gap-3 flex-1">
+                    <p className="text-[10px] text-gray-400 dark:text-zinc-500 leading-relaxed">목표 레벨과 잠수 시간을 입력하면, 어느 시점부터 사용하면 되는지 알려줍니다.</p>
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">목표 레벨</span>
@@ -2027,7 +2082,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                       else if ((vipRevHours !== '' && (isNaN(h) || h < 0 || h > 999)) || (vipRevMinutes !== '' && (isNaN(m) || m < 0 || m > 59))) reason = '시간이 올바르지 않아요';
                       else if ((h || 0) === 0 && (m || 0) === 0) reason = '시간을 입력해주세요';
                       return (
-                        <button onClick={handleVipRevCalc} disabled={!!reason} className="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                        <button onClick={handleVipRevCalc} disabled={!!reason} className="mt-auto w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
                           {reason ?? '계산하기'}
                         </button>
                       );
@@ -2042,7 +2097,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500 dark:text-zinc-400">도달</span>
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">도달 레벨</span>
                         <div className="text-right">
                           {vipRevResult?.ok
                             ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{vipRevResult.targetLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(0.000%)</span></>
@@ -2057,12 +2112,12 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                 </div>
               )}
               {selected === 'blueberry' && (
-                <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+                <div className="flex-1 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
                   <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
                     <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">목표 레벨 역산</h3>
                   </div>
-                  <div className="p-4 flex flex-col gap-3">
-                    <p className="text-[11px] text-gray-400 dark:text-zinc-500 leading-relaxed">목표 레벨과 개수를 입력하면, 어느 시점부터 사용하면 되는지 알려줍니다.</p>
+                  <div className="p-4 flex flex-col gap-3 flex-1">
+                    <p className="text-[10px] text-gray-400 dark:text-zinc-500 leading-relaxed">목표 레벨과 개수를 입력하면, 어느 시점부터 사용하면 되는지 알려줍니다.</p>
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">목표 레벨</span>
@@ -2099,7 +2154,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                       else if (blueRevCount === '' || isNaN(count)) reason = '개수를 입력해주세요';
                       else if (count < 1 || count > 99) reason = '개수가 올바르지 않아요';
                       return (
-                        <button onClick={handleBlueRevCalc} disabled={!!reason} className="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+                        <button onClick={handleBlueRevCalc} disabled={!!reason} className="mt-auto w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
                           {reason ?? '계산하기'}
                         </button>
                       );
@@ -2114,7 +2169,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         </div>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500 dark:text-zinc-400">도달</span>
+                        <span className="text-sm text-gray-500 dark:text-zinc-400">도달 레벨</span>
                         <div className="text-right">
                           {blueRevResult?.ok
                             ? <><span className="font-bold text-gray-800 dark:text-zinc-100">Lv.{blueRevResult.targetLevel}</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(0.000%)</span></>
