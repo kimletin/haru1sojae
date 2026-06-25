@@ -563,13 +563,13 @@ function calcCouponByTarget(startLevel: number, startExpPct: number, targetLevel
 }
 
 const MENU_ITEMS = [
-  { key: 'epicdungeon', label: '에픽 던전' },
-  { key: 'monsterpark', label: '몬스터파크' },
-  { key: 'vipsauna',    label: 'VIP 사우나' },
-  { key: 'expcoupon',   label: '상급\nEXP 쿠폰' },
-  { key: 'blueberry',   label: '블루베리\n농장' },
-  { key: 'mekaberry',   label: '메카베리\n농장' },
-  { key: 'treasurehunter', label: '트레져 헌터' },
+  { key: 'epicdungeon', label: '에픽 던전', icon: '앵글러컴퍼니' },
+  { key: 'monsterpark', label: '몬스터파크', icon: '몬스터파크' },
+  { key: 'vipsauna',    label: 'VIP 사우나', icon: 'VIP사우나' },
+  { key: 'expcoupon',   label: '상급\nEXP 쿠폰', icon: '상급 EXP 교환권' },
+  { key: 'blueberry',   label: '블루베리\n농장', icon: '블루베리 농장' },
+  { key: 'mekaberry',   label: '메카베리\n농장', icon: '메카베리 농장' },
+  { key: 'treasurehunter', label: '트레져 헌터', icon: '트레져 헌터' },
 ];
 
 // 경험치 콘텐츠 서브탭 키 (URL 검증용)
@@ -580,9 +580,9 @@ export const CONTENT_KEYS = MENU_ITEMS.map(m => m.key);
 
 const TREASURE_LEVELS = Array.from({ length: 40 }, (_, i) => i + 260);
 const TREASURE_BOXES: TreasureBox[] = ['폴로/프리토', '에스페시아'];
-const TREASURE_BOX_META: Record<TreasureBox, { label: string; sub: string }> = {
-  '폴로/프리토': { label: '골드 트레져 박스', sub: '폴로/프리토' },
-  '에스페시아':  { label: '다이아 트레져 박스', sub: '에스페시아' },
+const TREASURE_BOX_META: Record<TreasureBox, { label: string; sub: string; icon: string }> = {
+  '폴로/프리토': { label: '골드 트레져 박스', sub: '폴로/프리토', icon: '골드 트레져 박스' },
+  '에스페시아':  { label: '다이아 트레져 박스', sub: '에스페시아', icon: '다이아 트레져 박스' },
 };
 
 function TreasureHunterTable({ monsterLevel, charLevel, treasureBonus = 0, treasureBonuses = [], selectedBox }: {
@@ -1031,12 +1031,13 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
             key={item.key}
             onClick={() => setSelected(item.key)}
             className={
-              'aspect-square rounded-lg text-sm font-medium transition-colors cursor-pointer flex flex-col items-center justify-center whitespace-pre-line text-center ' +
+              'aspect-square rounded-lg text-xs font-medium transition-colors cursor-pointer flex flex-col items-center justify-center gap-1 whitespace-pre-line text-center ' +
               (selected === item.key
                 ? 'bg-orange-500 text-white border border-orange-500'
                 : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
             }
           >
+            <img src={`/icons/${encodeURIComponent(item.icon)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
             {item.label}
           </button>
         ))}
@@ -1053,15 +1054,18 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                   key={d.name}
                   onClick={() => setSelectedDungeon(d.name)}
                   className={
-                    'flex-1 rounded-lg text-sm font-medium transition-colors cursor-pointer py-2 px-3 flex flex-col items-center justify-center ' +
+                    'flex-1 rounded-lg text-sm font-medium transition-colors cursor-pointer py-2 px-3 flex items-center justify-center gap-2 ' +
                     (selectedDungeon === d.name
                       ? 'bg-orange-500 text-white border border-orange-500'
                       : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
                   }
                 >
-                  <div className="font-semibold">{d.name}</div>
-                  <div className={'text-xs mt-0.5 ' + (selectedDungeon === d.name ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>
-                    Lv.{d.minLv}~
+                  <img src={`/icons/${encodeURIComponent(d.name)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
+                  <div className="flex flex-col items-center">
+                    <div className="font-semibold">{d.name}</div>
+                    <div className={'text-xs mt-0.5 ' + (selectedDungeon === d.name ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>
+                      Lv.{d.minLv}~
+                    </div>
                   </div>
                 </button>
               ))}
@@ -1219,14 +1223,19 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                         key={d}
                         onClick={() => setTreasureBox(d)}
                         className={
-                          'flex-1 rounded-lg text-sm font-medium transition-colors cursor-pointer py-2 px-3 flex flex-col items-center justify-center ' +
+                          'flex-1 rounded-lg text-sm font-medium transition-colors cursor-pointer py-2 px-3 flex items-center justify-center gap-2 ' +
                           (treasureBox === d
                             ? 'bg-orange-500 text-white border border-orange-500'
                             : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
                         }
                       >
-                        <div className="font-semibold">{TREASURE_BOX_META[d].label}</div>
-                        <div className={'text-xs mt-0.5 ' + (treasureBox === d ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>{TREASURE_BOX_META[d].sub}</div>
+                        <div className="w-12 h-12 shrink-0 overflow-hidden flex items-center justify-center">
+                          <img src={`/icons/${encodeURIComponent(TREASURE_BOX_META[d].icon)}.png`} alt="" className="w-full h-full object-contain scale-150" />
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className="font-semibold">{TREASURE_BOX_META[d].label}</div>
+                          <div className={'text-xs mt-0.5 ' + (treasureBox === d ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>{TREASURE_BOX_META[d].sub}</div>
+                        </div>
                       </button>
                     ))}
                   </div>

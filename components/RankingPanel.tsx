@@ -2,6 +2,16 @@
 
 import { EfficiencyItem } from '@/types';
 import ItemName from '@/components/ItemName';
+import TooltipWrapper from '@/components/TooltipWrapper';
+
+function expPer100M(efficiency: number): React.ReactNode {
+  return (
+    <div className="text-center">
+      <div className="text-orange-200">1억 메소 당 경험치</div>
+      <div className="font-semibold">{Math.round(efficiency * 1e8).toLocaleString('ko-KR')}</div>
+    </div>
+  );
+}
 
 interface Props {
   items: EfficiencyItem[];
@@ -46,9 +56,17 @@ export default function RankingPanel({ items }: Props) {
           >
             <RankBadge rank={i + 1} />
             <span className="text-sm text-gray-800 dark:text-zinc-200 flex-1 flex items-center gap-0.5 min-w-0"><ItemName name={item.name} /></span>
-<span className="text-sm font-semibold text-right ml-2" style={{ color: rankColor(i + 1, items.length) }}>
-              {(item.ratio * 100).toFixed(1) + '%'}
-            </span>
+{item.efficiency > 0 ? (
+              <TooltipWrapper className="ml-2 shrink-0" tip={expPer100M(item.efficiency)}>
+                <span className="text-sm font-semibold cursor-default" style={{ color: rankColor(i + 1, items.length) }}>
+                  {(item.ratio * 100).toFixed(1) + '%'}
+                </span>
+              </TooltipWrapper>
+            ) : (
+              <span className="text-sm font-semibold text-right ml-2" style={{ color: rankColor(i + 1, items.length) }}>
+                {(item.ratio * 100).toFixed(1) + '%'}
+              </span>
+            )}
           </div>
         ))}
       </div>

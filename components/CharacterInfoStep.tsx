@@ -24,26 +24,20 @@ function regionMinLevel(region: HuntingRegion): number {
   return Math.min(...region.grounds.flatMap(g => g.mobs.map(m => m.level)));
 }
 
-function regionLevelRange(region: HuntingRegion): string {
-  const levels = region.grounds.flatMap(g => g.mobs.map(m => m.level));
-  const min = Math.min(...levels);
-  const max = Math.max(...levels);
-  return min === max ? `${min}` : `${min}-${max}`;
-}
-
 function mobLevelLabel(mobs: { level: number; count: number }[]): string {
   const levels = [...new Set(mobs.map(m => m.level))];
   return levels.length === 1 ? `Lv.${levels[0]}` : levels.map(l => `Lv.${l}`).join('/');
 }
 
 // 숫자 입력 (라벨 + 단위)
-function NumField({ label, value, onChange, unit = '메소', max = 9_999_999_999, min = 0, disabled, width = 'w-[118px]' }: {
-  label: string; value?: number; onChange?: (v: number) => void; unit?: string; max?: number; min?: number; disabled?: boolean; width?: string;
+function NumField({ label, value, onChange, unit = '메소', max = 9_999_999_999, min = 0, disabled, width = 'w-[118px]', icon }: {
+  label: string; value?: number; onChange?: (v: number) => void; unit?: string; max?: number; min?: number; disabled?: boolean; width?: string; icon?: string;
 }) {
   const [focused, setFocused] = useState(false);
   const display = disabled ? '' : focused ? String(value) : (value ?? 0).toLocaleString('ko-KR');
   return (
     <div className="flex items-center gap-2 py-0.5">
+      {icon && <img src={`/icons/${encodeURIComponent(icon)}.png`} alt="" className={`w-5 h-5 shrink-0 object-contain ${disabled ? 'opacity-40' : ''}`} />}
       <label className={`text-xs whitespace-nowrap flex-1 ${disabled ? 'text-gray-400 dark:text-zinc-500' : 'text-gray-700 dark:text-zinc-300'}`}>{label}</label>
       <div className="relative flex items-center">
         <input
@@ -106,25 +100,25 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
         {/* 1열: 시세 정보 */}
         <div className="min-w-0">
           <p className={sectionLabel}>시세 정보</p>
-          <NumField label="물통 시세" disabled unit="" />
-          <NumField label="메소마켓 시세" value={d.mesoMarketRate} onChange={v => set('mesoMarketRate', v)} unit="메포" max={9999} />
+          <NumField label="물통 시세" disabled unit="" icon="메소" />
+          <NumField label="메소마켓 시세" value={d.mesoMarketRate} onChange={v => set('mesoMarketRate', v)} unit="메포" max={9999} icon="메포" />
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-1.5 pt-1.5">
-            <p className="text-[11px] text-gray-400 dark:text-zinc-500 font-semibold mb-0.5">30분 도핑</p>
-            <NumField label="추가 경험치 50%" value={d.price50} onChange={v => set('price50', v)} />
-            <NumField label="추가 경험치 70%" value={d.price70} onChange={v => set('price70', v)} />
-            <NumField label="2배 쿠폰" value={d.price2x} onChange={v => set('price2x', v)} />
-            <NumField label="3배 쿠폰" value={d.price3x} onChange={v => set('price3x', v)} />
-            <NumField label="4배 쿠폰" value={d.price4x} onChange={v => set('price4x', v)} />
-            <NumField label="소경축비" value={d.priceSmallBooster} onChange={v => set('priceSmallBooster', v)} />
-            <NumField label="고농축비" value={d.priceLargeBooster} onChange={v => set('priceLargeBooster', v)} />
-            <NumField label="아즈모스 영약" value={d.priceAzmos} onChange={v => set('priceAzmos', v)} />
+            <p className="text-[11px] text-orange-500 dark:text-orange-400 font-semibold mb-0.5">30분 도핑</p>
+            <NumField label="추가 경험치 50%" value={d.price50} onChange={v => set('price50', v)} icon="추가 경험치 50%" />
+            <NumField label="추가 경험치 70%" value={d.price70} onChange={v => set('price70', v)} icon="추가 경험치 70%" />
+            <NumField label="2배 쿠폰" value={d.price2x} onChange={v => set('price2x', v)} icon="경험치 2배 쿠폰" />
+            <NumField label="3배 쿠폰" value={d.price3x} onChange={v => set('price3x', v)} icon="경험치 3배 쿠폰" />
+            <NumField label="4배 쿠폰" value={d.price4x} onChange={v => set('price4x', v)} icon="경험치 4배 쿠폰" />
+            <NumField label="소경축비" value={d.priceSmallBooster} onChange={v => set('priceSmallBooster', v)} icon="소경축비" />
+            <NumField label="고농축비" value={d.priceLargeBooster} onChange={v => set('priceLargeBooster', v)} icon="고농축비" />
+            <NumField label="아즈모스 영약" value={d.priceAzmos} onChange={v => set('priceAzmos', v)} icon="아즈모스 영약" />
           </div>
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-1.5 pt-1.5">
-            <p className="text-[11px] text-gray-400 dark:text-zinc-500 font-semibold mb-0.5">30일 도핑</p>
-            <NumField label="부티크 사냥 칭호" value={d.priceHunterTitle} onChange={v => set('priceHunterTitle', v)} />
-            <NumField label="혈맹의 반지" value={d.priceBloodRingMeso} onChange={v => set('priceBloodRingMeso', v)} />
-            <NumField label="경험치 부스트링" value={d.priceBoostringMeso} onChange={v => set('priceBoostringMeso', v)} />
-            <NumField label="정령의 펜던트" value={d.priceJungpenMeso} onChange={v => set('priceJungpenMeso', v)} />
+            <p className="text-[11px] text-orange-500 dark:text-orange-400 font-semibold mb-0.5">30일 도핑</p>
+            <NumField label="부티크 사냥 칭호" value={d.priceHunterTitle} onChange={v => set('priceHunterTitle', v)} icon="부티크 사냥 칭호" />
+            <NumField label="혈맹의 반지" value={d.priceBloodRingMeso} onChange={v => set('priceBloodRingMeso', v)} icon="혈맹의 반지" />
+            <NumField label="경험치 부스트링" value={d.priceBoostringMeso} onChange={v => set('priceBoostringMeso', v)} icon="경험치 부스트링" />
+            <NumField label="정령의 펜던트" value={d.priceJungpenMeso} onChange={v => set('priceJungpenMeso', v)} icon="정령의 펜던트" />
           </div>
         </div>
 
@@ -132,6 +126,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
         <div className="min-w-0 border-l border-gray-100 dark:border-zinc-700 pl-4">
           <p className={sectionLabel}>사냥 시간</p>
           <div className="flex items-center gap-2 py-0.5">
+            <img src={`/icons/${encodeURIComponent('소재비')}.png`} alt="" className="w-5 h-5 shrink-0 object-contain" />
             <label className="text-xs whitespace-nowrap flex-1 text-gray-700 dark:text-zinc-300">일 평균 재획</label>
             <div className="flex items-center gap-0.5">
               <span className="text-xs font-semibold text-gray-700 dark:text-zinc-100">{toTimeStr(d.dailySessions)}</span>
@@ -151,19 +146,19 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
               <span className="text-xs text-orange-500 dark:text-orange-400 font-bold">30분 내 사용 부스터</span>
               <TooltipIcon text={<>부스터를 많이 사용할수록 30분 도핑<br />아이템들의 효율이 상승합니다</>} />
             </div>
-            <NumField label="VIP/HEXA 부스터" value={d.booster30min} onChange={v => set('booster30min', v)} unit="개" max={99} width="w-[60px]" />
-            <NumField label="영겁의 황금태엽" value={d.eternal30min} onChange={v => set('eternal30min', v)} unit="개" max={99} width="w-[60px]" />
+            <NumField label="VIP/HEXA 부스터" value={d.booster30min} onChange={v => set('booster30min', v)} unit="개" max={99} width="w-[60px]" icon="VIP 부스터" />
+            <NumField label="영겁의 황금태엽" value={d.eternal30min} onChange={v => set('eternal30min', v)} unit="개" max={99} width="w-[60px]" icon="영겁의 황금태엽" />
             <div className="flex items-center gap-1 mt-2 mb-1">
               <span className="text-xs text-orange-500 dark:text-orange-400 font-bold">1일 평균 사용 부스터</span>
               <TooltipIcon text={<>부스터를 많이 사용할수록 30일 도핑<br />아이템들의 효율이 상승합니다</>} />
             </div>
-            <NumField label="VIP/HEXA 부스터" value={d.booster1day} onChange={v => set('booster1day', v)} unit="개" max={99} width="w-[60px]" />
-            <NumField label="영겁의 황금태엽" value={d.eternal1day} onChange={v => set('eternal1day', v)} unit="개" max={99} width="w-[60px]" />
+            <NumField label="VIP/HEXA 부스터" value={d.booster1day} onChange={v => set('booster1day', v)} unit="개" max={99} width="w-[60px]" icon="VIP 부스터" />
+            <NumField label="영겁의 황금태엽" value={d.eternal1day} onChange={v => set('eternal1day', v)} unit="개" max={99} width="w-[60px]" icon="영겁의 황금태엽" />
           </div>
 
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
             <p className={sectionLabel}>에픽 던전</p>
-            <div className="flex gap-1">
+            <div className="grid grid-cols-3 gap-1">
               {([
                 { val: '하이마운틴', label: '하이마운틴', minLv: 260 },
                 { val: '앵글러컴퍼니', label: '앵글러컴퍼니', minLv: 270 },
@@ -176,7 +171,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
                     onClick={() => accessible && set('epicDungeonZone', val)}
                     disabled={!accessible}
                     className={
-                      'flex-1 py-1.5 flex flex-col items-center justify-center rounded border-2 text-[10px] transition-colors ' +
+                      'h-14 p-0.5 flex flex-col items-center justify-center gap-0.5 rounded border-2 text-[9px] transition-colors ' +
                       (!accessible
                         ? 'opacity-40 cursor-not-allowed bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400'
                         : d.epicDungeonZone === val
@@ -184,8 +179,8 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
                           : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400 cursor-pointer')
                     }
                   >
+                    <img src={`/icons/${encodeURIComponent(val)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
                     <span className="font-medium leading-tight text-center px-0.5">{label}</span>
-                    <span className={'text-[9px] mt-0.5 ' + (d.epicDungeonZone === val ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>Lv.{minLv}-</span>
                   </button>
                 );
               })}
@@ -194,7 +189,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
 
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
             <p className={sectionLabel}>몬스터파크</p>
-            <div className="grid grid-cols-3 gap-1">
+            <div className="grid grid-cols-4 gap-1">
               {MONSTER_PARK_ZONES.map(({ zone, minLevel }) => {
                 const accessible = d.charLevel >= minLevel;
                 const active = d.monsterParkZone === zone;
@@ -204,7 +199,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
                     onClick={() => accessible && set('monsterParkZone', zone)}
                     disabled={!accessible}
                     className={
-                      'py-1.5 flex flex-col items-center justify-center rounded border-2 text-[10px] transition-colors ' +
+                      'h-14 p-0.5 flex flex-col items-center justify-center gap-0.5 rounded border-2 text-[9px] transition-colors ' +
                       (!accessible
                         ? 'opacity-40 cursor-not-allowed bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400'
                         : active
@@ -212,8 +207,8 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
                           : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400 cursor-pointer')
                     }
                   >
+                    <img src={`/icons/${encodeURIComponent(zone)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
                     <span className="font-medium leading-tight text-center px-0.5">{zone}</span>
-                    <span className={'text-[9px] mt-0.5 ' + (active ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>Lv.{minLevel}-</span>
                   </button>
                 );
               })}
@@ -225,7 +220,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
         <div className="relative min-w-0 border-l border-gray-100 dark:border-zinc-700">
           <div className="absolute inset-0 flex flex-col pl-4">
             <p className={sectionLabel}>사냥터</p>
-            <div className="grid grid-cols-3 gap-1.5 mb-2">
+            <div className="grid grid-cols-4 gap-1.5 mb-2">
               {HUNTING_REGIONS.map(r => {
                 const locked = d.charLevel < regionMinLevel(r);
                 const active = r.name === d.huntingRegion;
@@ -235,7 +230,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
                     disabled={locked}
                     onClick={() => { if (!locked && r.grounds.length > 0) selectGround(r.name, r.grounds[0]); }}
                     className={
-                      'w-full py-1.5 flex flex-col items-center justify-center rounded border-2 transition-colors ' +
+                      'w-full h-14 p-0.5 flex flex-col items-center justify-center gap-0.5 rounded border-2 transition-colors ' +
                       (locked
                         ? 'opacity-40 cursor-not-allowed bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-400'
                         : active
@@ -243,8 +238,8 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
                           : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-300 hover:border-orange-400 cursor-pointer')
                     }
                   >
-                    <span className="text-[10px] font-medium leading-tight text-center px-0.5">{r.name}</span>
-                    <span className={'text-[9px] mt-0.5 ' + (active ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>Lv.{regionLevelRange(r)}</span>
+                    <img src={`/icons/${encodeURIComponent(r.name)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
+                    <span className="text-[9px] font-medium leading-tight text-center px-0.5">{r.name}</span>
                   </button>
                 );
               })}

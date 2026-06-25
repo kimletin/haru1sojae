@@ -56,9 +56,8 @@ export default function InputSummaryCard({ inputs, meta, onEditInfo }: Props) {
           >정보 수정</button>
         </div>
         <div className="py-3">
+          <Row label="메소마켓 시세" value={`${inputs.mesoMarketRate.toLocaleString('ko-KR')}메포`} />
           <Row label="일 평균 재획" value={toTimeStr(inputs.dailySessions)} />
-          <Row label="30분 평균 부스터" value={`VIP/HEXA ${inputs.booster30min}개 · 영겁 ${inputs.eternal30min}개`} />
-          <Row label="1일 평균 부스터" value={`VIP/HEXA ${inputs.booster1day}개 · 영겁 ${inputs.eternal1day}개`} />
           <Row label="에픽 던전" value={inputs.epicDungeonZone} />
           <Row label="몬스터파크" value={inputs.monsterParkZone} />
           <Row label="사냥터" value={`${inputs.huntingRegion} · ${inputs.huntingGround}`} />

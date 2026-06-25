@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { HUNTING_REGIONS } from '@/data/huntingGrounds';
-import { MONSTER_EXP } from '@/data/monsterExp';
-import Num from '@/components/Num';
+import { HUNTING_REGIONS, type HuntingGround } from '@/data/huntingGrounds';
+import { getMonstersAtMap } from '@/data/regionMonsters';
+import HuntingGroundDetailModal from '@/components/HuntingGroundDetailModal';
 
 interface Props {
   charLevel: number;
@@ -24,6 +24,7 @@ const REGION_LEVEL_RANGE: Record<string, string> = {
 
 export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGround }: Props) {
   const [selectedRegion, setSelectedRegion] = useState(huntingRegion || '세르니움');
+  const [detailGround, setDetailGround] = useState<HuntingGround | null>(null);
 
   useEffect(() => {
     setSelectedRegion(huntingRegion);
@@ -45,8 +46,13 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
   }, [selectedRegion]);
 
   const region = HUNTING_REGIONS.find(r => r.name === selectedRegion)!;
+  const regionIndex = HUNTING_REGIONS.findIndex(r => r.name === selectedRegion);
+  const regionFolder = `${regionIndex + 1}.${selectedRegion}`;
+  const imgSrcFor = (g: HuntingGround) =>
+    `/maps/${encodeURIComponent(regionFolder)}/${encodeURIComponent(g.name)}.png`;
 
   return (
+    <>
     <div className="flex gap-4 items-start">
       {/* 지역 선택 (3열 그리드) */}
       <div className="grid grid-cols-3 gap-1.5 shrink-0 w-[282px] self-start">
@@ -55,14 +61,15 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
             key={r.name}
             onClick={() => setSelectedRegion(r.name)}
             className={
-              'aspect-square rounded-lg text-sm font-medium transition-colors cursor-pointer text-center flex flex-col items-center justify-center ' +
+              'aspect-square rounded-lg text-xs font-medium transition-colors cursor-pointer text-center flex flex-col items-center justify-center gap-0.5 ' +
               (selectedRegion === r.name
                 ? 'bg-orange-500 text-white border border-orange-500'
                 : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
             }
           >
+            <img src={`/icons/${encodeURIComponent(r.name)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
             <div className="font-semibold">{r.name}</div>
-            <div className={'text-xs mt-0.5 ' + (selectedRegion === r.name ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>
+            <div className={'text-[10px] mt-0.5 ' + (selectedRegion === r.name ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>
               {REGION_LEVEL_RANGE[r.name]}
             </div>
           </button>
@@ -79,17 +86,17 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
         <div ref={scrollRef} className="overflow-y-auto" style={{maxHeight:'644px'}}>
           <table className="table-fixed text-sm border-collapse w-full">
             <colgroup>
-              <col style={{ width: '34%' }} />
-              <col style={{ width: '23%' }} />
-              <col style={{ width: '12%' }} />
-              <col style={{ width: '29%' }} />
+              <col style={{ width: '36%' }} />
+              <col style={{ width: '24%' }} />
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '20%' }} />
             </colgroup>
             <thead>
               <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
                 <th className="text-center px-4 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">사냥터</th>
                 <th className="text-center px-4 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">몬스터 레벨</th>
                 <th className="text-center px-4 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">마리수</th>
-                <th className="text-center px-4 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">순 경험치</th>
+                <th className="text-center px-4 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">세부 정보</th>
               </tr>
             </thead>
             <tbody>
@@ -109,10 +116,14 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
                       </td>
                       <td className={'px-4 py-1.5 text-center ' + textColor}>{levelStr}</td>
                       <td className={'px-4 py-1.5 ' + textColor} style={{textAlign:'center'}}>{totalCount}</td>
-                      <td className={'px-4 py-1.5 text-center ' + textColor}>
-                        {g.mobs.map((m, mi) => (
-                          <span key={mi}>{mi > 0 && '/'}<Num n={MONSTER_EXP[m.level] ?? 0} /></span>
-                        ))}
+                      <td className="px-4 py-1.5 text-center">
+                        <button
+                          onClick={() => setDetailGround(g)}
+                          aria-label="세부 정보"
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-gray-200 dark:border-zinc-600 text-gray-500 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-400 transition-colors cursor-pointer"
+                        >
+                          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4"><circle cx="9" cy="9" r="6" /><path d="M14 14l4 4" strokeLinecap="round" /></svg>
+                        </button>
                       </td>
                     </tr>
                   );
@@ -131,7 +142,15 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
                     ) : null}
                     <td className={'px-4 py-1.5 text-center ' + textColor}>{mob.level}</td>
                     <td className={'px-4 py-1.5 text-center ' + textColor}>{mob.count}</td>
-                    <td className={'px-4 py-1.5 text-center ' + textColor}><Num n={MONSTER_EXP[mob.level] ?? 0} /></td>
+                    <td className="px-4 py-1.5 text-center">
+                      <button
+                        onClick={() => setDetailGround(g)}
+                        aria-label="세부 정보"
+                        className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-gray-200 dark:border-zinc-600 text-gray-500 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-400 transition-colors cursor-pointer"
+                      >
+                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4"><circle cx="9" cy="9" r="6" /><path d="M14 14l4 4" strokeLinecap="round" /></svg>
+                      </button>
+                    </td>
                   </tr>
                 ));
               })}
@@ -140,5 +159,15 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
         </div>
       </div>
     </div>
+    {detailGround && (
+      <HuntingGroundDetailModal
+        groundName={detailGround.name}
+        imageSrc={imgSrcFor(detailGround)}
+        mobDir={regionFolder}
+        monsters={getMonstersAtMap(detailGround.name, detailGround.mobs.map(m => m.level))}
+        onClose={() => setDetailGround(null)}
+      />
+    )}
+    </>
   );
 }

@@ -3,6 +3,16 @@
 import { InputValues, EfficiencyItem } from '@/types';
 import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency } from '@/lib/calculator';
 import Num from '@/components/Num';
+import TooltipWrapper from '@/components/TooltipWrapper';
+
+function expPer100M(efficiency: number): React.ReactNode {
+  return (
+    <div className="text-center">
+      <div className="text-orange-200">1억 메소 당 경험치</div>
+      <div className="font-semibold">{Math.round(efficiency * 1e8).toLocaleString('ko-KR')}</div>
+    </div>
+  );
+}
 
 function fmtMeso(n: number): string {
   if (n <= 0) return '-';
@@ -78,7 +88,11 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
                 <span className="text-gray-700 dark:text-zinc-300">{fmtMeso(row.priceMeso)}</span>
               </td>
               <td className="px-2 py-1.5 text-center font-semibold text-orange-500">
-                {row.ratio > 0 ? (row.ratio * 100).toFixed(1) + '%' : '-'}
+                {row.ratio > 0 ? (
+                  <TooltipWrapper tip={expPer100M(row.efficiency)}>
+                    <span className="cursor-default">{(row.ratio * 100).toFixed(1) + '%'}</span>
+                  </TooltipWrapper>
+                ) : '-'}
               </td>
             </tr>
           ))}
@@ -116,7 +130,7 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
     { name: '2배 쿠폰',                  rate: 1,   ...effRow(base30 * 1,   inputs.price2x) },
     { name: '3배 쿠폰',                  rate: 2,   ...effRow(base30 * 2,   inputs.price3x) },
     { name: '4배 쿠폰',                  rate: 3,   ...effRow(base30 * 3,   inputs.price4x) },
-    { name: '소경축비',             rate: 0.1, ...effRow(base30 * 0.1, inputs.priceSmallBooster) },
+    { name: '소경축비', rate: 0.1, ...effRow(base30 * 0.1, inputs.priceSmallBooster) },
     { name: '소경축비→고농축비', rate: 0.1, ...effRow(base30 * 0.1, inputs.priceLargeBooster - inputs.priceSmallBooster) },
     { name: '아즈모스 영약', rate: 0.2, ...effRow(base30 * 0.2, inputs.priceAzmos) },
   ];
