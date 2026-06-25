@@ -45,7 +45,6 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
     blue:   'text-gray-800 dark:text-zinc-100',
     orange: 'text-gray-800 dark:text-zinc-100',
   };
-  const hasRate = rows.some(r => r.rate !== undefined);
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden">
       <div className={'px-4 py-2.5 border-b relative ' + header[color]}>
@@ -54,8 +53,7 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
       </div>
       <table className="table-fixed w-full text-sm border-collapse">
         <colgroup>
-          <col style={{width: hasRate ? '180px' : '240px'}} />
-          {hasRate && <col style={{width:'60px'}} />}
+          <col style={{width:'240px'}} />
           <col style={{width:'100px'}} />
           <col style={{width:'110px'}} />
           <col style={{width:'110px'}} />
@@ -63,7 +61,6 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
         <thead>
           <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
             <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">항목</th>
-            {hasRate && <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">배율</th>}
             <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">경험치</th>
             <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">가격(메소)</th>
             <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">가성비 배율</th>
@@ -78,11 +75,6 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
                   {row.isEvent && <span className="text-xs font-medium bg-amber-400 text-white px-1.5 py-0.5 rounded-full">E</span>}
                 </span>
               </td>
-              {hasRate && (
-                <td className="px-2 py-1.5 text-center text-gray-500 dark:text-zinc-400 text-xs">
-                  {row.rate !== undefined && (typeof row.rate === 'string' ? row.rate : '+' + (Number(row.rate) * 100).toFixed(0) + '%')}
-                </td>
-              )}
               <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300 whitespace-nowrap"><Num n={row.exp} /></td>
               <td className="px-2 py-1.5 text-center">
                 <span className="text-gray-700 dark:text-zinc-300">{fmtMeso(row.priceMeso)}</span>

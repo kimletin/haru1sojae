@@ -46,7 +46,8 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
   const [manualExpRate, setManualExpRate] = useState('');
   const [manualMonsterPark, setManualMonsterPark] = useState('');
   const [manualEpicDungeon, setManualEpicDungeon] = useState('');
-  const [activeError, setActiveError] = useState<{ field: 'name' | 'level' | 'expRate' | 'mp' | 'ep'; msg: string } | null>(null);
+  const [manualTreasure, setManualTreasure] = useState('');
+  const [activeError, setActiveError] = useState<{ field: 'name' | 'level' | 'expRate' | 'mp' | 'ep' | 'tr'; msg: string } | null>(null);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -73,6 +74,7 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
   const expRateNum = parseFloat(manualExpRate);
   const mpNum      = parseInt(manualMonsterPark);
   const epNum      = parseInt(manualEpicDungeon);
+  const trNum      = parseInt(manualTreasure);
 
   const getFirstError = () => {
     if (manualName.trim().length === 0) return { field: 'name'    as const, msg: '닉네임을 입력해주세요' };
@@ -84,6 +86,8 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
                                         return { field: 'mp'      as const, msg: '몬파 보약이 올바르지 않아요' };
     if (manualEpicDungeon !== '' && (isNaN(epNum) || epNum < 0 || epNum > 100))
                                         return { field: 'ep'      as const, msg: '에픽 던전 보약이 올바르지 않아요' };
+    if (manualTreasure !== '' && (isNaN(trNum) || trNum < 0 || trNum > 100))
+                                        return { field: 'tr'      as const, msg: '트레져 헌터 보약이 올바르지 않아요' };
     return null;
   };
   const manualExpRateVal = manualExpRate === '' ? undefined : expRateNum;
@@ -106,6 +110,7 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
       world: '',
       monsterParkBonus: manualMonsterPark ? parseInt(manualMonsterPark) : 0,
       epicDungeonBonus: manualEpicDungeon ? parseInt(manualEpicDungeon) : 0,
+      treasureBonus: manualTreasure ? parseInt(manualTreasure) : 0,
       expRate: manualExpRateVal,
     });
     setStep('info');
@@ -289,6 +294,20 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
                 </div>
                 {activeError?.field === 'ep' && <p className="text-xs text-red-500 mt-0.5 px-1">{activeError.msg}</p>}
+              </div>
+              <div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="트레져 헌터 보약"
+                    value={manualTreasure}
+                    onChange={e => { setManualTreasure(e.target.value.replace(/[^0-9]/g, '')); setActiveError(null); }}
+                    className={'w-full border rounded-lg px-3 pr-8 py-1.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 ' + (activeError?.field === 'tr' ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-zinc-600')}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
+                </div>
+                {activeError?.field === 'tr' && <p className="text-xs text-red-500 mt-0.5 px-1">{activeError.msg}</p>}
               </div>
               <button
                 onClick={handleNextFromManual}

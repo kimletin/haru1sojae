@@ -9,6 +9,7 @@ interface Props {
   charLevel: number;
   huntingRegion: string;
   huntingGround: string;
+  hasCharacter?: boolean;
 }
 
 const REGION_LEVEL_RANGE: Record<string, string> = {
@@ -22,7 +23,7 @@ const REGION_LEVEL_RANGE: Record<string, string> = {
   '기어드락':   'Lv.295-299',
 };
 
-export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGround }: Props) {
+export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGround, hasCharacter = true }: Props) {
   const [selectedRegion, setSelectedRegion] = useState(huntingRegion || '세르니움');
   const [detailGround, setDetailGround] = useState<HuntingGround | null>(null);
 
@@ -101,7 +102,7 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
             </thead>
             <tbody>
               {region.grounds.map((g, i) => {
-                const isMe = selectedRegion === huntingRegion && g.name === huntingGround;
+                const isMe = hasCharacter && selectedRegion === huntingRegion && g.name === huntingGround;
                 const rowBg = isMe ? 'bg-orange-50 dark:bg-orange-900/40 font-bold' : 'hover:bg-gray-50 dark:hover:bg-gray-700';
                 const textColor = isMe ? 'text-orange-600' : 'text-gray-700 dark:text-zinc-300';
 
@@ -120,9 +121,9 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
                         <button
                           onClick={() => setDetailGround(g)}
                           aria-label="세부 정보"
-                          className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-gray-200 dark:border-zinc-600 text-gray-500 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-400 transition-colors cursor-pointer"
+                          className="inline-flex items-center justify-center w-6 h-6 rounded-md border border-gray-200 dark:border-zinc-600 text-gray-500 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-400 transition-colors cursor-pointer"
                         >
-                          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4"><circle cx="9" cy="9" r="6" /><path d="M14 14l4 4" strokeLinecap="round" /></svg>
+                          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5"><circle cx="9" cy="9" r="6" /><path d="M14 14l4 4" strokeLinecap="round" /></svg>
                         </button>
                       </td>
                     </tr>
@@ -146,9 +147,9 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
                       <button
                         onClick={() => setDetailGround(g)}
                         aria-label="세부 정보"
-                        className="inline-flex items-center justify-center w-7 h-7 rounded-md border border-gray-200 dark:border-zinc-600 text-gray-500 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-400 transition-colors cursor-pointer"
+                        className="inline-flex items-center justify-center w-6 h-6 rounded-md border border-gray-200 dark:border-zinc-600 text-gray-500 dark:text-zinc-400 hover:text-orange-500 hover:border-orange-400 transition-colors cursor-pointer"
                       >
-                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4"><circle cx="9" cy="9" r="6" /><path d="M14 14l4 4" strokeLinecap="round" /></svg>
+                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5"><circle cx="9" cy="9" r="6" /><path d="M14 14l4 4" strokeLinecap="round" /></svg>
                       </button>
                     </td>
                   </tr>
@@ -161,9 +162,11 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
     </div>
     {detailGround && (
       <HuntingGroundDetailModal
+        region={selectedRegion}
         groundName={detailGround.name}
         imageSrc={imgSrcFor(detailGround)}
         mobDir={regionFolder}
+        mobCount={detailGround.mobs.reduce((s, m) => s + m.count, 0)}
         monsters={getMonstersAtMap(detailGround.name, detailGround.mobs.map(m => m.level))}
         onClose={() => setDetailGround(null)}
       />

@@ -42,3 +42,6 @@ next-env.d.ts
 
 # local notes (추적 안 함)
 progress.md
+
+# 맵 원본 PNG 백업(배포 제외)
+maps_png_backup/

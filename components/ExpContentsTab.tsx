@@ -109,11 +109,12 @@ interface DungeonTableProps {
   epicDungeonBonus: number;
   epicDungeonBonuses: BonusEntry[];
   scrollKey?: string;
+  hasCharacter?: boolean;
 }
 
 type StageKey = 'stage0' | 'stage1' | 'stage2';
 
-function DungeonTable({ title, levels, data, metacoin, charLevel, headerColor, titleColor, badgeColor, rowBg, textColor, epicDungeonBonus, epicDungeonBonuses, scrollKey }: DungeonTableProps) {
+function DungeonTable({ title, levels, data, metacoin, charLevel, headerColor, titleColor, badgeColor, rowBg, textColor, epicDungeonBonus, epicDungeonBonuses, scrollKey, hasCharacter = true }: DungeonTableProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLTableRowElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
@@ -189,7 +190,7 @@ function DungeonTable({ title, levels, data, metacoin, charLevel, headerColor, t
               {levels.map(lv => {
                 const d = data[lv];
                 if (!d) return null;
-                const isMe = lv === charLevel;
+                const isMe = hasCharacter && lv === charLevel;
                 const baseColor = isMe ? textColor : 'text-gray-700 dark:text-zinc-300';
                 const subColor  = isMe ? textColor : 'text-gray-400 dark:text-zinc-500';
 
@@ -585,8 +586,8 @@ const TREASURE_BOX_META: Record<TreasureBox, { label: string; sub: string; icon:
   '에스페시아':  { label: '다이아 트레져 박스', sub: '에스페시아', icon: '다이아 트레져 박스' },
 };
 
-function TreasureHunterTable({ monsterLevel, charLevel, treasureBonus = 0, treasureBonuses = [], selectedBox }: {
-  monsterLevel: number; charLevel: number; treasureBonus?: number; treasureBonuses?: BonusEntry[]; selectedBox: TreasureBox;
+function TreasureHunterTable({ monsterLevel, charLevel, treasureBonus = 0, treasureBonuses = [], selectedBox, hasCharacter = true }: {
+  monsterLevel: number; charLevel: number; treasureBonus?: number; treasureBonuses?: BonusEntry[]; selectedBox: TreasureBox; hasCharacter?: boolean;
 }) {
   const [bonusInput, setBonusInput] = useState(treasureBonus > 0 ? String(treasureBonus) : '');
   const [sunday, setSunday] = useState(false);
@@ -643,7 +644,7 @@ function TreasureHunterTable({ monsterLevel, charLevel, treasureBonus = 0, treas
           </thead>
           <tbody>
             {TREASURE_LEVELS.map(lv => {
-              const isMe = lv === monsterLevel;
+              const isMe = hasCharacter && lv === monsterLevel;
               const baseColor = isMe ? 'text-orange-600' : 'text-gray-700 dark:text-zinc-300';
               const subColor  = isMe ? 'text-orange-400' : 'text-gray-400 dark:text-zinc-500';
               const rare = calc(lv, mult.rare);
@@ -721,11 +722,12 @@ interface Props {
   todayExpRate?: number | null;
   slotKey?: number;
   initialSelected?: string;
+  hasCharacter?: boolean;
 }
 
 const SUNDAY_MULT: Record<SundayType, number> = { '일반': 1, '썬데이': 1.5, '스페셜': 4 };
 
-export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBonus, epicDungeonBonus = 0, epicDungeonBonuses = [], treasureBonus = 0, treasureBonuses = [], todayExpRate, slotKey, initialSelected }: Props) {
+export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBonus, epicDungeonBonus = 0, epicDungeonBonuses = [], treasureBonus = 0, treasureBonuses = [], todayExpRate, slotKey, initialSelected, hasCharacter = true }: Props) {
   const myParkZone = getMonsterParkZone(charLevel);
 
   const [selected, setSelected] = useState(initialSelected ?? 'epicdungeon');
@@ -1085,6 +1087,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                 epicDungeonBonus={epicDungeonBonus}
                 epicDungeonBonuses={epicDungeonBonuses}
                 scrollKey={selected + selectedDungeon}
+                hasCharacter={hasCharacter}
               />
             </div>
           </div>
@@ -1115,7 +1118,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                             const sundayBonus = SUNDAY_MULT[sundayType] - 1;
                             const potionBonus = (parseFloat(parkBonusInput) || 0) / 100;
                             const exp = Math.round(baseExp * (1 + sundayBonus + potionBonus));
-                            const isMe = zone === myParkZone;
+                            const isMe = hasCharacter && zone === myParkZone;
                             const subColor = isMe ? 'text-orange-500' : 'text-gray-400 dark:text-zinc-500';
                             return (
                               <tr
@@ -1180,7 +1183,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                   headerColor="bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
                   titleColor="text-gray-800 dark:text-zinc-100"
                   levelLabel="레벨"
-                  rows={LEVELS.map(lv => ({ level: lv, value: VIP_SAUNA_EXP[lv] ?? 0, isMe: lv === charLevel, ...commonRowProps }))}
+                  rows={LEVELS.map(lv => ({ level: lv, value: VIP_SAUNA_EXP[lv] ?? 0, isMe: hasCharacter && lv === charLevel, ...commonRowProps }))}
                 />
               )}
 
@@ -1191,7 +1194,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                   headerColor="bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
                   titleColor="text-gray-800 dark:text-zinc-100"
                   levelLabel="레벨"
-                  rows={LEVELS.map(lv => ({ level: lv, value: (SUPER_EXP_COUPON[lv] ?? 0) * 1000, isMe: lv === charLevel, ...commonRowProps }))}
+                  rows={LEVELS.map(lv => ({ level: lv, value: (SUPER_EXP_COUPON[lv] ?? 0) * 1000, isMe: hasCharacter && lv === charLevel, ...commonRowProps }))}
                 />
               )}
 
@@ -1201,7 +1204,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                   headerColor="bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
                   titleColor="text-gray-800 dark:text-zinc-100"
                   levelLabel="레벨"
-                  rows={LEVELS.filter(lv => lv >= 280).map(lv => ({ level: lv, value: MEKABERRY_EXP[lv] ?? 0, isMe: lv === charLevel, ...commonRowProps }))}
+                  rows={LEVELS.filter(lv => lv >= 280).map(lv => ({ level: lv, value: MEKABERRY_EXP[lv] ?? 0, isMe: hasCharacter && lv === charLevel, ...commonRowProps }))}
                 />
               )}
 
@@ -1211,7 +1214,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                   headerColor="bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800"
                   titleColor="text-gray-800 dark:text-zinc-100"
                   levelLabel="레벨"
-                  rows={LEVELS.map(lv => ({ level: lv, value: BLUEBERRY_EXP[lv] ?? 0, isMe: lv === charLevel, ...commonRowProps }))}
+                  rows={LEVELS.map(lv => ({ level: lv, value: BLUEBERRY_EXP[lv] ?? 0, isMe: hasCharacter && lv === charLevel, ...commonRowProps }))}
                 />
               )}
 
@@ -1246,6 +1249,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                       treasureBonus={treasureBonus}
                       treasureBonuses={treasureBonuses}
                       selectedBox={treasureBox}
+                      hasCharacter={hasCharacter}
                     />
                   </div>
                 </div>

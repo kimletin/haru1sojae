@@ -28,7 +28,7 @@ const EPIC_ZONES = ['하이마운틴', '앵글러컴퍼니', '악몽선경'];
 
 // 하위 → 상위 상품으로 갈아타는 업그레이드 행: 두 아이콘을 화살표로 함께 표시
 const UPGRADE_MAP: Record<string, { from: { icon: string; label: string }; to: { icon: string; label: string } }> = {
-  '추가경험치 50%→70%': { from: { icon: '추가 경험치 50%', label: '추경 50%' }, to: { icon: '추가 경험치 70%', label: '70%' } },
+  '추가경험치 50%→70%': { from: { icon: '추가 경험치 50%', label: '추경 50%' }, to: { icon: '추가 경험치 70%', label: '추경 70%' } },
   '소경축비→고농축비': { from: { icon: '소경축비', label: '소경축비' }, to: { icon: '고농축비', label: '고농축비' } },
 };
 
@@ -41,9 +41,12 @@ function iconFor(name: string): string | null {
   return null;
 }
 
-// 표시용 라벨 변환(축약어)
+// 표시용 라벨 변환
 function displayLabel(text: string): string {
-  return text.replace('추가경험치', '추경').replace('경험치 부스트링', '부스트 링');
+  return text
+    .replace('추가경험치', '추가 경험치')
+    .replace('소경축비', '소형 경험 축적의 비약')
+    .replace(/^(\d배 쿠폰)$/, '경험치 $1');
 }
 
 function Icon({ name }: { name: string }) {

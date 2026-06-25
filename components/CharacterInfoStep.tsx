@@ -124,9 +124,9 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
             <p className="text-[11px] text-orange-500 dark:text-orange-400 font-semibold mb-0.5">30분 도핑</p>
             <NumField label="추가 경험치 50%" value={d.price50} onChange={v => set('price50', v)} icon="추가 경험치 50%" />
             <NumField label="추가 경험치 70%" value={d.price70} onChange={v => set('price70', v)} icon="추가 경험치 70%" />
-            <NumField label="2배 쿠폰" value={d.price2x} onChange={v => set('price2x', v)} icon="경험치 2배 쿠폰" />
-            <NumField label="3배 쿠폰" value={d.price3x} onChange={v => set('price3x', v)} icon="경험치 3배 쿠폰" />
-            <NumField label="4배 쿠폰" value={d.price4x} onChange={v => set('price4x', v)} icon="경험치 4배 쿠폰" />
+            <NumField label="경험치 2배 쿠폰" value={d.price2x} onChange={v => set('price2x', v)} icon="경험치 2배 쿠폰" />
+            <NumField label="경험치 3배 쿠폰" value={d.price3x} onChange={v => set('price3x', v)} icon="경험치 3배 쿠폰" />
+            <NumField label="경험치 4배 쿠폰" value={d.price4x} onChange={v => set('price4x', v)} icon="경험치 4배 쿠폰" />
             <NumField label="소경축비" value={d.priceSmallBooster} onChange={v => set('priceSmallBooster', v)} icon="소경축비" />
             <NumField label="고농축비" value={d.priceLargeBooster} onChange={v => set('priceLargeBooster', v)} icon="고농축비" />
             <NumField label="아즈모스 영약" value={d.priceAzmos} onChange={v => set('priceAzmos', v)} icon="아즈모스 영약" />

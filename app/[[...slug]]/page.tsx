@@ -133,7 +133,7 @@ const TABS = [
 type Tab = typeof TABS[number];
 
 const TAB_PARAM: Record<Tab, string> = {
-  '경험치 효율표':  'eff',
+  '경험치 효율표':  'table',
   '경험치 컨텐츠':  'cont',
   '경험치 정보':    'exp',
   '사냥터 정보':    'hunt',
@@ -178,12 +178,12 @@ export default function Home() {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [searchModalTarget, setSearchModalTarget] = useState(0);
-  const [isFirstVisit, setIsFirstVisit] = useState(false);
   const [charMetas, setCharMetas] = useState<(CharMeta | null)[]>(makeDefaultMetas());
   const [todayExpRate, setTodayExpRate] = useState<number | null>(null);
   const [initialContentKey, setInitialContentKey] = useState<string | undefined>(undefined);
   const [notFound, setNotFound] = useState(false);
   const [isPrivacy, setIsPrivacy] = useState(false);
+  const [isHome, setIsHome] = useState(false);
   const presetsRef = useRef<InputValues[]>(makeDefaultPresets());
   const activePresetRef = useRef(0);
 
@@ -192,10 +192,7 @@ export default function Home() {
     const parts = slug.split('/');
     const tabSlug = parts[0];
 
-    // 첫 방문(캐시 없음)이면 어느 탭으로 들어와도 효율표 탭으로 redirect
-    const isNew = !localStorage.getItem(PRESETS_KEY) && !localStorage.getItem(STORAGE_KEY);
-
-    let tab = isNew ? null : (PARAM_TO_TAB[tabSlug] ?? PARAM_TO_TAB[slug]);
+    let tab: Tab | null = PARAM_TO_TAB[tabSlug] ?? PARAM_TO_TAB[slug] ?? null;
     // 서브 경로 검증: /cont/<유효키>만 허용, 그 외 추가 경로는 잘못된 주소로 처리
     if (tab && parts.length > 1) {
       if (tabSlug === 'cont' && parts.length === 2 && CONTENT_KEYS.includes(parts[1])) {
@@ -204,22 +201,22 @@ export default function Home() {
         tab = null;
       }
     }
-    const initialTab = tab ?? TABS[0];
-    if (tab) setActiveTab(tab);
-    document.title = `${initialTab} | 하루1소재`;
-    if (isNew) window.history.replaceState({}, '', '/');
-    else if (slug === 'privacy') { setIsPrivacy(true); document.title = '개인정보처리방침 | 하루1소재'; }
-    // 알 수 없는 주소(유효한 탭이 아니고 루트도 아님)면 404 처리
-    else if (!tab && slug !== '') setNotFound(true);
+    if (slug === '') {
+      setIsHome(true);
+      document.title = '하루1소재';
+    } else if (slug === 'privacy') {
+      setIsPrivacy(true);
+      document.title = '개인정보처리방침 | 하루1소재';
+    } else if (tab) {
+      setActiveTab(tab);
+      document.title = `${tab} | 하루1소재`;
+    } else {
+      // 알 수 없는 주소면 404
+      setNotFound(true);
+    }
 
     const savedSlots = parseInt(localStorage.getItem(NUM_SLOTS_KEY) ?? '');
     if (!isNaN(savedSlots)) setNumSlots(Math.min(Math.max(savedSlots, 1), NUM_PRESETS));
-
-    if (isNew) {
-      setIsFirstVisit(true);
-      setSearchModalTarget(0);
-      setShowSearchModal(true);
-    }
 
     const metas = loadMetas();
     setCharMetas(metas);
@@ -245,8 +242,9 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (isHome || isPrivacy || notFound) return;
     document.title = `${activeTab} | 하루1소재`;
-  }, [activeTab]);
+  }, [activeTab, isHome, isPrivacy, notFound]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -257,14 +255,24 @@ export default function Home() {
   const handleTabChange = (tab: Tab) => {
     setNotFound(false);
     setIsPrivacy(false);
+    setIsHome(false);
     setActiveTab(tab);
     document.title = `${tab} | 하루1소재`;
-    const path = tab === TABS[0] ? '/' : '/' + TAB_PARAM[tab];
-    window.history.replaceState({}, '', path);
+    window.history.replaceState({}, '', '/' + TAB_PARAM[tab]);
+  };
+
+  const goHome = () => {
+    setNotFound(false);
+    setIsPrivacy(false);
+    setIsHome(true);
+    document.title = '하루1소재';
+    window.history.replaceState({}, '', '/');
+    document.getElementById('app-scroll')?.scrollTo(0, 0);
   };
 
   const goPrivacy = () => {
     setNotFound(false);
+    setIsHome(false);
     setIsPrivacy(true);
     document.title = '개인정보처리방침 | 하루1소재';
     window.history.replaceState({}, '', '/privacy');
@@ -375,14 +383,12 @@ export default function Home() {
     }
 
     setShowSearchModal(false);
-    setIsFirstVisit(false);
     handlePresetChange(idx);
   };
 
   const handleAddCharacter = () => {
     if (numSlots >= NUM_PRESETS) return;
     setSearchModalTarget(numSlots); // 아직 슬롯 추가 안 함
-    setIsFirstVisit(false);
     setShowSearchModal(true);
   };
 
@@ -498,7 +504,7 @@ export default function Home() {
       {showSearchModal && (
         <CharacterSearchModal
           onConfirm={handleCharacterConfirm}
-          onClose={isFirstVisit ? undefined : () => setShowSearchModal(false)}
+          onClose={() => setShowSearchModal(false)}
           getInitialInputs={getInitialInputs}
           existingOcids={charMetas.filter(m => m?.ocid).map(m => m!.ocid!)}
           existingNames={presetNames}
@@ -515,7 +521,7 @@ export default function Home() {
       <header className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-600 shrink-0 z-10 shadow-sm">
         <div className="w-[905px] mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <button
-            onClick={() => handleTabChange(TABS[0])}
+            onClick={goHome}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
           >
             <img src="/icon.png" alt="icon" className="w-8 h-8" />
@@ -532,7 +538,7 @@ export default function Home() {
                   onClick={() => handleTabChange(tab)}
                   className={
                     'px-2.5 py-1 rounded-lg text-sm font-medium transition-colors cursor-pointer ' +
-                    (activeTab === tab && !notFound && !isPrivacy ? 'bg-orange-500 text-white' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100')
+                    (activeTab === tab && !notFound && !isPrivacy && !isHome ? 'bg-orange-500 text-white' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100')
                   }
                 >
                   {tab}
@@ -554,14 +560,33 @@ export default function Home() {
       <div className="min-h-full flex flex-col">
       <div className="flex-1">
       {notFound ? (
-        <div className="flex flex-col items-center justify-center gap-4 text-center px-4 py-24">
-          <p className="text-6xl font-bold text-gray-800 dark:text-zinc-100">404</p>
+        <div className="flex flex-col items-center justify-center gap-2 text-center px-4 py-24">
+          <img src="/404.png" alt="404" />
+          <p className="text-4xl font-bold text-gray-800 dark:text-zinc-100">404</p>
           <p className="text-sm text-gray-500 dark:text-zinc-400">페이지를 찾을 수 없습니다.</p>
           <button
-            onClick={() => { setNotFound(false); handleTabChange(TABS[0]); }}
-            className="mt-2 px-5 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold transition-colors cursor-pointer"
+            onClick={goHome}
+            className="mt-1 px-5 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold transition-colors cursor-pointer"
           >메인으로</button>
         </div>
+      ) : isHome ? (
+      <div className="flex flex-col items-center justify-center gap-8 px-4 py-24 text-center">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-zinc-100">하루1소재</h2>
+          <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">메이플스토리 경험치의 모든 것</p>
+        </div>
+        <div className="grid grid-cols-5 gap-4 w-full max-w-[760px]">
+          {TABS.map(t => (
+            <button key={t} onClick={() => handleTabChange(t)}
+              className="aspect-square rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm hover:border-orange-400 hover:shadow transition-all cursor-pointer text-sm font-semibold text-gray-700 dark:text-zinc-200 flex flex-col items-center justify-center gap-2">
+              <span className="w-12 h-12 flex items-center justify-center">
+                <img src={`/main/${encodeURIComponent(t)}.png`} alt="" className="max-w-full max-h-full object-contain" />
+              </span>
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
       ) : isPrivacy ? (
       <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="w-[905px] mx-auto">
@@ -660,6 +685,13 @@ export default function Home() {
             )}
           </div>
           {activeTab === TABS[0] ? (
+            numSlots === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-4 text-center py-24">
+                <img src="/table.png" alt="" />
+                <p className="text-lg font-semibold text-gray-700 dark:text-zinc-200">캐릭터를 추가해주세요</p>
+                <button onClick={handleAddCharacter} className="px-5 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold transition-colors cursor-pointer">캐릭터 추가</button>
+              </div>
+            ) : (
             <div className="flex flex-row gap-4">
                 <main className="w-[560px] shrink-0">
                   <div className="mb-4">
@@ -680,6 +712,7 @@ export default function Home() {
                   <RankingPanel items={rankedItems} />
                 </aside>
             </div>
+            )
           ) : (
             <div>
                 {activeTab === TABS[1] && (
@@ -694,13 +727,14 @@ export default function Home() {
                     treasureBonuses={charMetas[activePreset]?.treasureBonuses?.map(b => ({ name: b.name, pct: b.pct })) ?? []}
                     todayExpRate={todayExpRate}
                     slotKey={activePreset}
+                    hasCharacter={numSlots > 0}
                   />
                 )}
                 {activeTab === TABS[2] && (
-                  <ExpInfoTab charLevel={inputs.charLevel} monsterLevel={inputs.monsterLevel} huntingMobs={inputs.huntingMobs} />
+                  <ExpInfoTab charLevel={inputs.charLevel} monsterLevel={inputs.monsterLevel} huntingMobs={inputs.huntingMobs} hasCharacter={numSlots > 0} />
                 )}
                 {activeTab === TABS[3] && (
-                  <HuntingGroundTab charLevel={inputs.charLevel} huntingRegion={inputs.huntingRegion} huntingGround={inputs.huntingGround} />
+                  <HuntingGroundTab charLevel={inputs.charLevel} huntingRegion={inputs.huntingRegion} huntingGround={inputs.huntingGround} hasCharacter={numSlots > 0} />
                 )}
                 {activeTab === TABS[4] && (
                   <InfoCenterTab />

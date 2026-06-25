@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useEffect } from 'react';
 import { LEVEL_EXP } from '@/data/levelExp';
 import type { MobGroup } from '@/types';
 import Num from '@/components/Num';
@@ -36,9 +37,10 @@ interface Props {
   charLevel: number;
   monsterLevel: number;
   huntingMobs?: MobGroup[];
+  hasCharacter?: boolean;
 }
 
-export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs }: Props) {
+export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs, hasCharacter = true }: Props) {
   const mobs = huntingMobs && huntingMobs.length > 1 ? huntingMobs : null;
   const mobLevels = mobs
     ? mobs.map(m => m.level).filter((v, i, a) => a.indexOf(v) === i)
@@ -46,16 +48,30 @@ export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs }: Pro
 
   const levels = Object.keys(LEVEL_EXP).map(Number).sort((a, b) => a - b).filter(lv => lv < 300);
 
-  const isRowActive = (row: PenaltyRow) => mobLevels.some(lv => row.test(charLevel - lv));
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const activeRef = useRef<HTMLTableRowElement>(null);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (activeRef.current && scrollRef.current) {
+        const c = scrollRef.current, r = activeRef.current;
+        c.scrollTop = r.offsetTop - c.clientHeight / 2 + r.clientHeight / 2;
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [charLevel]);
+
+  const isRowActive = (row: PenaltyRow) => hasCharacter && mobLevels.some(lv => row.test(charLevel - lv));
 
   return (
     <div>
-      <div className="flex flex-row gap-4 items-start">
+      <div className="flex flex-row gap-4 items-stretch">
         {/* 레벨별 필요 경험치 */}
-        <div className="flex-[55] min-w-0 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden">
-          <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5">
+        <div className="flex-[55] min-w-0 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+          <div className="bg-orange-200 dark:bg-orange-900/50 border-b border-orange-200 dark:border-orange-800 px-4 py-2.5 shrink-0">
             <h3 className="text-sm font-semibold text-center text-gray-800 dark:text-zinc-100">레벨별 필요 경험치</h3>
           </div>
+          <div className="relative flex-1 min-h-0">
+          <div ref={scrollRef} className="absolute inset-0 overflow-y-auto">
           <table className="table-fixed text-sm border-collapse w-full">
             <colgroup>
               <col style={{width:'25%'}} />
@@ -63,7 +79,7 @@ export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs }: Pro
               <col style={{width:'24%'}} />
               <col style={{width:'24%'}} />
             </colgroup>
-            <thead>
+            <thead className="sticky top-0 z-10">
               <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
                 <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-bold">레벨</th>
                 <th className="text-center px-5 py-2 text-gray-600 dark:text-zinc-400 font-bold">필요 경험치</th>
@@ -74,9 +90,9 @@ export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs }: Pro
             <tbody>
               {levels.map(lv => {
                 const d = LEVEL_EXP[lv];
-                const isMe = lv === charLevel;
+                const isMe = hasCharacter && lv === charLevel;
                 return (
-                  <tr key={lv} className={'border-b ' + (isMe ? 'bg-orange-50 dark:bg-orange-900/40 font-bold' : 'hover:bg-gray-50 dark:hover:bg-zinc-800')}>
+                  <tr key={lv} ref={isMe ? activeRef : undefined} className={'border-b ' + (isMe ? 'bg-orange-50 dark:bg-orange-900/40 font-bold' : 'hover:bg-gray-50 dark:hover:bg-zinc-800')}>
                     <td className={'px-5 py-1.5 text-center ' + (isMe ? 'text-orange-600' : 'text-gray-700 dark:text-zinc-300')}>
                       {lv}
                       {isMe && <span className="ml-1.5 text-xs bg-orange-500 dark:bg-orange-700 text-white px-1.5 py-0.5 rounded-full">나</span>}
@@ -89,6 +105,8 @@ export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs }: Pro
               })}
             </tbody>
           </table>
+          </div>
+          </div>
         </div>
 
         {/* 경험치 패널티 */}
