@@ -19,11 +19,8 @@ export default function HuntingGroundDetailModal({ groundName, imageSrc, mobDir,
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
-      <div
-        className="bg-white dark:bg-zinc-900 rounded-xl shadow-xl p-6 w-[960px] max-w-[95vw] max-h-[88vh] overflow-y-auto"
-        onClick={e => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-xl p-6 w-[960px] max-w-[95vw] max-h-[88vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-bold text-gray-900 dark:text-zinc-100">{groundName}</h2>
           <button

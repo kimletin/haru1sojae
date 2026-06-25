@@ -59,6 +59,24 @@ function NumField({ label, value, onChange, unit = '메소', max = 9_999_999_999
   );
 }
 
+// 개수 입력 (라벨 + ▲▼ 버튼, 일 평균 재획과 동일한 형태)
+function StepperField({ label, icon, value, onChange, min = 0, max = 99, unit = '개' }: {
+  label: string; icon?: string; value: number; onChange: (v: number) => void; min?: number; max?: number; unit?: string;
+}) {
+  const stepBtn = 'w-5 h-5 flex items-center justify-center text-[10px] text-gray-500 dark:text-zinc-400 hover:text-orange-500 cursor-pointer border border-gray-300 dark:border-zinc-600 rounded hover:border-orange-400';
+  return (
+    <div className="flex items-center gap-2 py-0.5">
+      {icon && <img src={`/icons/${encodeURIComponent(icon)}.png`} alt="" className="w-5 h-5 shrink-0 object-contain" />}
+      <label className="text-xs whitespace-nowrap flex-1 text-gray-700 dark:text-zinc-300">{label}</label>
+      <div className="flex items-center gap-0.5">
+        <span className="text-xs font-semibold text-gray-700 dark:text-zinc-100">{value}{unit}</span>
+        <button onClick={() => onChange(Math.min(max, value + 1))} className={stepBtn}>▲</button>
+        <button onClick={() => onChange(Math.max(min, value - 1))} className={stepBtn}>▼</button>
+      </div>
+    </div>
+  );
+}
+
 const sectionLabel = 'text-xs text-orange-500 dark:text-orange-400 font-bold mb-1';
 
 function TooltipIcon({ text }: { text: React.ReactNode }) {
@@ -146,14 +164,14 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
               <span className="text-xs text-orange-500 dark:text-orange-400 font-bold">30분 내 사용 부스터</span>
               <TooltipIcon text={<>부스터를 많이 사용할수록 30분 도핑<br />아이템들의 효율이 상승합니다</>} />
             </div>
-            <NumField label="VIP/HEXA 부스터" value={d.booster30min} onChange={v => set('booster30min', v)} unit="개" max={99} width="w-[60px]" icon="VIP 부스터" />
-            <NumField label="영겁의 황금태엽" value={d.eternal30min} onChange={v => set('eternal30min', v)} unit="개" max={99} width="w-[60px]" icon="영겁의 황금태엽" />
+            <StepperField label="VIP/HEXA 부스터" icon="VIP 부스터" value={d.booster30min} onChange={v => set('booster30min', v)} />
+            <StepperField label="영겁의 황금태엽" icon="영겁의 황금태엽" value={d.eternal30min} onChange={v => set('eternal30min', v)} />
             <div className="flex items-center gap-1 mt-2 mb-1">
               <span className="text-xs text-orange-500 dark:text-orange-400 font-bold">1일 평균 사용 부스터</span>
               <TooltipIcon text={<>부스터를 많이 사용할수록 30일 도핑<br />아이템들의 효율이 상승합니다</>} />
             </div>
-            <NumField label="VIP/HEXA 부스터" value={d.booster1day} onChange={v => set('booster1day', v)} unit="개" max={99} width="w-[60px]" icon="VIP 부스터" />
-            <NumField label="영겁의 황금태엽" value={d.eternal1day} onChange={v => set('eternal1day', v)} unit="개" max={99} width="w-[60px]" icon="영겁의 황금태엽" />
+            <StepperField label="VIP/HEXA 부스터" icon="VIP 부스터" value={d.booster1day} onChange={v => set('booster1day', v)} />
+            <StepperField label="영겁의 황금태엽" icon="영겁의 황금태엽" value={d.eternal1day} onChange={v => set('eternal1day', v)} />
           </div>
 
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
