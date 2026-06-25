@@ -49,7 +49,7 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
   const regionIndex = HUNTING_REGIONS.findIndex(r => r.name === selectedRegion);
   const regionFolder = `${regionIndex + 1}.${selectedRegion}`;
   const imgSrcFor = (g: HuntingGround) =>
-    `/maps/${encodeURIComponent(regionFolder)}/${encodeURIComponent(g.name)}.png`;
+    `/maps/${encodeURIComponent(regionFolder)}/${encodeURIComponent(g.name)}.webp`;
 
   return (
     <>
