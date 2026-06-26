@@ -64,7 +64,7 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
             key={r.name}
             onClick={() => setSelectedRegion(r.name)}
             className={
-              'aspect-square rounded-lg text-xs font-medium transition-colors cursor-pointer text-center flex flex-col items-center justify-center gap-0.5 ' +
+              'aspect-square rounded-lg shadow-sm text-xs font-medium transition-colors cursor-pointer text-center flex flex-col items-center justify-center gap-0.5 ' +
               (selectedRegion === r.name
                 ? 'bg-orange-500 text-white border border-orange-500'
                 : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')

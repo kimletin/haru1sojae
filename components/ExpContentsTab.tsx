@@ -1033,7 +1033,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
             key={item.key}
             onClick={() => setSelected(item.key)}
             className={
-              'aspect-square rounded-lg text-xs font-medium transition-colors cursor-pointer flex flex-col items-center justify-center gap-1 whitespace-pre-line text-center ' +
+              'aspect-square rounded-lg shadow-sm text-xs font-medium transition-colors cursor-pointer flex flex-col items-center justify-center gap-1 whitespace-pre-line text-center ' +
               (selected === item.key
                 ? 'bg-orange-500 text-white border border-orange-500'
                 : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
@@ -1153,7 +1153,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                             onClick={() => setSundayType(val)}
                             className={`text-xs px-2 py-0.5 rounded border cursor-pointer transition-colors ${sundayType === val ? 'bg-orange-500 border-orange-500 text-white' : 'border-gray-300 dark:border-zinc-600 text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700'}`}
                           >
-                            {val}
+                            {val === '스페셜' ? '스페셜썬데이' : val}
                           </button>
                         </TooltipWrapper>
                       ))}
@@ -1793,7 +1793,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                                     : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400 dark:hover:border-orange-400')
                                 }
                               >
-                                {val}
+                                {val === '스페셜' ? '스페셜썬데이' : val}
                               </button>
                             </TooltipWrapper>
                           ))}

@@ -11,6 +11,8 @@ import ExpInfoTab from '@/components/ExpInfoTab';
 import ExpContentsTab, { CONTENT_KEYS } from '@/components/ExpContentsTab';
 import HuntingGroundTab from '@/components/HuntingGroundTab';
 import InfoCenterTab from '@/components/InfoCenterTab';
+import { UPDATES, type UpdateEntry } from '@/data/updates';
+import HomeCard from '@/components/HomeCard';
 import PrivacyTab from '@/components/PrivacyTab';
 import CharacterSearchModal, { type CharacterInfo } from '@/components/CharacterSearchModal';
 import CharacterCard from '@/components/CharacterCard';
@@ -570,7 +572,7 @@ export default function Home() {
           >메인으로</button>
         </div>
       ) : isHome ? (
-      <div className="flex flex-col items-center justify-center gap-8 px-4 py-24 text-center">
+      <div className="flex flex-col items-center justify-center gap-8 px-4 py-12 text-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 dark:text-zinc-100">하루1소재</h2>
           <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">메이플스토리 경험치의 모든 것</p>
@@ -584,6 +586,16 @@ export default function Home() {
               </span>
               {t}
             </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-4 w-full max-w-[760px]">
+          {([
+            { title: '공지사항', entries: [] as UpdateEntry[] },
+            { title: '업데이트', entries: [] as UpdateEntry[] },
+            { title: '이벤트', entries: [] as UpdateEntry[] },
+            { title: '패치 노트', entries: UPDATES },
+          ]).map(({ title, entries }) => (
+            <HomeCard key={title} title={title} entries={entries} />
           ))}
         </div>
       </div>

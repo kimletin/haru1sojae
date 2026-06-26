@@ -56,7 +56,7 @@ function Icon({ name }: { name: string }) {
 function StageBadge({ stage }: { stage: string }) {
   const cls = STAGE_COLORS[stage] ?? 'bg-purple-500 text-white';
   return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ml-1 ${cls}`}>
+    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${cls}`}>
       {stage}단계
     </span>
   );
