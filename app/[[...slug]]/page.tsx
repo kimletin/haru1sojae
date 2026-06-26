@@ -11,8 +11,7 @@ import ExpInfoTab from '@/components/ExpInfoTab';
 import ExpContentsTab, { CONTENT_KEYS } from '@/components/ExpContentsTab';
 import HuntingGroundTab from '@/components/HuntingGroundTab';
 import InfoCenterTab from '@/components/InfoCenterTab';
-import { UPDATES, type UpdateEntry } from '@/data/updates';
-import HomeCard from '@/components/HomeCard';
+import HomeCards from '@/components/HomeCards';
 import PrivacyTab from '@/components/PrivacyTab';
 import CharacterSearchModal, { type CharacterInfo } from '@/components/CharacterSearchModal';
 import CharacterCard from '@/components/CharacterCard';
@@ -588,16 +587,7 @@ export default function Home() {
             </button>
           ))}
         </div>
-        <div className="grid grid-cols-2 gap-4 w-full max-w-[760px]">
-          {([
-            { title: '공지사항', entries: [] as UpdateEntry[] },
-            { title: '업데이트', entries: [] as UpdateEntry[] },
-            { title: '이벤트', entries: [] as UpdateEntry[] },
-            { title: '패치 노트', entries: UPDATES },
-          ]).map(({ title, entries }) => (
-            <HomeCard key={title} title={title} entries={entries} />
-          ))}
-        </div>
+        <HomeCards />
       </div>
       ) : isPrivacy ? (
       <div className="max-w-7xl mx-auto px-4 py-6">
