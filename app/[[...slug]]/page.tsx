@@ -570,7 +570,7 @@ export default function Home() {
         </div>
       ) : isHome ? (
       <div className="flex flex-col items-center justify-center gap-4 px-4 py-6 text-center">
-        <div className="relative w-[905px] h-[300px] rounded-2xl overflow-hidden shadow-sm">
+        <div className="relative w-[905px] h-[300px] mt-9 rounded-2xl overflow-hidden shadow-sm">
           <img
             src={`/main/${encodeURIComponent('main banner')}.jpg`}
             alt="하루1소재"
