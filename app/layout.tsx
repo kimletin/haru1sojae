@@ -14,10 +14,26 @@ export const viewport: Viewport = {
   maximumScale: 5,
 };
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://haru1sojae.kr';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: '하루1소재',
-  description: '메이플스토리 경험치 효율 계산기',
+  description: '메이플스토리 경험치 효율 시뮬레이터',
   icons: { icon: '/icon.png' },
+  openGraph: {
+    title: '하루1소재',
+    description: '메이플스토리 경험치 효율 시뮬레이터',
+    siteName: '하루1소재',
+    url: SITE_URL,
+    locale: 'ko_KR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '하루1소재',
+    description: '메이플스토리 경험치 효율 시뮬레이터',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
