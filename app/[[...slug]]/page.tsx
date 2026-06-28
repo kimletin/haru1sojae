@@ -387,6 +387,7 @@ export default function Home() {
       class: info.class ?? null,
       world: info.world ?? null,
       dateCreate: null,
+      popularity: null,
       monsterParkBonus: mpBonus || null,
       epicDungeonBonus: epBonus || null,
       treasureBonus: trBonus || null,
@@ -464,35 +465,39 @@ export default function Home() {
       if (meta.world) rankParams.set('world', meta.world);
       if (meta.class) rankParams.set('class', meta.class);
 
-      const [histData, rankData, imageData, skillData] = await Promise.all([
+      const [histData, rankData, skillData, popData] = await Promise.all([
         fetch(`/api/character/history?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
         fetch(`/api/character/ranking?${rankParams}`).then(r => r.json()),
-        fetch(`/api/character?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
         fetch(`/api/character/skill?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
+        fetch(`/api/character/popularity?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
       ]);
 
-      const histOk  = Array.isArray(histData);
+      // history 응답은 { history: HistoryPoint[], basic: {...} } — basic은 오늘 호출에서 추출(별도 basic 호출 제거)
+      const histArr: HistoryPoint[] | null = Array.isArray(histData?.history) ? histData.history : null;
+      const basic = histData?.basic ?? null;
+      const histOk  = histArr !== null;
       const rankOk  = rankData && typeof rankData === 'object' && rankData.error === undefined;
-      const imageOk = imageData && imageData.image !== undefined;
+      const imageOk = basic != null;
       const skillOk = skillData && skillData.monsterParkBonus !== undefined;
+      const popOk   = popData && typeof popData.popularity === 'number';
 
       if (histOk && isActive) {
-        const hist: HistoryPoint[] = histData;
-        setCharHistory(hist);
-        const todayPoint = hist.find(pt => pt.date === kstToday()) ?? null;
+        setCharHistory(histArr);
+        const todayPoint = histArr.find(pt => pt.date === kstToday()) ?? null;
         setTodayExpRate(todayPoint?.expRate ?? null);
       }
       if (rankOk && isActive) setCharRanking(rankData);
 
-      if (imageOk || skillOk) {
+      if (imageOk || skillOk || popOk) {
         const metaUpdate: Record<string, unknown> = {};
+        if (popOk) metaUpdate.popularity = popData.popularity;
         if (imageOk) {
           metaUpdate.imageUpdatedAt = Date.now();
-          metaUpdate.image = imageData.image;
-          if (imageData.class !== undefined) metaUpdate.class = imageData.class;
-          if (imageData.world !== undefined) metaUpdate.world = imageData.world;
-          if (imageData.guild !== undefined) metaUpdate.guild = imageData.guild;
-          if (imageData.dateCreate !== undefined) metaUpdate.dateCreate = imageData.dateCreate;
+          metaUpdate.image = basic.image;
+          if (basic.class !== undefined) metaUpdate.class = basic.class;
+          if (basic.world !== undefined) metaUpdate.world = basic.world;
+          if (basic.guild !== undefined) metaUpdate.guild = basic.guild;
+          if (basic.dateCreate !== undefined) metaUpdate.dateCreate = basic.dateCreate;
         }
         if (skillOk) {
           metaUpdate.skillUpdatedAt = Date.now();
@@ -505,8 +510,8 @@ export default function Home() {
         }
         handleMetaUpdate(presetIdx, metaUpdate as Partial<CharMeta>);
       }
-      if (imageOk && imageData.level != null) {
-        handleCharLevelUpdate(presetIdx, imageData.level);
+      if (imageOk && basic.level != null) {
+        handleCharLevelUpdate(presetIdx, basic.level);
       }
 
       if (histOk) {
@@ -521,7 +526,7 @@ export default function Home() {
         } catch {}
         const cache = {
           savedAt: histOk ? Date.now() : (prevCache.savedAt ?? Date.now()),
-          history: histOk ? histData : (prevCache.history ?? []),
+          history: histOk ? histArr : (prevCache.history ?? []),
           ranking: rankOk ? rankData : (prevCache.ranking ?? null),
         };
         try { localStorage.setItem(CHAR_CACHE_KEY(ocid), JSON.stringify(cache)); } catch {}
@@ -716,7 +721,7 @@ export default function Home() {
         </div>
       ) : isHome ? (
       <div className="flex flex-col items-center justify-center gap-4 px-4 py-6 text-center">
-        <div className="relative w-[905px] h-[300px] mt-9 rounded-2xl overflow-hidden shadow-sm">
+        <div className="relative w-[905px] h-[300px] rounded-2xl overflow-hidden shadow-sm">
           <img
             src={`/main/${encodeURIComponent('main banner')}.jpg`}
             alt="하루1소재"

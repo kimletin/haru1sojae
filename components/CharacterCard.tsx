@@ -79,12 +79,6 @@ function formatExpKR(exp: number): string {
   return parts.join(' ');
 }
 
-// "2026-06-22T..." → "26.06.22"
-function formatCreateDate(s: string): string {
-  if (s.length < 10) return s;
-  return `${s.slice(2, 4)}.${s.slice(5, 7)}.${s.slice(8, 10)}`;
-}
-
 // 두 슬롯 사이 경험치 증가량 계산 (레벨업 가로질러 반영)
 // character_exp는 현재 레벨 내 누적치라 레벨업 시 리셋되므로, levelExp 테이블로 보정한다.
 function computeDelta(prev: Slot | null, slot: Slot): { deltaRate: number; deltaExp: number } {
@@ -156,7 +150,7 @@ export default function CharacterCard({ name, level, meta, onEditInfo, isEmpty, 
         )}
       </div>
 
-      <div className="relative flex items-stretch h-[208px]">
+      <div className="relative flex items-stretch h-[176px]">
         {/* 좌측: 캐릭터 정보 */}
         <div className="flex flex-col px-4 flex-1 min-w-0 justify-center gap-4">
           <div className="flex items-center justify-center gap-5">
@@ -209,10 +203,10 @@ export default function CharacterCard({ name, level, meta, onEditInfo, isEmpty, 
                     <span className="text-gray-700 dark:text-zinc-300">{meta.class}</span>
                   </div>
                 )}
-                {meta?.dateCreate && (
+                {meta?.popularity != null && (
                   <div className="flex gap-2">
-                    <span className="w-6 text-gray-400 dark:text-zinc-500 shrink-0">생성</span>
-                    <span className="text-gray-700 dark:text-zinc-300">{formatCreateDate(meta.dateCreate)}</span>
+                    <span className="text-gray-400 dark:text-zinc-500 shrink-0 whitespace-nowrap">인기도</span>
+                    <span className="text-gray-700 dark:text-zinc-300">{meta.popularity.toLocaleString('ko-KR')}</span>
                   </div>
                 )}
               </div>
@@ -231,8 +225,8 @@ export default function CharacterCard({ name, level, meta, onEditInfo, isEmpty, 
         <div className="w-px bg-gray-100 dark:bg-zinc-700 my-4" />
 
         {/* 우측: 경험치 히스토리 */}
-        <div className="w-[44%] shrink-0 px-5 py-2 min-w-0 flex flex-col">
-          <p className="text-xs text-gray-700 dark:text-zinc-500 mb-2 mt-7 px-2">
+        <div className="w-[44%] shrink-0 px-5 py-2 min-w-0 flex flex-col justify-center">
+          <p className="text-xs text-gray-700 dark:text-zinc-500 mb-2 mt-4 px-2">
             경험치 히스토리(7일)
             {!hasApi && <span className="ml-1 text-gray-300 dark:text-zinc-600">· API 미연동</span>}
           </p>
@@ -250,7 +244,7 @@ export default function CharacterCard({ name, level, meta, onEditInfo, isEmpty, 
               데이터를 불러올 수 없습니다
             </div>
           ) : (
-            <div className="relative mt-auto pt-3 mb-3 px-2">
+            <div className="relative pt-3 mb-3 px-2">
               <div className="flex items-end gap-1 h-[100px] justify-between">
                 {slots.map((slot, i) => {
                   const prev = i > 0 ? slots[i - 1] : null;

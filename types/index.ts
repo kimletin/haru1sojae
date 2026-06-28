@@ -46,6 +46,7 @@ export interface CharMeta {
   class: string | null;
   world: string | null;
   dateCreate: string | null;    // 캐릭터 생성일 (Nexon character_date_create)
+  popularity: number | null;    // 인기도 (Nexon character/popularity)
   monsterParkBonus: number | null;
   epicDungeonBonus: number | null;
   monsterParkBonuses: { name: string; pct: number; icon: string | null }[] | null;
