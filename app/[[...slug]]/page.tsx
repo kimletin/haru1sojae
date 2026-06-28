@@ -677,7 +677,7 @@ export default function Home() {
             onClick={goHome}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
           >
-            <img src="/icon.png" alt="icon" className="w-8 h-8" />
+            <img src="/icon.png" alt="icon" className="w-8 h-8 translate-y-[1px]" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">하루<span className="text-orange-500">1소재</span></h1>
           </button>
           <div className="flex items-center gap-3">
