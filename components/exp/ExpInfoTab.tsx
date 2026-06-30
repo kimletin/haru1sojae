@@ -1,11 +1,11 @@
 'use client';
 
-import CardHeader from '@/components/CardHeader';
+import CardHeader from '@/components/ui/CardHeader';
 
 import { useRef, useEffect } from 'react';
 import { LEVEL_EXP } from '@/data/levelExp';
 import type { MobGroup } from '@/types';
-import Num from '@/components/Num';
+import Num from '@/components/ui/Num';
 import { PENALTY_SEGMENTS, type PenaltySegment } from '@/data/expPenalty';
 
 interface Props {

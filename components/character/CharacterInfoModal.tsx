@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import type { InputValues } from '@/types';
-import CharacterInfoStep from '@/components/CharacterInfoStep';
+import CharacterInfoStep from '@/components/character/CharacterInfoStep';
 import { lockScroll, unlockScroll } from '@/lib/scrollLock';
 
 interface Props {

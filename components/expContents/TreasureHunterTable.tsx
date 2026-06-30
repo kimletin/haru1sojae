@@ -1,8 +1,8 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import CardHeader from '@/components/CardHeader';
-import Num from '@/components/Num';
-import TooltipWrapper from '@/components/TooltipWrapper';
+import CardHeader from '@/components/ui/CardHeader';
+import Num from '@/components/ui/Num';
+import TooltipWrapper from '@/components/ui/TooltipWrapper';
 import { pctNoSign } from '@/components/expContents/shared';
 import { MONSTER_EXP } from '@/data/monsterExp';
 import { TREASURE_MULTIPLIERS, type TreasureBox } from '@/data/treasureHunter';

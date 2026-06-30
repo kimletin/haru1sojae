@@ -1,8 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
-import CardHeader from '@/components/CardHeader';
-import Num from '@/components/Num';
-import TooltipWrapper from '@/components/TooltipWrapper';
+import CardHeader from '@/components/ui/CardHeader';
+import Num from '@/components/ui/Num';
+import TooltipWrapper from '@/components/ui/TooltipWrapper';
 import { LEVEL_EXP } from '@/data/levelExp';
 import { MONSTER_PARK_EXP, getMonsterParkZone } from '@/data/monsterPark';
 import { calcLevelUp } from '@/components/expContents/simMath';

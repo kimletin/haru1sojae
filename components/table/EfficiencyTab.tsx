@@ -2,8 +2,8 @@
 
 import { InputValues, EfficiencyItem } from '@/types';
 import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency } from '@/lib/calculator';
-import Num from '@/components/Num';
-import TooltipWrapper from '@/components/TooltipWrapper';
+import Num from '@/components/ui/Num';
+import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
 function expPer100M(efficiency: number): React.ReactNode {
   return (
@@ -95,7 +95,7 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
 }
 
 import type { MobGroup } from '@/types';
-import ItemName from '@/components/ItemName';
+import ItemName from '@/components/ui/ItemName';
 
 interface Props {
   inputs: InputValues;

@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import Num from '@/components/Num';
+import Num from '@/components/ui/Num';
 import { pctNoSign, type BonusEntry } from '@/components/expContents/shared';
 
 // ─── DungeonTable ─────────────────────────────────────────────────────────────

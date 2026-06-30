@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import HomeCard from '@/components/HomeCard';
-import EventCard from '@/components/EventCard';
+import HomeCard from '@/components/home/HomeCard';
+import EventCard from '@/components/home/EventCard';
 
 interface NoticeItem {
   date: string;

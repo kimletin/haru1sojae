@@ -1,9 +1,9 @@
 'use client';
 
-import CardHeader from '@/components/CardHeader';
+import CardHeader from '@/components/ui/CardHeader';
 
 import { useState } from 'react';
-import UpdateTimeline from '@/components/UpdateTimeline';
+import UpdateTimeline from '@/components/info/UpdateTimeline';
 
 const SECTIONS = ['업데이트 내역', '도움말'] as const;
 type Section = typeof SECTIONS[number];

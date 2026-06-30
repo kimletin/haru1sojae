@@ -1,6 +1,6 @@
 'use client';
 
-import CardHeader from '@/components/CardHeader';
+import CardHeader from '@/components/ui/CardHeader';
 
 import { useEffect, useState } from 'react';
 import { VIP_SAUNA_EXP } from '@/data/vipSauna';
@@ -9,8 +9,8 @@ import { SUPER_EXP_COUPON } from '@/data/superExpCoupon';
 import { MEKABERRY_EXP } from '@/data/mekaberry';
 import { BLUEBERRY_EXP } from '@/data/blueberry';
 import type { SundayType } from '@/types';
-import Num from '@/components/Num';
-import TooltipWrapper from '@/components/TooltipWrapper';
+import Num from '@/components/ui/Num';
+import TooltipWrapper from '@/components/ui/TooltipWrapper';
 import { pctNoSign, type ExpTableProps, type BonusEntry } from '@/components/expContents/shared';
 import { SingleTable } from '@/components/expContents/SingleTable';
 import EpicDungeonSection from '@/components/expContents/EpicDungeonSection';

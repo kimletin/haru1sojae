@@ -1,6 +1,6 @@
 'use client';
 
-import CardHeader from '@/components/CardHeader';
+import CardHeader from '@/components/ui/CardHeader';
 
 import { useEffect, useRef, useState } from 'react';
 

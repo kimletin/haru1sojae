@@ -1,6 +1,6 @@
 'use client';
 import { useRef, useEffect } from 'react';
-import Num from '@/components/Num';
+import Num from '@/components/ui/Num';
 import { pctNoSign, type ExpTableProps } from '@/components/expContents/shared';
 
 // ─── SingleTable (단일 컬럼, 부모 높이에 맞춰 스크롤) ──────────────────────────

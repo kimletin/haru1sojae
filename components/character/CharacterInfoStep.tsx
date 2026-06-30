@@ -5,7 +5,7 @@ import type { InputValues } from '@/types';
 import { HUNTING_REGIONS } from '@/data/huntingGrounds';
 import type { HuntingGround, HuntingRegion } from '@/data/huntingGrounds';
 import { MONSTER_PARK_ZONES } from '@/data/monsterPark';
-import TooltipWrapper from '@/components/TooltipWrapper';
+import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
 interface Props {
   charName: string;

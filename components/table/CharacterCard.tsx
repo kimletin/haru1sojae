@@ -1,8 +1,8 @@
 'use client';
 
-import CardHeader from '@/components/CardHeader';
+import CardHeader from '@/components/ui/CardHeader';
 
-import TooltipWrapper from '@/components/TooltipWrapper';
+import TooltipWrapper from '@/components/ui/TooltipWrapper';
 import { LEVEL_EXP } from '@/data/levelExp';
 import type { CharMeta } from '@/types';
 

@@ -1,14 +1,14 @@
 'use client';
 
-import CardHeader from '@/components/CardHeader';
+import CardHeader from '@/components/ui/CardHeader';
 
 import { useState, useRef, useEffect } from 'react';
 import { HUNTING_REGIONS, type HuntingGround } from '@/data/huntingGrounds';
 import { MONSTER_EXP } from '@/data/monsterExp';
 import { getMonstersAtMap } from '@/data/regionMonsters';
-import HuntingGroundDetailModal from '@/components/HuntingGroundDetailModal';
-import TooltipWrapper from '@/components/TooltipWrapper';
-import { rankColor, RankBadge, computeTieRanks } from '@/components/ranking';
+import HuntingGroundDetailModal from '@/components/hunt/HuntingGroundDetailModal';
+import TooltipWrapper from '@/components/ui/TooltipWrapper';
+import { rankColor, RankBadge, computeTieRanks } from '@/components/ui/ranking';
 import { getExpPenalty } from '@/data/expPenalty';
 
 function computeGroundScore(g: HuntingGround, charLevel: number): number {

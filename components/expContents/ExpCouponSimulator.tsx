@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
-import CardHeader from '@/components/CardHeader';
-import Num from '@/components/Num';
+import CardHeader from '@/components/ui/CardHeader';
+import Num from '@/components/ui/Num';
 import { LEVEL_EXP } from '@/data/levelExp';
 import { calcCouponByCount, calcCouponByTarget, findStartForTarget, type RevStartResult } from '@/components/expContents/simMath';
 

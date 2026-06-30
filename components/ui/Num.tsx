@@ -1,6 +1,6 @@
 'use client';
 
-import TooltipWrapper from '@/components/TooltipWrapper';
+import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
 interface NumProps {
   n: number;

@@ -1,11 +1,11 @@
 'use client';
 
-import CardHeader from '@/components/CardHeader';
+import CardHeader from '@/components/ui/CardHeader';
 
 import { EfficiencyItem } from '@/types';
-import ItemName from '@/components/ItemName';
-import TooltipWrapper from '@/components/TooltipWrapper';
-import { rankColor, RankBadge, computeTieRanks } from '@/components/ranking';
+import ItemName from '@/components/ui/ItemName';
+import TooltipWrapper from '@/components/ui/TooltipWrapper';
+import { rankColor, RankBadge, computeTieRanks } from '@/components/ui/ranking';
 
 function expPer100M(efficiency: number): React.ReactNode {
   return (

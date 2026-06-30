@@ -1,9 +1,9 @@
 'use client';
 
-import CardHeader from '@/components/CardHeader';
+import CardHeader from '@/components/ui/CardHeader';
 
 import type { InputValues, CharMeta } from '@/types';
-import TooltipWrapper from '@/components/TooltipWrapper';
+import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
 type MergedBonus = { name: string; icon?: string | null; mp?: number; ep?: number; tr?: number };
 
