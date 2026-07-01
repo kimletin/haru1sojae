@@ -125,16 +125,16 @@ export function DungeonTable({ title, levels, data, metacoin, charLevel, headerC
                       {isMe && <span className={'ml-1.5 text-xs text-white px-1.5 py-0.5 rounded-full ' + badgeColor}>나</span>}
                     </td>
                     <td className={'px-4 py-1.5 text-center ' + baseColor}>
-                      {pctNoSign(s0, lv)}
-                      <span className={'text-xs ml-1 ' + subColor + (hasBonus ? ' cursor-pointer' : '')} {...makeHandlers('stage0')}>(+<Num n={s0} />)</span>
+                      <Num n={s0} />
+                      <span className={'text-xs ml-1 ' + subColor + (hasBonus ? ' cursor-pointer' : '')} {...makeHandlers('stage0')}>(+{pctNoSign(s0, lv)})</span>
                     </td>
                     <td className={'px-4 py-1.5 text-center ' + baseColor}>
-                      {pctNoSign(s1, lv)}
-                      <span className={'text-xs ml-1 ' + subColor + (hasBonus ? ' cursor-pointer' : '')} {...makeHandlers('stage1')}>(+<Num n={s1} />)</span>
+                      <Num n={s1} />
+                      <span className={'text-xs ml-1 ' + subColor + (hasBonus ? ' cursor-pointer' : '')} {...makeHandlers('stage1')}>(+{pctNoSign(s1, lv)})</span>
                     </td>
                     <td className={'px-4 py-1.5 text-center ' + baseColor}>
-                      {pctNoSign(s2, lv)}
-                      <span className={'text-xs ml-1 ' + subColor + (hasBonus ? ' cursor-pointer' : '')} {...makeHandlers('stage2')}>(+<Num n={s2} />)</span>
+                      <Num n={s2} />
+                      <span className={'text-xs ml-1 ' + subColor + (hasBonus ? ' cursor-pointer' : '')} {...makeHandlers('stage2')}>(+{pctNoSign(s2, lv)})</span>
                     </td>
                   </tr>
                 );

@@ -48,8 +48,8 @@ export function SingleTable({ title, headerColor, titleColor, rows, levelLabel, 
                     {row.isMe && <span className={'ml-1.5 text-xs text-white px-1.5 py-0.5 rounded-full ' + row.badgeColor}>나</span>}
                   </td>
                   <td className={meBg + 'px-3 py-1.5 text-center ' + txt}>
-                    {pctNoSign(row.value, row.level)}
-                    <span className={'text-xs ml-1 ' + sub}>(+<Num n={row.value} />)</span>
+                    <Num n={row.value} />
+                    <span className={'text-xs ml-1 ' + sub}>(+{pctNoSign(row.value, row.level)})</span>
                   </td>
                 </tr>
               );

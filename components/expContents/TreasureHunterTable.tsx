@@ -90,20 +90,20 @@ export function TreasureHunterTable({ monsterLevel, charLevel, treasureBonus = 0
                     {isMe && <span className="ml-1 text-[9px] bg-orange-500 dark:bg-orange-700 text-white px-1 py-0.5 rounded-full">나</span>}
                   </td>
                   <td className={'px-2 py-1.5 text-center ' + baseColor}>
-                    {pctNoSign(rare, charLevel)}
-                    <span className={'text-xs ml-1 ' + subColor}>(+<Num n={rare} />)</span>
+                    <Num n={rare} />
+                    <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(rare, charLevel)})</span>
                   </td>
                   <td className={'px-2 py-1.5 text-center ' + baseColor}>
-                    {pctNoSign(epic, charLevel)}
-                    <span className={'text-xs ml-1 ' + subColor}>(+<Num n={epic} />)</span>
+                    <Num n={epic} />
+                    <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(epic, charLevel)})</span>
                   </td>
                   <td className={'px-2 py-1.5 text-center ' + baseColor}>
-                    {pctNoSign(unique, charLevel)}
-                    <span className={'text-xs ml-1 ' + subColor}>(+<Num n={unique} />)</span>
+                    <Num n={unique} />
+                    <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(unique, charLevel)})</span>
                   </td>
                   <td className={'px-2 py-1.5 text-center ' + baseColor}>
-                    {pctNoSign(legendary, charLevel)}
-                    <span className={'text-xs ml-1 ' + subColor}>(+<Num n={legendary} />)</span>
+                    <Num n={legendary} />
+                    <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(legendary, charLevel)})</span>
                   </td>
                 </tr>
               );

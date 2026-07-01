@@ -200,7 +200,7 @@ export default function VipSaunaSimulator({ charLevel, hasCharacter, todayExpRat
               <span className="text-sm text-gray-500 dark:text-zinc-400">획득 경험치</span>
               <div className="text-right">
                 {vipSimResult
-                  ? <><span className="font-bold text-orange-600 dark:text-orange-400">{vipSimResult.gainPct.toFixed(3)}%</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(+<Num n={vipSimResult.gainedExp} />)</span></>
+                  ? <><span className="font-bold text-orange-600 dark:text-orange-400"><Num n={vipSimResult.gainedExp} /></span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(+{vipSimResult.gainPct.toFixed(3)}%)</span></>
                   : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
               </div>
             </div>

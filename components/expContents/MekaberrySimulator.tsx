@@ -162,7 +162,7 @@ export default function MekaberrySimulator({ charLevel, hasCharacter, todayExpRa
               <span className="text-sm text-gray-500 dark:text-zinc-400">획득 경험치</span>
               <div className="text-right">
                 {mekaSimResult
-                  ? <><span className="font-bold text-orange-600 dark:text-orange-400">{mekaSimResult.gainPct.toFixed(3)}%</span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(+<Num n={mekaSimResult.gainedExp} />)</span></>
+                  ? <><span className="font-bold text-orange-600 dark:text-orange-400"><Num n={mekaSimResult.gainedExp} /></span><span className="ml-1.5 text-sm text-orange-400 dark:text-orange-500">(+{mekaSimResult.gainPct.toFixed(3)}%)</span></>
                   : <span className="font-bold text-gray-300 dark:text-zinc-600">-</span>}
               </div>
             </div>

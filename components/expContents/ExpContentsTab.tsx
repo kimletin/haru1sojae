@@ -153,8 +153,8 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                                   {isMe && <span className="ml-1.5 text-xs bg-orange-500 dark:bg-orange-700 text-white px-1.5 py-0.5 rounded-full">나</span>}
                                 </td>
                                 <td className={'px-3 py-2 text-center ' + (isMe ? 'text-orange-700 font-bold' : 'text-gray-700 dark:text-zinc-300')}>
-                                  {pctNoSign(exp, charLevel)}
-                                  <span className={'text-xs ml-1 ' + subColor}>(+<Num n={exp} />)</span>
+                                  <Num n={exp} />
+                                  {hasCharacter && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(exp, charLevel)})</span>}
                                 </td>
                               </tr>
                             );
