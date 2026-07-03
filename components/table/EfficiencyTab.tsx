@@ -14,11 +14,6 @@ function expPer100M(efficiency: number): React.ReactNode {
   );
 }
 
-function fmtMeso(n: number): string {
-  if (n <= 0) return '-';
-  return Math.round(n).toLocaleString('ko-KR');
-}
-
 interface TableRow {
   name: string;
   rate?: number | string;
@@ -53,17 +48,17 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
       </div>
       <table className="table-fixed w-full text-sm border-collapse">
         <colgroup>
-          <col style={{width:'240px'}} />
-          <col style={{width:'100px'}} />
-          <col style={{width:'110px'}} />
-          <col style={{width:'110px'}} />
+          <col style={{width:'37%'}} />
+          <col style={{width:'22%'}} />
+          <col style={{width:'21%'}} />
+          <col style={{width:'20%'}} />
         </colgroup>
         <thead>
           <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
-            <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">항목</th>
-            <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">경험치</th>
-            <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">가격(메소)</th>
-            <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold">가성비 배율</th>
+            <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">항목</th>
+            <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">경험치</th>
+            <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">가격(메소)</th>
+            <th className="text-center px-2 py-1.5 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">가성비</th>
           </tr>
         </thead>
         <tbody>
@@ -76,10 +71,10 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
                 </span>
               </td>
               <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300 whitespace-nowrap"><Num n={row.exp} /></td>
-              <td className="px-2 py-1.5 text-center">
-                <span className="text-gray-700 dark:text-zinc-300">{fmtMeso(row.priceMeso)}</span>
+              <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300 whitespace-nowrap">
+                {row.priceMeso > 0 ? <Num n={row.priceMeso} /> : '-'}
               </td>
-              <td className="px-2 py-1.5 text-center font-semibold text-orange-500">
+              <td className="px-2 py-1.5 text-center font-semibold text-orange-500 whitespace-nowrap">
                 {row.ratio > 0 ? (
                   <TooltipWrapper tip={expPer100M(row.efficiency)}>
                     <span className="cursor-default">{(row.ratio * 100).toFixed(1) + '%'}</span>
@@ -148,11 +143,11 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
     { name: '몬스터파크(' + parkZone + ') 일반',   ...effRow(getMonsterParkExp(parkZone, '일반', monsterParkBonus), parkPrice) },
     { name: '몬스터파크(' + parkZone + ') 썬데이', ...effRow(getMonsterParkExp(parkZone, '썬데이', monsterParkBonus), parkPrice) },
     { name: '몬스터파크(' + parkZone + ') 스페셜', ...effRow(getMonsterParkExp(parkZone, '스페셜', monsterParkBonus), parkPrice) },
-    { name: 'VIP 사우나 (1시간)',            ...effRow(vipExp, getVipSaunaPrice(inputs.mesoMarketRate)) },
+    { name: 'VIP 사우나',            ...effRow(vipExp, getVipSaunaPrice(inputs.mesoMarketRate)) },
   ];
 
   return (
-    <div className="space-y-4 w-[560px]">
+    <div className="space-y-4 w-full lg:w-[560px]">
       <EffTable title="경험치 도핑 (30분)" rows={doping30Rows} color="green" />
 
       <EffTable

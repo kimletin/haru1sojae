@@ -11,7 +11,7 @@ import { BLUEBERRY_EXP } from '@/data/blueberry';
 import type { SundayType } from '@/types';
 import Num from '@/components/ui/Num';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
-import { pctNoSign, type ExpTableProps, type BonusEntry } from '@/components/expContents/shared';
+import { pctNoSign, type ExpTableProps } from '@/components/expContents/shared';
 import { SingleTable } from '@/components/expContents/SingleTable';
 import EpicDungeonSection from '@/components/expContents/EpicDungeonSection';
 import TreasureHunterSection from '@/components/expContents/TreasureHunterSection';
@@ -29,9 +29,9 @@ const MENU_ITEMS = [
   { key: 'epicdungeon', label: '에픽 던전', icon: '앵글러컴퍼니' },
   { key: 'monsterpark', label: '몬스터파크', icon: '몬스터파크' },
   { key: 'vipsauna',    label: 'VIP 사우나', icon: 'VIP사우나' },
-  { key: 'expcoupon',   label: '상급\nEXP 쿠폰', icon: '상급 EXP 교환권' },
-  { key: 'blueberry',   label: '블루베리\n농장', icon: '블루베리 농장' },
-  { key: 'mekaberry',   label: '메카베리\n농장', icon: '메카베리 농장' },
+  { key: 'expcoupon',   label: '상급 EXP 쿠폰', icon: '상급 EXP 교환권' },
+  { key: 'blueberry',   label: '블루베리 농장', icon: '블루베리 농장' },
+  { key: 'mekaberry',   label: '메카베리 농장', icon: '메카베리 농장' },
   { key: 'treasurehunter', label: '트레져 헌터', icon: '트레져 헌터' },
 ];
 
@@ -44,7 +44,6 @@ interface Props {
   monsterLevel: number;
   monsterParkBonus: number;
   epicDungeonBonus?: number;
-  epicDungeonBonuses?: BonusEntry[];
   treasureBonus?: number;
   todayExpRate?: number | null;
   slotKey?: number;
@@ -54,7 +53,7 @@ interface Props {
 
 const SUNDAY_MULT: Record<SundayType, number> = { '일반': 1, '썬데이': 1.5, '스페셜': 4 };
 
-export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBonus, epicDungeonBonus = 0, epicDungeonBonuses = [], treasureBonus = 0, todayExpRate, slotKey, initialSelected, hasCharacter = true }: Props) {
+export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBonus, epicDungeonBonus = 0, treasureBonus = 0, todayExpRate, slotKey, initialSelected, hasCharacter = true }: Props) {
   const myParkZone = getMonsterParkZone(charLevel);
 
   const [selected, setSelected] = useState(initialSelected ?? 'epicdungeon');
@@ -92,15 +91,15 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
     : null;
 
   return (
-    <div className="flex gap-4 items-stretch">
-      {/* 좌측 메뉴 */}
-      <div className="grid grid-cols-1 gap-1.5 shrink-0 w-[90px] self-start">
+    <div className="flex flex-col lg:flex-row gap-4 lg:items-stretch">
+      {/* 좌측 메뉴 (모바일: 4열 2행 그리드 / 720px~: 1행 / 데스크톱: 세로 90px 정사각형 고정) */}
+      <div className="grid grid-cols-4 min-[720px]:grid-cols-7 lg:grid-cols-1 gap-1.5 shrink-0 w-full lg:w-[90px] self-start">
         {MENU_ITEMS.map(item => (
           <button
             key={item.key}
             onClick={() => setSelected(item.key)}
             className={
-              'aspect-square rounded-lg shadow-sm text-xs font-medium transition-colors cursor-pointer flex flex-col items-center justify-center gap-1 whitespace-pre-line text-center ' +
+              'h-16 lg:h-auto lg:aspect-square rounded-lg shadow-sm text-xs font-medium transition-colors cursor-pointer flex flex-col items-center justify-center gap-1 text-center ' +
               (selected === item.key
                 ? 'bg-orange-500 text-white border border-orange-500'
                 : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
@@ -112,10 +111,10 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
         ))}
       </div>
 
-      {/* 우측 콘텐츠 */}
-      <div className={'flex flex-1 gap-4 ' + (newLayout ? 'flex-row-reverse ' + (selected === 'mekaberry' ? 'items-start' : 'items-stretch') : selected === 'monsterpark' ? 'flex-row-reverse' : 'items-stretch')}>
+      {/* 우측 콘텐츠 (모바일: 세로 스택, 시뮬레이터가 위로 오도록 flex-col-reverse / 720px~: 좌우 배치, 메뉴 위치와 별개 전환점) */}
+      <div className={'flex flex-1 gap-4 flex-col-reverse items-stretch min-[720px]:flex-row ' + (newLayout ? 'min-[720px]:flex-row-reverse ' + (selected === 'mekaberry' ? 'min-[720px]:items-start' : 'min-[720px]:items-stretch') : selected === 'monsterpark' ? 'min-[720px]:flex-row-reverse min-[720px]:items-stretch' : 'min-[720px]:items-stretch')}>
         {isEpic ? (
-          <EpicDungeonSection charLevel={charLevel} epicDungeonBonus={epicDungeonBonus} epicDungeonBonuses={epicDungeonBonuses} hasCharacter={hasCharacter} />
+          <EpicDungeonSection charLevel={charLevel} epicDungeonBonus={epicDungeonBonus} hasCharacter={hasCharacter} />
         ) : (
           <>
             {/* 좌측 카드 */}
@@ -202,7 +201,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
               {newLayout && splitProps && (
                 selected === 'mekaberry'
                   ? <SingleTable {...splitProps} fillHeight={false} />
-                  : <div className="absolute inset-0"><SingleTable {...splitProps} /></div>
+                  : <div className="min-[720px]:absolute min-[720px]:inset-0"><SingleTable {...splitProps} /></div>
               )}
 
               {selected === 'treasurehunter' && <TreasureHunterSection monsterLevel={monsterLevel} charLevel={charLevel} treasureBonus={treasureBonus} hasCharacter={hasCharacter} />}
@@ -210,7 +209,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
             </div>
 
             {/* 시뮬레이터 카드 */}
-            {selected !== 'treasurehunter' && <div className={newLayout ? 'flex-1 flex flex-col gap-4' : 'flex-1 self-start flex flex-col gap-4'}>
+            {selected !== 'treasurehunter' && <div className={newLayout ? 'flex-1 flex flex-col gap-4' : 'flex-1 min-[720px]:self-start flex flex-col gap-4'}>
               {selected === 'vipsauna' ? (
                 <VipSaunaSimulator charLevel={charLevel} hasCharacter={hasCharacter} todayExpRate={todayExpRate} slotKey={slotKey} />
               ) : selected === 'expcoupon' ? (

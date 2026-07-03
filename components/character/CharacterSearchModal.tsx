@@ -116,8 +116,8 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className={'bg-white dark:bg-zinc-900 rounded-xl shadow-xl p-6 ' + (step === 'info' ? 'w-[820px] max-h-[88vh] overflow-y-auto' : 'w-96')}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+      <div className={'bg-white dark:bg-zinc-900 rounded-xl shadow-xl p-6 ' + (step === 'info' ? 'w-[calc(100%-2rem)] max-w-[820px] max-h-[88vh] overflow-y-auto' : 'w-96 max-w-[calc(100%-2rem)]')}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-bold text-gray-900 dark:text-zinc-100">캐릭터 추가</h2>
           {onClose && (
@@ -147,7 +147,7 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
                 autoFocus
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleSearch(); }}
-                className="flex-1 min-w-0 border border-gray-300 dark:border-zinc-600 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                className="flex-1 min-w-0 border border-gray-300 dark:border-zinc-600 rounded-lg px-3 py-1.5 text-[16px] lg:text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
               />
               <button
                 onClick={handleSearch}
@@ -234,7 +234,7 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
                   value={manualName}
                   autoFocus
                   onChange={e => { setManualName(e.target.value); setActiveError(null); }}
-                  className={'w-full border rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 ' + (activeError?.field === 'name' ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-zinc-600')}
+                  className={'w-full border rounded-lg px-3 py-1.5 text-[16px] lg:text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 ' + (activeError?.field === 'name' ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-zinc-600')}
                 />
                 {activeError?.field === 'name' && <p className="text-xs text-red-500 mt-0.5 px-1">{activeError.msg}</p>}
               </div>
@@ -246,7 +246,7 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
                     placeholder="레벨"
                     value={manualLevel}
                     onChange={e => { setManualLevel(e.target.value.replace(/[^0-9]/g, '')); setActiveError(null); }}
-                    className={'w-full border rounded-lg px-3 pr-10 py-1.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 ' + (activeError?.field === 'level' ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-zinc-600')}
+                    className={'w-full border rounded-lg px-3 pr-10 py-1.5 text-[16px] lg:text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 ' + (activeError?.field === 'level' ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-zinc-600')}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-zinc-500 pointer-events-none">레벨</span>
                 </div>
@@ -260,7 +260,7 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
                     placeholder="현재 경험치"
                     value={manualExpRate}
                     onChange={e => { setManualExpRate(e.target.value.replace(/[^0-9.]/g, '')); setActiveError(null); }}
-                    className={'w-full border rounded-lg px-3 pr-8 py-1.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 ' + (activeError?.field === 'expRate' ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-zinc-600')}
+                    className={'w-full border rounded-lg px-3 pr-8 py-1.5 text-[16px] lg:text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 ' + (activeError?.field === 'expRate' ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-zinc-600')}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
                 </div>
@@ -274,7 +274,7 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
                     placeholder="몬파 보약"
                     value={manualMonsterPark}
                     onChange={e => { setManualMonsterPark(e.target.value.replace(/[^0-9]/g, '')); setActiveError(null); }}
-                    className={'w-full border rounded-lg px-3 pr-8 py-1.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 ' + (activeError?.field === 'mp' ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-zinc-600')}
+                    className={'w-full border rounded-lg px-3 pr-8 py-1.5 text-[16px] lg:text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 ' + (activeError?.field === 'mp' ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-zinc-600')}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
                 </div>
@@ -288,7 +288,7 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
                     placeholder="에픽 던전 보약"
                     value={manualEpicDungeon}
                     onChange={e => { setManualEpicDungeon(e.target.value.replace(/[^0-9]/g, '')); setActiveError(null); }}
-                    className={'w-full border rounded-lg px-3 pr-8 py-1.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 ' + (activeError?.field === 'ep' ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-zinc-600')}
+                    className={'w-full border rounded-lg px-3 pr-8 py-1.5 text-[16px] lg:text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 ' + (activeError?.field === 'ep' ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-zinc-600')}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
                 </div>
@@ -302,7 +302,7 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
                     placeholder="트레져 헌터 보약"
                     value={manualTreasure}
                     onChange={e => { setManualTreasure(e.target.value.replace(/[^0-9]/g, '')); setActiveError(null); }}
-                    className={'w-full border rounded-lg px-3 pr-8 py-1.5 text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 ' + (activeError?.field === 'tr' ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-zinc-600')}
+                    className={'w-full border rounded-lg px-3 pr-8 py-1.5 text-[16px] lg:text-sm outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 ' + (activeError?.field === 'tr' ? 'border-red-400 dark:border-red-500' : 'border-gray-300 dark:border-zinc-600')}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
                 </div>

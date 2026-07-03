@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import Num from '@/components/ui/Num';
-import { pctNoSign, type BonusEntry } from '@/components/expContents/shared';
+import { pctNoSign } from '@/components/expContents/shared';
 
 // ─── DungeonTable ─────────────────────────────────────────────────────────────
 
@@ -9,7 +9,6 @@ interface DungeonTableProps {
   title: string;
   levels: number[];
   data: Record<number, { stage0: number; stage1: number; stage2: number }>;
-  metacoin: { stage1: number; stage2: number };
   charLevel: number;
   headerColor: string;
   titleColor: string;
@@ -17,18 +16,14 @@ interface DungeonTableProps {
   rowBg: string;
   textColor: string;
   epicDungeonBonus: number;
-  epicDungeonBonuses: BonusEntry[];
   scrollKey?: string;
   hasCharacter?: boolean;
 }
 
-type StageKey = 'stage0' | 'stage1' | 'stage2';
-
-export function DungeonTable({ title, levels, data, metacoin, charLevel, headerColor, titleColor, badgeColor, rowBg, textColor, epicDungeonBonus, epicDungeonBonuses, scrollKey, hasCharacter = true }: DungeonTableProps) {
+export function DungeonTable({ title, levels, data, charLevel, headerColor, titleColor, badgeColor, rowBg, textColor, epicDungeonBonus, scrollKey, hasCharacter = true }: DungeonTableProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLTableRowElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
-  const [tooltip, setTooltip] = useState<{ lv: number; stage: StageKey; x: number; y: number } | null>(null);
   const [epicBonusInput, setEpicBonusInput] = useState(epicDungeonBonus > 0 ? String(epicDungeonBonus) : '');
 
   useEffect(() => {
@@ -36,7 +31,6 @@ export function DungeonTable({ title, levels, data, metacoin, charLevel, headerC
   }, [epicDungeonBonus]);
 
   const bonusPct = parseFloat(epicBonusInput) || 0;
-  const hasBonus = bonusPct > 0 && epicDungeonBonuses.length > 0;
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -50,40 +44,11 @@ export function DungeonTable({ title, levels, data, metacoin, charLevel, headerC
     return () => cancelAnimationFrame(frame);
   }, [charLevel, scrollKey]);
 
-  useEffect(() => {
-    if (tooltip === null) return;
-    const handler = (e: MouseEvent) => {
-      if (tableRef.current && !tableRef.current.contains(e.target as Node)) setTooltip(null);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [tooltip]);
-
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col h-full">
+    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col lg:h-full">
       <div className={'px-4 py-2.5 border-b shrink-0 ' + headerColor}>
         <h3 className={'text-sm font-semibold text-center ' + titleColor}>{title}</h3>
       </div>
-
-      {tooltip !== null && hasBonus && (() => {
-        const d = data[tooltip.lv];
-        if (!d) return null;
-        const baseExp = d[tooltip.stage];
-        return (
-          <div
-            style={{ position: 'fixed', left: tooltip.x + 14, top: tooltip.y + 14 }}
-            className="bg-gray-800 text-white text-[11px] rounded-lg px-2 py-1.5 z-50 pointer-events-none leading-relaxed flex flex-col items-center whitespace-nowrap"
-          >
-            <div className="text-gray-300 dark:text-zinc-400">기존 경험치: <Num n={baseExp} /></div>
-            <div className="mt-1 flex flex-col items-center">
-              {epicDungeonBonuses.map(b => (
-                <div key={b.name}>{b.name} <span className="text-orange-300">(+{b.pct}%)</span></div>
-              ))}
-            </div>
-          </div>
-        );
-      })()}
-
 
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         <div ref={tableRef}>
@@ -92,8 +57,8 @@ export function DungeonTable({ title, levels, data, metacoin, charLevel, headerC
               <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
                 <th className="text-center px-4 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">레벨</th>
                 <th className="text-center px-4 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">0단계</th>
-                <th className="text-center px-4 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">1단계 ({metacoin.stage1.toLocaleString()}메포)</th>
-                <th className="text-center px-4 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">2단계 ({metacoin.stage2.toLocaleString()}메포)</th>
+                <th className="text-center px-4 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">1단계</th>
+                <th className="text-center px-4 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">2단계</th>
               </tr>
             </thead>
             <tbody>
@@ -109,11 +74,6 @@ export function DungeonTable({ title, levels, data, metacoin, charLevel, headerC
                 const s1 = d.stage1 + bonusAmt;
                 const s2 = d.stage2 + bonusAmt;
 
-                const makeHandlers = (stage: StageKey) => hasBonus ? {
-                  onMouseEnter: (e: React.MouseEvent) => setTooltip({ lv, stage, x: e.clientX, y: e.clientY }),
-                  onMouseLeave: () => setTooltip(null),
-                } : { onMouseLeave: () => setTooltip(null) };
-
                 return (
                   <tr
                     key={lv}
@@ -126,15 +86,15 @@ export function DungeonTable({ title, levels, data, metacoin, charLevel, headerC
                     </td>
                     <td className={'px-4 py-1.5 text-center ' + baseColor}>
                       <Num n={s0} />
-                      <span className={'text-xs ml-1 ' + subColor + (hasBonus ? ' cursor-pointer' : '')} {...makeHandlers('stage0')}>(+{pctNoSign(s0, lv)})</span>
+                      <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(s0, lv)})</span>
                     </td>
                     <td className={'px-4 py-1.5 text-center ' + baseColor}>
                       <Num n={s1} />
-                      <span className={'text-xs ml-1 ' + subColor + (hasBonus ? ' cursor-pointer' : '')} {...makeHandlers('stage1')}>(+{pctNoSign(s1, lv)})</span>
+                      <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(s1, lv)})</span>
                     </td>
                     <td className={'px-4 py-1.5 text-center ' + baseColor}>
                       <Num n={s2} />
-                      <span className={'text-xs ml-1 ' + subColor + (hasBonus ? ' cursor-pointer' : '')} {...makeHandlers('stage2')}>(+{pctNoSign(s2, lv)})</span>
+                      <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(s2, lv)})</span>
                     </td>
                   </tr>
                 );

@@ -39,12 +39,12 @@ export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs, hasCh
 
   return (
     <div>
-      <div className="flex flex-row gap-4 items-stretch">
+      <div className="flex flex-col lg:flex-row gap-4 lg:items-stretch">
         {/* 레벨별 필요 경험치 */}
         <div className="flex-[55] min-w-0 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
           <CardHeader title="레벨별 필요 경험치" className="shrink-0" />
-          <div className="relative flex-1 min-h-0">
-          <div ref={scrollRef} className="absolute inset-0 overflow-y-auto">
+          <div className="relative lg:flex-1 lg:min-h-0">
+          <div ref={scrollRef} className="max-h-[400px] lg:max-h-none lg:absolute lg:inset-0 overflow-y-auto">
           <table className="table-fixed text-sm border-collapse w-full">
             <colgroup>
               <col style={{width:'25%'}} />

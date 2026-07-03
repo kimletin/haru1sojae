@@ -51,7 +51,7 @@ export default function PrivacyTab() {
 
         <Section title="7. 쿠키 등 자동 수집 장치">
           <p>서비스는 광고용 쿠키나 이용자를 개인적으로 식별·추적하는 도구를 사용하지 않습니다.</p>
-          <p>다만 서비스 이용 현황 파악을 위해 넥슨 Open API Analytics를 이용하며, 이를 통해 방문·이용 통계(방문 수, 페이지 조회 등 익명 집계 정보)가 수집될 수 있습니다.</p>
+          <p>다만 서비스 이용 현황 파악을 위해 NEXON OPEN API Analytics를 이용하며, 이를 통해 방문·이용 통계(방문 수, 페이지 조회 등 익명 집계 정보)가 수집될 수 있습니다.</p>
         </Section>
 
         <Section title="8. 개인정보 보호책임자 및 문의">

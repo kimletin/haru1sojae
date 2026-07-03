@@ -1,14 +1,11 @@
 @import "tailwindcss";
 
 
-body {
-  min-width: 1000px;
-}
-
 html {
-  overflow-x: auto;
-  overflow-y: auto;
+  overflow-x: hidden;
+  overflow-y: hidden;
   font-size: 15px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* 카드 제목은 원래 크기(14px) 유지 */

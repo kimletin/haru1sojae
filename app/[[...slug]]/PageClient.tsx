@@ -15,7 +15,7 @@ import HomeCardSection from '@/components/home/HomeCardSection';
 import PrivacyTab from '@/components/privacy/PrivacyTab';
 import CharacterSearchModal, { type CharacterInfo } from '@/components/character/CharacterSearchModal';
 import CharacterCard, { type HistoryPoint, type Ranking } from '@/components/table/CharacterCard';
-import { SunIcon, MoonIcon } from '@/components/ui/Icons';
+import { SunIcon, MoonIcon, TabIcon } from '@/components/ui/Icons';
 import type { CharMeta } from '@/types';
 import { getDefaultHunting } from '@/data/huntingGrounds';
 import { getMonsterParkZone } from '@/data/monsterPark';
@@ -174,6 +174,7 @@ export default function Home() {
   const [notFound, setNotFound] = useState(false);
   const [isPrivacy, setIsPrivacy] = useState(false);
   const [isHome, setIsHome] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false); // 우측 메뉴 패널 (lg 미만 전용, 버튼으로만 열림)
   // 캐릭터 데이터(앱 레벨로 일원화) — 활성 캐릭터의 표시용 상태
   const [charHistory, setCharHistory] = useState<HistoryPoint[]>([]);
   const [charRanking, setCharRanking] = useState<Ranking | null>(null);
@@ -252,6 +253,15 @@ export default function Home() {
     setMounted(true);
   }, []);
 
+  // 우측 메뉴 패널: lg 이상에서는 탭이 헤더에 바로 보이므로 토글 패널 개념이 없음 — 그 폭으로 넘어가면 강제로 닫는다
+  // (자동으로 열리는 로직은 없음, lg 미만에서는 항상 버튼을 눌러야만 열림)
+  useEffect(() => {
+    const apply = () => { if (window.innerWidth >= 960) setMenuOpen(false); };
+    apply();
+    window.addEventListener('resize', apply);
+    return () => window.removeEventListener('resize', apply);
+  }, []);
+
   useEffect(() => {
     if (isHome || isPrivacy || notFound) return;
     document.title = `${activeTab} | 하루1소재`;
@@ -263,22 +273,12 @@ export default function Home() {
     setTodayExpRate(rate);
   }, [activePreset]);
 
-  // 상단바를 본문과 좌우 정렬: #app-scroll의 스크롤바 거터 폭을 측정해 헤더 우측 패딩으로 보정
-  useEffect(() => {
-    const measure = () => {
-      const el = document.getElementById('app-scroll');
-      if (!el) return;
-      document.documentElement.style.setProperty('--app-sb-gutter', `${el.offsetWidth - el.clientWidth}px`);
-    };
-    measure();
-    window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
-  }, [mounted]);
 
   const handleTabChange = (tab: Tab) => {
     setNotFound(false);
     setIsPrivacy(false);
     setIsHome(false);
+    setMenuOpen(false);
     setActiveTab(tab);
     document.title = `${tab} | 하루1소재`;
     const url = '/' + TAB_PARAM[tab];
@@ -289,6 +289,7 @@ export default function Home() {
     setNotFound(false);
     setIsPrivacy(false);
     setIsHome(true);
+    setMenuOpen(false);
     document.title = '하루1소재';
     if (window.location.pathname !== '/') window.history.pushState({}, '', '/');
     document.getElementById('app-scroll')?.scrollTo(0, 0);
@@ -666,8 +667,8 @@ export default function Home() {
           onClose={() => setShowInfoModal(false)}
         />
       )}
-      <header className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-600 shrink-0 z-10 shadow-sm" style={{ paddingRight: 'var(--app-sb-gutter, 0px)' }}>
-        <div className="w-[905px] mx-auto py-3 flex items-center justify-between gap-3">
+      <header className="relative bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-600 shrink-0 z-50 shadow-sm">
+        <div className="w-full px-4 py-3 flex items-center justify-between gap-3">
           <button
             onClick={goHome}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
@@ -676,23 +677,37 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">하루<span className="text-orange-500">1소재</span></h1>
           </button>
           <div className="flex items-center gap-3">
-            <nav className="flex flex-wrap gap-1">
+            {/* lg 이상: 탭 메뉴가 헤더에 바로 보임 */}
+            <nav className="hidden lg:flex items-center gap-1">
               {TABS.map(tab => (
                 <button
                   key={tab}
                   onClick={() => handleTabChange(tab)}
                   className={
-                    'px-2.5 py-1 rounded-lg text-sm font-medium transition-colors cursor-pointer ' +
-                    (activeTab === tab && !notFound && !isPrivacy && !isHome ? 'bg-orange-500 text-white' : 'text-gray-600 dark:text-zinc-400 hover:bg-gray-100')
+                    'px-3 py-2 flex items-center gap-1.5 text-sm font-medium rounded-lg transition-colors cursor-pointer ' +
+                    (activeTab === tab && !notFound && !isPrivacy && !isHome ? 'bg-orange-500 text-white' : 'text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-gray-700')
                   }
                 >
+                  <TabIcon tab={tab} className="shrink-0" />
                   {tab}
                 </button>
               ))}
             </nav>
+            {/* lg 미만: 햄버거 버튼으로만 메뉴 열림 */}
+            <button
+              onClick={() => setMenuOpen(v => !v)}
+              aria-label="메뉴"
+              className="order-2 lg:hidden p-1.5 rounded-lg transition-colors cursor-pointer text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              {menuOpen ? (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              ) : (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+              )}
+            </button>
             <button
               onClick={toggleDark}
-              className="p-1.5 rounded-lg transition-colors cursor-pointer text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="order-1 p-1.5 rounded-lg transition-colors cursor-pointer text-gray-600 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
               {darkMode ? <SunIcon /> : <MoonIcon />}
             </button>
@@ -700,7 +715,35 @@ export default function Home() {
         </div>
       </header>
 
-      <div id="app-scroll" className="flex-1 min-h-0 overflow-y-auto bg-gray-50 dark:bg-black" style={{ scrollbarGutter: 'stable' }}>
+      {/* lg 미만에서 메뉴 열릴 때 항상 배경 딤 */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-30 bg-black/40" onClick={() => setMenuOpen(false)} />
+      )}
+      {/* 우측 메뉴 패널 (lg 미만 전용) */}
+      <aside
+        className={
+          'lg:hidden fixed top-0 right-0 bottom-0 z-40 w-[200px] bg-white dark:bg-zinc-900 border-l border-gray-200 dark:border-zinc-600 shadow-lg pt-[64px] flex flex-col transition-transform duration-200 ' +
+          (menuOpen ? 'translate-x-0' : 'translate-x-full')
+        }
+      >
+        <nav className="flex flex-col p-2 gap-1">
+          {TABS.map(tab => (
+            <button
+              key={tab}
+              onClick={() => handleTabChange(tab)}
+              className={
+                'px-4 py-3 flex items-center gap-2.5 text-left text-sm font-medium rounded-lg transition-colors cursor-pointer ' +
+                (activeTab === tab && !notFound && !isPrivacy && !isHome ? 'bg-orange-500 text-white' : 'text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-gray-700')
+              }
+            >
+              <TabIcon tab={tab} className="shrink-0" />
+              {tab}
+            </button>
+          ))}
+        </nav>
+      </aside>
+
+      <div id="app-scroll" className="flex-1 min-h-0 overflow-y-auto bg-gray-50 dark:bg-black">
       <div className="min-h-full flex flex-col">
       <div className="flex-1 pb-10">
       {notFound ? (
@@ -715,26 +758,26 @@ export default function Home() {
         </div>
       ) : isHome ? (
       <div className="flex flex-col items-center justify-center gap-4 px-4 py-6 text-center">
-        <div className="relative w-[905px] h-[300px] rounded-2xl overflow-hidden shadow-sm">
+        <div className="relative w-full max-w-[905px] aspect-[905/300] rounded-2xl overflow-hidden shadow-sm">
           <img
             src={`/main/${encodeURIComponent('main banner')}.jpg`}
             alt="하루1소재"
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-black/25" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-4">
             <h2
-              className="text-5xl font-extrabold tracking-tight text-white"
+              className="text-4xl md:text-5xl font-extrabold tracking-tight text-white"
               style={{ textShadow: '0 2px 12px rgba(0,0,0,0.9)' }}
             >하루<span className="text-orange-500">1소재</span></h2>
             <p
-              className="text-base font-medium text-white/90"
+              className="text-sm sm:text-base font-medium text-white/90"
               style={{ textShadow: '0 1px 8px rgba(0,0,0,0.9)' }}
             >메이플스토리 경험치 효율 시뮬레이터</p>
           </div>
         </div>
-        <div className="grid grid-cols-5 gap-4 w-[905px]">
-          {TABS.map(t => (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-[905px]">
+          {TABS.filter(t => t !== '정보 센터').map(t => (
             <button key={t} onClick={() => handleTabChange(t)}
               className="h-24 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm hover:border-orange-400 hover:shadow transition-all cursor-pointer text-sm font-semibold text-gray-700 dark:text-zinc-200 flex flex-col items-center justify-center gap-2">
               <span className="w-12 h-12 flex items-center justify-center">
@@ -747,14 +790,14 @@ export default function Home() {
         <HomeCardSection />
       </div>
       ) : isPrivacy ? (
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="w-[905px] mx-auto">
+      <div className="mx-auto px-4 py-6">
+        <div className="w-full max-w-[905px] mx-auto">
           <PrivacyTab />
         </div>
       </div>
       ) : (
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="w-[905px] mx-auto">
+      <div className="mx-auto px-4 py-6">
+        <div className="w-full max-w-[905px] mx-auto">
           {activeTab !== '정보 센터' && (
           <div className="mb-2 flex items-center gap-1.5">
             <span className="text-xs text-gray-400 dark:text-zinc-500">캐릭터</span>
@@ -853,8 +896,8 @@ export default function Home() {
                 <button onClick={handleAddCharacter} className="px-5 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold transition-colors cursor-pointer">캐릭터 추가</button>
               </div>
             ) : (
-            <div className="flex flex-row gap-4">
-                <main className="w-[560px] shrink-0">
+            <div className="flex flex-col lg:flex-row gap-4">
+                <main className="w-full lg:w-[560px] lg:shrink-0">
                   <div className="mb-4">
                     <CharacterCard
                       name={presetNames[activePreset]}
@@ -866,10 +909,16 @@ export default function Home() {
                       loading={charLoading}
                     />
                   </div>
+                  {/* 모바일 전용: 입력정보·보약정보를 캐릭터카드 바로 아래에 (데스크톱은 우측 aside에서 표시) */}
+                  <div className="lg:hidden flex flex-col gap-4 mb-4">
+                    <InputSummaryCard inputs={inputs} meta={charMetas[activePreset]} onEditInfo={() => setShowInfoModal(true)} />
+                  </div>
                   <EfficiencyTab inputs={inputs} onChange={handleChange} items={rankedItems} monsterParkBonus={charMetas[activePreset]?.monsterParkBonus ?? 0} />
                 </main>
-                <aside className="flex-1 flex flex-col gap-4">
-                  <InputSummaryCard inputs={inputs} meta={charMetas[activePreset]} onEditInfo={() => setShowInfoModal(true)} />
+                <aside className="flex-1 min-w-0 flex flex-col gap-4">
+                  <div className="hidden lg:flex flex-col gap-4">
+                    <InputSummaryCard inputs={inputs} meta={charMetas[activePreset]} onEditInfo={() => setShowInfoModal(true)} />
+                  </div>
                   <RankingPanel items={rankedItems} />
                 </aside>
             </div>
@@ -883,7 +932,6 @@ export default function Home() {
                     monsterLevel={inputs.monsterLevel}
                     monsterParkBonus={charMetas[activePreset]?.monsterParkBonus ?? 0}
                     epicDungeonBonus={charMetas[activePreset]?.epicDungeonBonus ?? 0}
-                    epicDungeonBonuses={charMetas[activePreset]?.epicDungeonBonuses?.map(b => ({ name: b.name, pct: b.pct })) ?? []}
                     treasureBonus={charMetas[activePreset]?.treasureBonus ?? 0}
                     todayExpRate={todayExpRate}
                     slotKey={activePreset}
@@ -906,7 +954,7 @@ export default function Home() {
       )}
       </div>
       <footer className="bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-600 shrink-0">
-        <div className="w-[905px] mx-auto px-4 py-6 flex flex-col items-center gap-2.5 text-center">
+        <div className="w-full max-w-[905px] mx-auto px-4 py-6 flex flex-col items-center gap-2.5 text-center">
           <div className="flex items-center gap-2 text-xs">
             <a href="mailto:haru1sojae@gmail.com" className="text-gray-600 dark:text-zinc-300 hover:text-orange-500 transition-colors">문의하기</a>
             <span className="text-gray-300 dark:text-zinc-600">|</span>

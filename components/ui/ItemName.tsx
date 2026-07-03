@@ -45,7 +45,6 @@ function iconFor(name: string): string | null {
 function displayLabel(text: string): string {
   return text
     .replace('추가경험치', '추가 경험치')
-    .replace('소경축비', '소형 경험 축적의 비약')
     .replace(/^(\d배 쿠폰)$/, '경험치 $1');
 }
 
@@ -67,11 +66,15 @@ export default function ItemName({ name }: { name: string }) {
   if (up) {
     return (
       <>
-        <Icon name={up.from.icon} />
-        <span>{up.from.label}</span>
-        <span className="mx-0.5 text-gray-400">→</span>
-        <Icon name={up.to.icon} />
-        <span>{up.to.label}</span>
+        <span className="inline-flex items-center gap-0.5">
+          <Icon name={up.from.icon} />
+          <span>{up.from.label}</span>
+        </span>
+        <span className="inline-flex items-center gap-0.5">
+          <span className="mx-0.5 text-gray-400">→</span>
+          <Icon name={up.to.icon} />
+          <span>{up.to.label}</span>
+        </span>
       </>
     );
   }
@@ -83,11 +86,15 @@ export default function ItemName({ name }: { name: string }) {
   if (stageMatch) {
     return (
       <>
-        {iconEl}
-        {displayLabel(stageMatch[1])}
-        <StageBadge stage={stageMatch[2]} />
-        <span className="mx-0.5 text-gray-400">→</span>
-        <StageBadge stage={stageMatch[3]} />
+        <span className="inline-flex items-center gap-0.5">
+          {iconEl}
+          {displayLabel(stageMatch[1])}
+        </span>
+        <span className="inline-flex items-center gap-0.5">
+          <StageBadge stage={stageMatch[2]} />
+          <span className="mx-0.5 text-gray-400">→</span>
+          <StageBadge stage={stageMatch[3]} />
+        </span>
       </>
     );
   }

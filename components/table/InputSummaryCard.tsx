@@ -75,7 +75,6 @@ export default function InputSummaryCard({ inputs, meta, onEditInfo }: Props) {
                 {bonuses.map(b => (
                   <TooltipWrapper
                     key={b.name}
-                    tipClassName="!whitespace-normal leading-relaxed"
                     tip={<>
                       <div className="text-orange-200 font-semibold mb-0.5">{b.name}</div>
                       {b.mp != null && <div className="text-gray-200">몬스터파크 추가 경험치 <span className="text-orange-300">+{b.mp}%</span></div>}

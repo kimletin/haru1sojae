@@ -120,13 +120,13 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
     return (
       <div className="character-card bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden">
         <CardHeader title="캐릭터 정보" />
-        <div className="flex items-stretch h-[185px]">
+        <div className="flex flex-col min-[720px]:flex-row min-[720px]:items-stretch min-[720px]:h-[185px]">
           <div className="flex flex-col px-4 flex-1 min-w-0 pt-1 pb-5 items-center justify-center gap-3">
-            <div className="w-24 h-24 rounded-xl shrink-0 overflow-hidden bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-2xl text-gray-300 dark:text-zinc-600">?</div>
+            <div className="w-28 h-28 rounded-xl shrink-0 overflow-hidden bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-2xl text-gray-300 dark:text-zinc-600">?</div>
             <p className="text-sm text-gray-400 dark:text-zinc-500">캐릭터를 추가해주세요</p>
           </div>
-          <div className="w-px bg-gray-100 dark:bg-zinc-700 my-4" />
-          <div className="w-[44%] shrink-0 px-5 py-2 min-w-0 flex flex-col">
+          <div className="h-px min-[720px]:h-auto w-auto min-[720px]:w-px bg-gray-100 dark:bg-zinc-700 mx-4 min-[720px]:mx-0 min-[720px]:my-4" />
+          <div className="w-full min-[720px]:w-[44%] min-[720px]:shrink-0 px-5 py-2 min-w-0 flex flex-col">
             <p className="text-xs text-gray-700 dark:text-zinc-500 mb-2 mt-3">경험치 히스토리 (7일)</p>
             <div className="flex-1 flex items-center justify-center text-xs text-gray-300 dark:text-zinc-600 text-center leading-relaxed">
               캐릭터를 추가해주세요
@@ -141,13 +141,13 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
     <div className="character-card bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden">
       <CardHeader title="캐릭터 정보" />
 
-      <div className="relative flex items-stretch h-[172px]">
+      <div className="relative flex flex-col min-[720px]:flex-row min-[720px]:items-stretch min-[720px]:h-[172px]">
         {/* 좌측: 캐릭터 정보 */}
-        <div className="flex flex-col px-4 flex-1 min-w-0 justify-center gap-4">
+        <div className="flex flex-col px-4 py-5 min-[720px]:py-0 flex-1 min-w-0 justify-center gap-4">
           <div className="flex items-center justify-center gap-5">
-            <div className="w-24 h-24 rounded-xl shrink-0 overflow-hidden">
+            <div className="w-28 h-28 rounded-xl shrink-0 overflow-hidden">
               {meta?.image ? (
-                <img src={meta.image} alt={name} className="w-full h-full object-contain scale-[3]" />
+                <img src={meta.image} alt={name} className="w-full h-full object-contain scale-[3] -translate-y-[8px]" />
               ) : (
                 <div className="w-full h-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-2xl text-gray-300 dark:text-zinc-600">?</div>
               )}
@@ -213,10 +213,10 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
           )}
         </div>
 
-        <div className="w-px bg-gray-100 dark:bg-zinc-700 my-4" />
+        <div className="h-px min-[720px]:h-auto w-auto min-[720px]:w-px bg-gray-100 dark:bg-zinc-700 mx-4 min-[720px]:mx-0 min-[720px]:my-4" />
 
         {/* 우측: 경험치 히스토리 */}
-        <div className="w-[44%] shrink-0 px-5 py-2 min-w-0 flex flex-col justify-center">
+        <div className="w-full min-[720px]:w-[44%] min-[720px]:shrink-0 px-5 py-2 min-w-0 flex flex-col justify-center">
           <p className="text-xs text-gray-700 dark:text-zinc-500 mb-2 mt-4 px-2">
             경험치 히스토리(7일)
             {!hasApi && <span className="ml-1 text-gray-300 dark:text-zinc-600">· API 미연동</span>}
@@ -236,7 +236,7 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
             </div>
           ) : (
             <div className="relative pt-3 mb-3 px-2">
-              <div className="flex items-end gap-1 h-[100px] justify-between">
+              <div className="flex items-end gap-1 h-[100px] justify-between max-w-[234px] mx-auto">
                 {slots.map((slot, i) => {
                   const prev = i > 0 ? slots[i - 1] : null;
                   const { deltaRate, deltaExp } = computeDelta(prev, slot);
@@ -251,7 +251,7 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
                   <TooltipWrapper
                     key={slot.date}
                     className="flex-1 min-w-0 max-w-[30px]"
-                    tipClassName="!whitespace-normal leading-relaxed flex flex-col items-start"
+                    tipClassName="leading-relaxed flex flex-col items-start"
                     tip={barTip}
                     followCursor
                   >

@@ -1,8 +1,7 @@
 'use client';
 
 import CardHeader from '@/components/ui/CardHeader';
-
-import { useEffect, useRef, useState } from 'react';
+import { useSwipeCarousel } from '@/components/home/useSwipeCarousel';
 
 const PAGE_SIZE = 5;
 
@@ -13,30 +12,13 @@ interface CardEntry {
 }
 
 export default function HomeCard({ title, entries }: { title: string; entries: CardEntry[] }) {
-  const [page, setPage] = useState(0);
   const pageCount = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
-  const cur = Math.min(page, pageCount - 1);
-  const rows = entries.slice(cur * PAGE_SIZE, cur * PAGE_SIZE + PAGE_SIZE);
+  const { page: cur, setPage, trackRef, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, handleClickCapture } = useSwipeCarousel(pageCount);
 
-  const cardRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = cardRef.current;
-    if (!el || pageCount <= 1) return;
-    function onWheel(e: WheelEvent) {
-      e.preventDefault(); // 페이지만 넘기고 화면 스크롤은 막음
-      const dir = e.deltaY > 0 ? 1 : -1;
-      setPage((p) => Math.min(pageCount - 1, Math.max(0, Math.min(p, pageCount - 1) + dir)));
-    }
-    el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
-  }, [pageCount]);
-
-  return (
-    <div
-      ref={cardRef}
-      className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col h-[260px]">
-      <CardHeader title={title} className="shrink-0" />
-      <div className="flex-1 flex flex-col">
+  const renderPage = (idx: number) => {
+    const rows = idx >= 0 && idx < pageCount ? entries.slice(idx * PAGE_SIZE, idx * PAGE_SIZE + PAGE_SIZE) : [];
+    return (
+      <div key={idx} className="w-full shrink-0 flex flex-col">
         {Array.from({ length: PAGE_SIZE }).map((_, i) => {
           const entry = rows[i];
           const border = i < PAGE_SIZE - 1 ? 'border-b border-gray-100 dark:border-zinc-700' : '';
@@ -65,6 +47,25 @@ export default function HomeCard({ title, entries }: { title: string; entries: C
             </div>
           );
         })}
+      </div>
+    );
+  };
+
+  return (
+    <div
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
+      onClickCapture={handleClickCapture}
+      className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col h-[260px] touch-pan-y">
+      <CardHeader title={title} className="shrink-0" />
+      <div className="flex-1 overflow-hidden">
+        <div ref={trackRef} className="flex h-full" style={{ transform: 'translateX(calc(-100% + 0px))' }}>
+          {renderPage(cur - 1)}
+          {renderPage(cur)}
+          {renderPage(cur + 1)}
+        </div>
       </div>
       <div className="shrink-0 flex items-center justify-center gap-1.5 py-2 border-t border-gray-100 dark:border-zinc-700">
         {Array.from({ length: pageCount }).map((_, p) => (
