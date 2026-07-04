@@ -120,13 +120,13 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
     return (
       <div className="character-card bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden">
         <CardHeader title="캐릭터 정보" />
-        <div className="flex flex-col min-[720px]:flex-row min-[720px]:items-stretch min-[720px]:h-[185px]">
+        <div className="flex flex-col lg:flex-row lg:items-stretch lg:h-[185px]">
           <div className="flex flex-col px-4 flex-1 min-w-0 pt-1 pb-5 items-center justify-center gap-3">
             <div className="w-28 h-28 rounded-xl shrink-0 overflow-hidden bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-2xl text-gray-300 dark:text-zinc-600">?</div>
             <p className="text-sm text-gray-400 dark:text-zinc-500">캐릭터를 추가해주세요</p>
           </div>
-          <div className="h-px min-[720px]:h-auto w-auto min-[720px]:w-px bg-gray-100 dark:bg-zinc-700 mx-4 min-[720px]:mx-0 min-[720px]:my-4" />
-          <div className="w-full min-[720px]:w-[44%] min-[720px]:shrink-0 px-5 py-2 min-w-0 flex flex-col">
+          <div className="h-px lg:h-auto w-auto lg:w-px bg-gray-100 dark:bg-zinc-700 mx-4 lg:mx-0 lg:my-4" />
+          <div className="w-full lg:w-[44%] lg:shrink-0 px-5 py-2 min-w-0 flex flex-col">
             <p className="text-xs text-gray-700 dark:text-zinc-500 mb-2 mt-3">경험치 히스토리 (7일)</p>
             <div className="flex-1 flex items-center justify-center text-xs text-gray-300 dark:text-zinc-600 text-center leading-relaxed">
               캐릭터를 추가해주세요
@@ -141,9 +141,9 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
     <div className="character-card bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden">
       <CardHeader title="캐릭터 정보" />
 
-      <div className="relative flex flex-col min-[720px]:flex-row min-[720px]:items-stretch min-[720px]:h-[172px]">
+      <div className="relative flex flex-col lg:flex-row lg:items-stretch lg:h-[172px]">
         {/* 좌측: 캐릭터 정보 */}
-        <div className="flex flex-col px-4 py-5 min-[720px]:py-0 flex-1 min-w-0 justify-center gap-4">
+        <div className="flex flex-col px-4 py-5 lg:py-0 flex-1 min-w-0 justify-center gap-4">
           <div className="flex items-center justify-center gap-5">
             <div className="w-28 h-28 rounded-xl shrink-0 overflow-hidden">
               {meta?.image ? (
@@ -194,10 +194,10 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
                     <span className="text-gray-700 dark:text-zinc-300">{meta.class}</span>
                   </div>
                 )}
-                {meta?.popularity != null && (
+                {meta?.unionLevel != null && (
                   <div className="flex gap-2">
-                    <span className="text-gray-400 dark:text-zinc-500 shrink-0 whitespace-nowrap">인기도</span>
-                    <span className="text-gray-700 dark:text-zinc-300">{meta.popularity.toLocaleString('ko-KR')}</span>
+                    <span className="text-gray-400 dark:text-zinc-500 shrink-0 whitespace-nowrap">유뇬</span>
+                    <span className="text-gray-700 dark:text-zinc-300">{meta.unionLevel.toLocaleString('ko-KR')}</span>
                   </div>
                 )}
               </div>
@@ -213,10 +213,10 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
           )}
         </div>
 
-        <div className="h-px min-[720px]:h-auto w-auto min-[720px]:w-px bg-gray-100 dark:bg-zinc-700 mx-4 min-[720px]:mx-0 min-[720px]:my-4" />
+        <div className="h-px lg:h-auto w-auto lg:w-px bg-gray-100 dark:bg-zinc-700 mx-4 lg:mx-0 lg:my-4" />
 
         {/* 우측: 경험치 히스토리 */}
-        <div className="w-full min-[720px]:w-[44%] min-[720px]:shrink-0 px-5 py-2 min-w-0 flex flex-col justify-center">
+        <div className="w-full lg:w-[44%] lg:shrink-0 px-5 py-2 min-w-0 flex flex-col justify-center">
           <p className="text-xs text-gray-700 dark:text-zinc-500 mb-2 mt-4 px-2">
             경험치 히스토리(7일)
             {!hasApi && <span className="ml-1 text-gray-300 dark:text-zinc-600">· API 미연동</span>}

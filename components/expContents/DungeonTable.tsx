@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import Num from '@/components/ui/Num';
+import SimNumInput from '@/components/expContents/SimNumInput';
 import { pctNoSign } from '@/components/expContents/shared';
 
 // ─── DungeonTable ─────────────────────────────────────────────────────────────
@@ -52,7 +53,7 @@ export function DungeonTable({ title, levels, data, charLevel, headerColor, titl
 
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         <div ref={tableRef}>
-          <table className="table-fixed text-sm border-collapse w-full">
+          <table className="table-fixed text-[12px] lg:text-sm border-collapse w-full">
             <thead className="sticky top-0 z-10">
               <tr className="bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-zinc-600">
                 <th className="text-center px-4 py-2 text-gray-600 dark:text-zinc-400 font-bold whitespace-nowrap">레벨</th>
@@ -106,17 +107,7 @@ export function DungeonTable({ title, levels, data, charLevel, headerColor, titl
       <div className="px-4 py-2 flex items-center justify-end border-t border-gray-100 dark:border-zinc-700 shrink-0">
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-gray-500 dark:text-zinc-400">보약</span>
-          <div className="relative flex items-center">
-            <input
-              type="text"
-              inputMode="numeric"
-              value={epicBonusInput}
-              onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); const n = parseInt(v); setEpicBonusInput(v === '' ? '' : String(Math.min(n, 200))); }}
-              className="w-14 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[22px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-4"
-              placeholder="0"
-            />
-            <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
-          </div>
+          <SimNumInput value={epicBonusInput} onChange={setEpicBonusInput} unit="%" pad="4" width="w-14" height="h-[22px]" max={200} />
         </div>
       </div>
 

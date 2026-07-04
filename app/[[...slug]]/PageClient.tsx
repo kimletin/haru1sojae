@@ -256,7 +256,7 @@ export default function Home() {
   // 우측 메뉴 패널: lg 이상에서는 탭이 헤더에 바로 보이므로 토글 패널 개념이 없음 — 그 폭으로 넘어가면 강제로 닫는다
   // (자동으로 열리는 로직은 없음, lg 미만에서는 항상 버튼을 눌러야만 열림)
   useEffect(() => {
-    const apply = () => { if (window.innerWidth >= 960) setMenuOpen(false); };
+    const apply = () => { if (window.innerWidth >= 905) setMenuOpen(false); };
     apply();
     window.addEventListener('resize', apply);
     return () => window.removeEventListener('resize', apply);
@@ -292,7 +292,7 @@ export default function Home() {
     setMenuOpen(false);
     document.title = '하루1소재';
     if (window.location.pathname !== '/') window.history.pushState({}, '', '/');
-    document.getElementById('app-scroll')?.scrollTo(0, 0);
+    window.scrollTo(0, 0);
   };
 
   const goPrivacy = () => {
@@ -301,7 +301,7 @@ export default function Home() {
     setIsPrivacy(true);
     document.title = '개인정보처리방침 | 하루1소재';
     if (window.location.pathname !== '/privacy') window.history.pushState({}, '', '/privacy');
-    document.getElementById('app-scroll')?.scrollTo(0, 0);
+    window.scrollTo(0, 0);
   };
 
   const handleChange = (key: keyof InputValues, value: number | string | boolean | MobGroup[]) => {
@@ -386,7 +386,7 @@ export default function Home() {
       class: info.class ?? null,
       world: info.world ?? null,
       dateCreate: null,
-      popularity: null,
+      unionLevel: null,
       monsterParkBonus: mpBonus || null,
       epicDungeonBonus: epBonus || null,
       treasureBonus: trBonus || null,
@@ -464,11 +464,11 @@ export default function Home() {
       if (meta.world) rankParams.set('world', meta.world);
       if (meta.class) rankParams.set('class', meta.class);
 
-      const [histData, rankData, skillData, popData] = await Promise.all([
+      const [histData, rankData, skillData, unionData] = await Promise.all([
         fetch(`/api/character/history?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
         fetch(`/api/character/ranking?${rankParams}`).then(r => r.json()),
         fetch(`/api/character/skill?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
-        fetch(`/api/character/popularity?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
+        fetch(`/api/character/union?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
       ]);
 
       // history 응답은 { history: HistoryPoint[], basic: {...} } — basic은 오늘 호출에서 추출(별도 basic 호출 제거)
@@ -478,7 +478,7 @@ export default function Home() {
       const rankOk  = rankData && typeof rankData === 'object' && rankData.error === undefined;
       const imageOk = basic != null;
       const skillOk = skillData && skillData.monsterParkBonus !== undefined;
-      const popOk   = popData && typeof popData.popularity === 'number';
+      const unionOk = unionData && typeof unionData.unionLevel === 'number';
 
       if (histOk && isActive) {
         setCharHistory(histArr);
@@ -487,9 +487,9 @@ export default function Home() {
       }
       if (rankOk && isActive) setCharRanking(rankData);
 
-      if (imageOk || skillOk || popOk) {
+      if (imageOk || skillOk || unionOk) {
         const metaUpdate: Record<string, unknown> = {};
-        if (popOk) metaUpdate.popularity = popData.popularity;
+        if (unionOk) metaUpdate.unionLevel = unionData.unionLevel;
         if (imageOk) {
           metaUpdate.imageUpdatedAt = Date.now();
           metaUpdate.image = basic.image;
@@ -650,13 +650,14 @@ export default function Home() {
   if (!mounted) return <div className="min-h-dvh bg-gray-50 dark:bg-black" />;
 
   return (
-    <div className="h-dvh flex flex-col bg-gray-50 dark:bg-black overflow-hidden">
+    <div className="min-h-dvh flex flex-col bg-gray-50 dark:bg-black">
       {showSearchModal && (
         <CharacterSearchModal
           onConfirm={handleCharacterConfirm}
           onClose={() => setShowSearchModal(false)}
           getInitialInputs={getInitialInputs}
           existingOcids={charMetas.filter(m => m?.ocid).map(m => m!.ocid!)}
+          loadSources={Array.from({ length: numSlots }, (_, i) => ({ name: presetNames[i], inputs: presetsRef.current[i] }))}
         />
       )}
       {showInfoModal && (
@@ -665,9 +666,10 @@ export default function Home() {
           initialInputs={inputs}
           onApply={handleApply}
           onClose={() => setShowInfoModal(false)}
+          loadSources={Array.from({ length: numSlots }, (_, i) => ({ name: presetNames[i], inputs: presetsRef.current[i] })).filter((_, i) => i !== activePreset)}
         />
       )}
-      <header className="relative bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-600 shrink-0 z-50 shadow-sm">
+      <header className="sticky top-0 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-600 shrink-0 z-50 shadow-sm">
         <div className="w-full px-4 py-3 flex items-center justify-between gap-3">
           <button
             onClick={goHome}
@@ -743,8 +745,8 @@ export default function Home() {
         </nav>
       </aside>
 
-      <div id="app-scroll" className="flex-1 min-h-0 overflow-y-auto bg-gray-50 dark:bg-black">
-      <div className="min-h-full flex flex-col">
+      <div id="app-scroll" className="flex-1 flex flex-col bg-gray-50 dark:bg-black">
+      <div className="flex-1 flex flex-col">
       <div className="flex-1 pb-10">
       {notFound ? (
         <div className="flex flex-col items-center justify-center gap-2 text-center px-4 py-24">
@@ -767,22 +769,20 @@ export default function Home() {
           <div className="absolute inset-0 bg-black/25" />
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 px-4">
             <h2
-              className="text-4xl md:text-5xl font-extrabold tracking-tight text-white"
+              className="text-3xl lg:text-5xl font-extrabold tracking-tight text-white"
               style={{ textShadow: '0 2px 12px rgba(0,0,0,0.9)' }}
             >하루<span className="text-orange-500">1소재</span></h2>
             <p
-              className="text-sm sm:text-base font-medium text-white/90"
+              className="text-xs lg:text-base font-medium text-white/90"
               style={{ textShadow: '0 1px 8px rgba(0,0,0,0.9)' }}
             >메이플스토리 경험치 효율 시뮬레이터</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-[905px]">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 w-full max-w-[905px]">
           {TABS.filter(t => t !== '정보 센터').map(t => (
             <button key={t} onClick={() => handleTabChange(t)}
-              className="h-24 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm hover:border-orange-400 hover:shadow transition-all cursor-pointer text-sm font-semibold text-gray-700 dark:text-zinc-200 flex flex-col items-center justify-center gap-2">
-              <span className="w-12 h-12 flex items-center justify-center">
-                <img src={`/main/${encodeURIComponent(t)}.png`} alt="" className="max-w-full max-h-full object-contain" />
-              </span>
+              className="h-16 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm hover:border-orange-400 hover:shadow transition-all cursor-pointer text-sm font-semibold text-gray-700 dark:text-zinc-200 flex flex-row items-center justify-center gap-2">
+              <TabIcon tab={t} className="shrink-0" />
               {t}
             </button>
           ))}

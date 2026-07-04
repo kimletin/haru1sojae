@@ -10,9 +10,10 @@ interface Props {
   initialInputs: InputValues;
   onApply: (inputs: InputValues) => void;
   onClose: () => void;
+  loadSources?: { name: string; inputs: InputValues }[];
 }
 
-export default function CharacterInfoModal({ charName, initialInputs, onApply, onClose }: Props) {
+export default function CharacterInfoModal({ charName, initialInputs, onApply, onClose, loadSources }: Props) {
   useEffect(() => {
     lockScroll();
     return unlockScroll;
@@ -33,6 +34,7 @@ export default function CharacterInfoModal({ charName, initialInputs, onApply, o
           initialInputs={initialInputs}
           submitLabel="적용"
           disableIfUnchanged
+          loadSources={loadSources}
           onSubmit={inputs => { onApply(inputs); onClose(); }}
         />
       </div>

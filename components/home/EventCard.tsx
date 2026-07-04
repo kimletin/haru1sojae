@@ -14,13 +14,13 @@ interface EventEntry {
 
 export default function EventCard({ entries }: { entries: EventEntry[] }) {
   const pageCount = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
-  const { page: cur, setPage, trackRef, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, handleClickCapture } = useSwipeCarousel(pageCount);
+  const { page: cur, setPage, trackRef, containerRef, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, handleClickCapture } = useSwipeCarousel(pageCount);
 
   const renderPage = (idx: number) => {
     const rows = idx >= 0 && idx < pageCount ? entries.slice(idx * PAGE_SIZE, idx * PAGE_SIZE + PAGE_SIZE) : [];
     return (
       <div key={idx} className="w-full shrink-0 p-4">
-        <div className="grid grid-cols-2 min-[640px]:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {Array.from({ length: PAGE_SIZE }).map((_, i) => {
             const entry = rows[i];
             if (!entry) return <div key={i} />;
@@ -54,12 +54,13 @@ export default function EventCard({ entries }: { entries: EventEntry[] }) {
 
   return (
     <div
+      ref={containerRef}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel}
       onClickCapture={handleClickCapture}
-      className="min-[640px]:col-span-2 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col touch-pan-y">
+      className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col touch-pan-y">
       <CardHeader title="이벤트" className="shrink-0" />
       <div className="flex-1 overflow-hidden">
         <div ref={trackRef} className="flex h-full" style={{ transform: 'translateX(calc(-100% + 0px))' }}>

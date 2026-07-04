@@ -13,7 +13,7 @@ interface CardEntry {
 
 export default function HomeCard({ title, entries }: { title: string; entries: CardEntry[] }) {
   const pageCount = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
-  const { page: cur, setPage, trackRef, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, handleClickCapture } = useSwipeCarousel(pageCount);
+  const { page: cur, setPage, trackRef, containerRef, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, handleClickCapture } = useSwipeCarousel(pageCount);
 
   const renderPage = (idx: number) => {
     const rows = idx >= 0 && idx < pageCount ? entries.slice(idx * PAGE_SIZE, idx * PAGE_SIZE + PAGE_SIZE) : [];
@@ -53,6 +53,7 @@ export default function HomeCard({ title, entries }: { title: string; entries: C
 
   return (
     <div
+      ref={containerRef}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}

@@ -21,12 +21,12 @@ export function SingleTable({ title, headerColor, titleColor, rows, levelLabel, 
   }, [rows]);
 
   return (
-    <div className={'bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col' + (fillHeight ? ' min-[720px]:h-full' : '')}>
+    <div className={'bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col' + (fillHeight ? ' lg:h-full' : '')}>
       <div className={'px-4 py-2.5 border-b shrink-0 ' + headerColor}>
         <h3 className={'text-sm font-semibold text-center ' + titleColor}>{title}</h3>
       </div>
       <div ref={scrollRef} className="overflow-y-auto flex-1 min-h-0">
-        <table className="table-fixed text-sm border-collapse w-full">
+        <table className="table-fixed text-[12px] lg:text-sm border-collapse w-full">
           <colgroup>
             <col style={{width:'50%'}} /><col style={{width:'50%'}} />
           </colgroup>

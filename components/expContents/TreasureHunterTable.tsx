@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import CardHeader from '@/components/ui/CardHeader';
 import Num from '@/components/ui/Num';
+import SimNumInput from '@/components/expContents/SimNumInput';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 import { pctNoSign } from '@/components/expContents/shared';
 import { MONSTER_EXP } from '@/data/monsterExp';
@@ -50,10 +51,10 @@ export function TreasureHunterTable({ monsterLevel, charLevel, treasureBonus = 0
   };
 
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col h-full">
+    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col lg:h-full">
       <CardHeader title={TREASURE_BOX_META[selectedBox].label} className="shrink-0" />
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
-        <table className="table-fixed text-sm border-collapse w-full">
+        <table className="table-fixed text-[12px] lg:text-sm border-collapse w-full">
           <colgroup>
             <col style={{width:'16%'}} />
             <col style={{width:'21%'}} />
@@ -122,17 +123,7 @@ export function TreasureHunterTable({ monsterLevel, charLevel, treasureBonus = 0
         </TooltipWrapper>
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-gray-500 dark:text-zinc-400">보약</span>
-          <div className="relative flex items-center">
-            <input
-              type="text"
-              inputMode="numeric"
-              value={bonusInput}
-              onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); const n = parseInt(v); setBonusInput(v === '' ? '' : String(Math.min(n, 200))); }}
-              className="w-14 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[22px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-4"
-              placeholder="0"
-            />
-            <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
-          </div>
+          <SimNumInput value={bonusInput} onChange={setBonusInput} unit="%" pad="4" width="w-14" height="h-[22px]" max={200} />
         </div>
       </div>
     </div>

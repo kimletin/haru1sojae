@@ -69,7 +69,7 @@ export default function InputSummaryCard({ inputs, meta, onEditInfo }: Props) {
         <CardHeader title="보약 정보" />
         <div className="py-3">
           <div className="flex items-center gap-2 px-4 py-1.5 text-sm">
-            <span className="text-gray-800 dark:text-zinc-200 shrink-0 whitespace-nowrap">보약 리스트</span>
+            <span className="text-gray-800 dark:text-zinc-200 shrink-0 whitespace-nowrap">보약 목록</span>
             {bonuses.length > 0 ? (
               <div className="flex items-center justify-end gap-1.5 flex-wrap flex-1 min-w-0 cursor-default">
                 {bonuses.map(b => (

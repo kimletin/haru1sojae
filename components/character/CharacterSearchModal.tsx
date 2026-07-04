@@ -24,9 +24,10 @@ interface Props {
   onClose?: () => void;
   getInitialInputs: (level: number) => InputValues;
   existingOcids?: string[];
+  loadSources?: { name: string; inputs: InputValues }[];
 }
 
-export default function CharacterSearchModal({ onConfirm, onClose, getInitialInputs, existingOcids = [] }: Props) {
+export default function CharacterSearchModal({ onConfirm, onClose, getInitialInputs, existingOcids = [], loadSources }: Props) {
   useEffect(() => {
     lockScroll();
     return unlockScroll;
@@ -133,6 +134,7 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
             charName={selectedInfo.name}
             initialInputs={getInitialInputs(selectedInfo.level)}
             onBack={() => setStep('select')}
+            loadSources={loadSources}
             onSubmit={inputs => onConfirm(selectedInfo, inputs)}
           />
         ) : mode === 'search' ? (

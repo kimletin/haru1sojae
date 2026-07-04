@@ -92,10 +92,10 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
       </div>
 
       {/* 테이블 카드 */}
-      <div className="flex-1 min-w-0 max-h-[500px] lg:max-h-[762px] bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+      <div className="flex-1 min-w-0 lg:max-h-[762px] bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
         <CardHeader title={region.name} className="shrink-0" />
         <div ref={scrollRef} className="overflow-y-auto flex-1 min-h-0">
-          <table className="table-fixed text-sm border-collapse w-full">
+          <table className="table-fixed text-[12px] lg:text-sm border-collapse w-full">
             <colgroup>
               <col style={{ width: '42%' }} />
               <col style={{ width: '22%' }} />
@@ -208,12 +208,12 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
                   >
                     <RankBadge rank={rank} />
                     <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                      <span className={'text-sm truncate ' + (isMe ? 'font-bold text-orange-600' : 'text-gray-700 dark:text-zinc-300')}>
+                      <span className={'text-[12px] lg:text-sm truncate ' + (isMe ? 'font-bold text-orange-600' : 'text-gray-700 dark:text-zinc-300')}>
                         {item.name}
                       </span>
                       {isMe && <span className="text-xs bg-orange-500 dark:bg-orange-700 text-white px-1.5 py-0.5 rounded-full shrink-0">나</span>}
                     </div>
-                    <span className="text-sm font-semibold shrink-0" style={{ color: rankColor(rank, top15.length) }}>
+                    <span className="text-[12px] lg:text-sm font-semibold shrink-0" style={{ color: rankColor(rank, top15.length) }}>
                       {pct}%
                     </span>
                   </div>

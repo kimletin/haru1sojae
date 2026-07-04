@@ -46,7 +46,7 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
         <h3 className={'text-sm font-semibold text-center ' + titleColor[color]}>{title}</h3>
         {headerExtra && <div className="absolute right-3 top-1/2 -translate-y-1/2">{headerExtra}</div>}
       </div>
-      <table className="table-fixed w-full text-sm border-collapse">
+      <table className="table-fixed w-full text-[12px] lg:text-sm border-collapse">
         <colgroup>
           <col style={{width:'37%'}} />
           <col style={{width:'22%'}} />
@@ -72,7 +72,12 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
               </td>
               <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300 whitespace-nowrap"><Num n={row.exp} /></td>
               <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300 whitespace-nowrap">
-                {row.priceMeso > 0 ? <Num n={row.priceMeso} /> : '-'}
+                {row.priceMeso > 0 ? (
+                  <>
+                    <span className="lg:hidden"><Num n={row.priceMeso} /></span>
+                    <span className="hidden lg:inline">{Math.round(row.priceMeso).toLocaleString('ko-KR')}</span>
+                  </>
+                ) : '-'}
               </td>
               <td className="px-2 py-1.5 text-center font-semibold text-orange-500 whitespace-nowrap">
                 {row.ratio > 0 ? (

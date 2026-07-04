@@ -14,7 +14,16 @@ interface Props {
   onBack?: () => void;             // 있을 때만 "뒤로" 표시
   submitLabel?: string;           // 제출 버튼 라벨 (기본 '추가')
   disableIfUnchanged?: boolean;   // 변경 없으면 제출 버튼 비활성화
+  loadSources?: { name: string; inputs: InputValues }[]; // "불러오기"로 시세·가격 복사할 다른 캐릭터 목록
 }
+
+// 초기화/불러오기가 건드리는 1열(시세+도핑 가격) 필드
+const PRICE_KEYS = [
+  'mesoMarketRate',
+  'price50', 'price70', 'price2x', 'price3x', 'price4x',
+  'priceSmallBooster', 'priceLargeBooster', 'priceAzmos',
+  'priceHunterTitle', 'priceBloodRingMeso', 'priceBoostringMeso', 'priceJungpenMeso',
+] as const;
 
 function toTimeStr(sessions: number): string {
   return `${sessions / 2}시간`;
@@ -30,29 +39,33 @@ function mobLevelLabel(mobs: { level: number; count: number }[]): string {
 }
 
 // 숫자 입력 (라벨 + 단위)
-function NumField({ label, value, onChange, unit = '메소', max = 9_999_999_999, min = 0, disabled, width = 'w-[140px] lg:w-[118px]', icon }: {
+function NumField({ label, value, onChange, unit = '메소', max = 9_999_999_999, min = 0, disabled, width = 'w-[130px] lg:w-[120px]', icon }: {
   label: string; value?: number; onChange?: (v: number) => void; unit?: string; max?: number; min?: number; disabled?: boolean; width?: string; icon?: string;
 }) {
   const [focused, setFocused] = useState(false);
-  const display = disabled ? '' : focused ? String(value) : (value ?? 0).toLocaleString('ko-KR');
+  // 값이 0(미입력)이면 빈칸으로 표시(placeholder "0"). 포커스 중엔 콤마 없이 원본, 벗어나면 콤마로 구분. 키보드 닫힘은 감지하지 않음.
+  const display = disabled || !value ? '' : focused ? String(value) : value.toLocaleString('ko-KR');
+
   return (
     <div className="flex items-center gap-2 py-0.5">
       {icon && <img src={`/icons/${encodeURIComponent(icon)}.png`} alt="" className={`w-5 h-5 shrink-0 object-contain ${disabled ? 'opacity-40' : ''}`} />}
-      <label className={`text-[14px] lg:text-xs whitespace-nowrap flex-1 ${disabled ? 'text-gray-400 dark:text-zinc-500' : 'text-gray-700 dark:text-zinc-300'}`}>{label}</label>
-      {/* 모바일: 입력창 실제 font-size는 16px(확대 방지), scale로 시각적으로만 13px처럼 보이게 축소. 데스크톱(lg)은 원래 11px 그대로 */}
-      <div className={`relative ${width} h-[24px] overflow-hidden lg:overflow-visible`}>
+      <label className={`text-[13px] lg:text-xs whitespace-nowrap flex-1 ${disabled ? 'text-gray-400 dark:text-zinc-500' : 'text-gray-700 dark:text-zinc-300'}`}>{label}</label>
+      {/* 모바일: 입력창 실제 font-size는 16px(확대 방지), scale로 시각적으로만 12px처럼 보이게 축소. 데스크톱(lg)은 원래 11px 그대로 */}
+      <div className={`relative ${width} h-[24px] overflow-visible`}>
         <input
           type="text"
           inputMode="numeric"
           value={display}
+          placeholder={disabled ? '' : '0'}
           disabled={disabled}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
+          onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur(); }}
           onChange={e => {
-            const raw = Number(e.target.value.replace(/,/g, ''));
+            const raw = Number(e.target.value.replace(/[^0-9]/g, ''));
             if (!isNaN(raw)) onChange?.(Math.min(Math.max(raw, min), max));
           }}
-          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-[0.8125] w-[calc(100%/0.8125)] h-[calc(100%/0.8125)] text-[16px] border-[2.46px] rounded-[4.92px] px-[7.38px] ${unit ? 'pr-[29.54px]' : ''} lg:static lg:translate-x-0 lg:translate-y-0 lg:scale-100 lg:w-full lg:h-full lg:text-[11px] lg:border-2 lg:rounded lg:px-1.5 ${unit ? 'lg:pr-6' : ''} text-center py-0 focus:outline-none ${disabled ? 'border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-500 cursor-not-allowed' : 'border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-yellow-400'}`}
+          className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 scale-75 w-[calc(100%/0.75)] h-[calc(100%/0.75)] text-[16px] border-[2.6667px] rounded-[5.3333px] px-[8px] ${unit ? 'pr-[32px]' : ''} lg:static lg:translate-x-0 lg:translate-y-0 lg:scale-100 lg:w-full lg:h-full lg:text-[11px] lg:border-2 lg:rounded lg:px-1.5 ${unit ? 'lg:pr-6' : ''} text-center py-0 focus:outline-none ${disabled ? 'border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-500 cursor-not-allowed' : 'border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-yellow-400'}`}
         />
         {unit && <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-xs lg:text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">{unit}</span>}
       </div>
@@ -68,9 +81,9 @@ function StepperField({ label, icon, value, onChange, min = 0, max = 99, unit = 
   return (
     <div className="flex items-center gap-2 py-0.5">
       {icon && <img src={`/icons/${encodeURIComponent(icon)}.png`} alt="" className="w-6 h-6 lg:w-5 lg:h-5 shrink-0 object-contain" />}
-      <label className="text-[14px] lg:text-xs whitespace-nowrap flex-1 text-gray-700 dark:text-zinc-300">{label}</label>
+      <label className="text-[13px] lg:text-xs whitespace-nowrap flex-1 text-gray-700 dark:text-zinc-300">{label}</label>
       <div className="flex items-center gap-0.5">
-        <span className="text-[14px] lg:text-xs font-semibold text-gray-700 dark:text-zinc-100">{value}{unit}</span>
+        <span className="text-[13px] lg:text-xs font-semibold text-gray-700 dark:text-zinc-100">{value}{unit}</span>
         <button onClick={() => onChange(Math.min(max, value + 1))} className={stepBtn}>▲</button>
         <button onClick={() => onChange(Math.max(min, value - 1))} className={stepBtn}>▼</button>
       </div>
@@ -88,8 +101,9 @@ function TooltipIcon({ text }: { text: React.ReactNode }) {
   );
 }
 
-export default function CharacterInfoStep({ charName, initialInputs, onSubmit, onBack, submitLabel = '추가', disableIfUnchanged = false }: Props) {
+export default function CharacterInfoStep({ charName, initialInputs, onSubmit, onBack, submitLabel = '추가', disableIfUnchanged = false, loadSources = [] }: Props) {
   const [d, setD] = useState<InputValues>(initialInputs);
+  const [showLoad, setShowLoad] = useState(false);
   const set = <K extends keyof InputValues>(key: K, value: InputValues[K]) =>
     setD(prev => ({ ...prev, [key]: value }));
 
@@ -105,6 +119,39 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
       mobCount: ground.mobs.reduce((s, m) => s + m.count, 0),
       boosterMonsterLevel: ground.boosterLevel ?? ground.mobs[ground.mobs.length - 1].level,
     }));
+  };
+
+  // 초기화: 모든 입력란 0(빈칸), 사냥시간·부스터 0, 던전/파크/사냥터 첫 항목으로
+  const handleReset = () => {
+    const firstRegion = HUNTING_REGIONS[0];
+    const firstGround = firstRegion.grounds[0];
+    setD(prev => ({
+      ...prev,
+      mesoMarketRate: 0,
+      price50: 0, price70: 0, price2x: 0, price3x: 0, price4x: 0,
+      priceSmallBooster: 0, priceLargeBooster: 0, priceAzmos: 0,
+      priceHunterTitle: 0, priceBloodRingMeso: 0, priceBoostringMeso: 0, priceJungpenMeso: 0,
+      dailySessions: 0,
+      booster30min: 0, eternal30min: 0, booster1day: 0, eternal1day: 0,
+      epicDungeonZone: '하이마운틴',
+      monsterParkZone: MONSTER_PARK_ZONES[0].zone,
+      huntingRegion: firstRegion.name,
+      huntingGround: firstGround.name,
+      huntingMobs: firstGround.mobs,
+      monsterLevel: firstGround.mobs[0].level,
+      mobCount: firstGround.mobs.reduce((s, m) => s + m.count, 0),
+      boosterMonsterLevel: firstGround.boosterLevel ?? firstGround.mobs[firstGround.mobs.length - 1].level,
+    }));
+  };
+
+  // 불러오기: 선택한 캐릭터의 1열(시세+도핑 가격) 값만 복사
+  const handleLoad = (src: InputValues) => {
+    setD(prev => {
+      const next = { ...prev };
+      for (const k of PRICE_KEYS) next[k] = src[k];
+      return next;
+    });
+    setShowLoad(false);
   };
 
   const currentRegion = HUNTING_REGIONS.find(r => r.name === d.huntingRegion) ?? HUNTING_REGIONS[0];
@@ -166,9 +213,9 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
           <p className={sectionLabel}>사냥 시간</p>
           <div className="flex items-center gap-2 py-0.5">
             <img src={`/icons/${encodeURIComponent('소재비')}.png`} alt="" className="w-6 h-6 lg:w-5 lg:h-5 shrink-0 object-contain" />
-            <label className="text-[14px] lg:text-xs whitespace-nowrap flex-1 text-gray-700 dark:text-zinc-300">일 평균 재획</label>
+            <label className="text-[13px] lg:text-xs whitespace-nowrap flex-1 text-gray-700 dark:text-zinc-300">일 평균 재획</label>
             <div className="flex items-center gap-0.5">
-              <span className="text-[14px] lg:text-xs font-semibold text-gray-700 dark:text-zinc-100">{toTimeStr(d.dailySessions)}</span>
+              <span className="text-[13px] lg:text-xs font-semibold text-gray-700 dark:text-zinc-100">{toTimeStr(d.dailySessions)}</span>
               <button
                 onClick={() => set('dailySessions', Math.min(48, d.dailySessions + 1))}
                 className="w-6 h-6 lg:w-5 lg:h-5 flex items-center justify-center text-xs lg:text-[10px] text-gray-500 dark:text-zinc-400 hover:text-orange-500 cursor-pointer border border-gray-300 dark:border-zinc-600 rounded hover:border-orange-400"
@@ -296,7 +343,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
                       (active ? 'bg-orange-500 text-white' : 'text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800')
                     }
                   >
-                    <span className="text-[14px] lg:text-[11px] truncate">{g.name}</span>
+                    <span className="text-[13px] lg:text-[11px] truncate">{g.name}</span>
                     <span className={'text-xs lg:text-[10px] shrink-0 ' + (active ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>
                       {mobLevelLabel(g.mobs)}
                     </span>
@@ -309,18 +356,48 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
       </div>
 
       {/* 하단 버튼 */}
-      <div className={'flex mt-4 pt-3 border-t border-gray-100 dark:border-zinc-700 ' + (onBack ? 'justify-between' : 'justify-end')}>
-        {onBack && (
+      <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100 dark:border-zinc-700">
+        <div>
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="px-4 py-1 text-[12px] font-semibold rounded border-2 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-300 hover:border-gray-400 dark:hover:border-zinc-500 transition-colors cursor-pointer"
+            >뒤로</button>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {loadSources.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setShowLoad(v => !v)}
+                className="px-3 py-1 text-[12px] font-semibold rounded border-2 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-300 hover:border-orange-400 transition-colors cursor-pointer"
+              >불러오기</button>
+              {showLoad && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowLoad(false)} />
+                  <div className="absolute bottom-full mb-1 right-0 z-20 min-w-[120px] max-h-48 overflow-y-auto bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-600 rounded-lg shadow-lg py-1">
+                    {loadSources.map(s => (
+                      <button
+                        key={s.name}
+                        onClick={() => handleLoad(s.inputs)}
+                        className="w-full text-left px-3 py-1.5 text-[12px] text-gray-700 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 transition-colors cursor-pointer truncate"
+                      >{s.name}</button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           <button
-            onClick={onBack}
-            className="px-4 py-1 text-[12px] font-semibold rounded border-2 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-300 hover:border-gray-400 dark:hover:border-zinc-500 transition-colors cursor-pointer"
-          >뒤로</button>
-        )}
-        <button
-          onClick={() => onSubmit(d)}
-          disabled={unchanged}
-          className={'px-5 py-1 text-[12px] font-semibold rounded border-2 transition-colors ' + (unchanged ? 'bg-gray-200 dark:bg-zinc-700 border-gray-200 dark:border-zinc-700 text-gray-400 dark:text-zinc-500 cursor-not-allowed' : 'bg-orange-500 border-orange-500 text-white hover:bg-orange-600 hover:border-orange-600 cursor-pointer')}
-        >{submitLabel}</button>
+            onClick={handleReset}
+            className="px-3 py-1 text-[12px] font-semibold rounded border-2 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-300 hover:border-orange-400 transition-colors cursor-pointer"
+          >초기화</button>
+          <button
+            onClick={() => onSubmit(d)}
+            disabled={unchanged}
+            className={'px-5 py-1 text-[12px] font-semibold rounded border-2 transition-colors ' + (unchanged ? 'bg-gray-200 dark:bg-zinc-700 border-gray-200 dark:border-zinc-700 text-gray-400 dark:text-zinc-500 cursor-not-allowed' : 'bg-orange-500 border-orange-500 text-white hover:bg-orange-600 hover:border-orange-600 cursor-pointer')}
+          >{submitLabel}</button>
+        </div>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import CardHeader from '@/components/ui/CardHeader';
 import Num from '@/components/ui/Num';
+import SimNumInput from '@/components/expContents/SimNumInput';
 import { LEVEL_EXP } from '@/data/levelExp';
 import { calcVipSaunaByTime, calcVipSaunaByTarget, findStartForTarget, type RevStartResult } from '@/components/expContents/simMath';
 
@@ -92,19 +93,11 @@ export default function VipSaunaSimulator({ charLevel, hasCharacter, todayExpRat
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 레벨</span>
-              <div className="relative flex items-center">
-                <input type="text" inputMode="numeric" value={vipSimLevel} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setVipSimLevel(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
-                  placeholder="0" />
-                <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">레벨</span>
-              </div>
+              <SimNumInput value={vipSimLevel} onChange={setVipSimLevel} unit="레벨" pad="7" />
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 경험치</span>
-              <div className="relative flex items-center">
-                <input type="text" inputMode="decimal" value={vipSimExpPct} onChange={e => { const v = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'); setVipSimExpPct(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-4"
-                  placeholder="0.000" />
-                <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
-              </div>
+              <SimNumInput value={vipSimExpPct} onChange={setVipSimExpPct} decimal unit="%" pad="4" placeholder="0.000" />
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">버닝</span>
@@ -139,27 +132,15 @@ export default function VipSaunaSimulator({ charLevel, hasCharacter, todayExpRat
             {vipSimMode === '목표' && (
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">목표 레벨</span>
-                <div className="relative flex items-center">
-                  <input type="text" inputMode="numeric" value={vipSimTarget} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setVipSimTarget(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
-                    placeholder="0" />
-                  <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">레벨</span>
-                </div>
+                <SimNumInput value={vipSimTarget} onChange={setVipSimTarget} unit="레벨" pad="7" />
               </div>
             )}
             {vipSimMode === '시간' && (
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">잠수 시간</span>
                 <div className="flex items-center gap-1">
-                  <div className="relative flex items-center">
-                    <input type="text" inputMode="numeric" value={vipSimHours} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setVipSimHours(v); }} className="w-[60px] text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
-                      placeholder="0" />
-                    <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">시간</span>
-                  </div>
-                  <div className="relative flex items-center">
-                    <input type="text" inputMode="numeric" value={vipSimMinutes} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setVipSimMinutes(v); }} className="w-[44px] text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-5"
-                      placeholder="0" />
-                    <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">분</span>
-                  </div>
+                  <SimNumInput value={vipSimHours} onChange={setVipSimHours} unit="시간" pad="7" width="w-[60px]" />
+                  <SimNumInput value={vipSimMinutes} onChange={setVipSimMinutes} unit="분" pad="5" width="w-[44px]" />
                 </div>
               </div>
             )}
@@ -222,25 +203,13 @@ export default function VipSaunaSimulator({ charLevel, hasCharacter, todayExpRat
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">목표 레벨</span>
-              <div className="relative flex items-center">
-                <input type="text" inputMode="numeric" value={vipRevTarget} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setVipRevTarget(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
-                  placeholder="0" />
-                <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">레벨</span>
-              </div>
+              <SimNumInput value={vipRevTarget} onChange={setVipRevTarget} unit="레벨" pad="7" />
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">잠수 시간</span>
               <div className="flex items-center gap-1">
-                <div className="relative flex items-center">
-                  <input type="text" inputMode="numeric" value={vipRevHours} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setVipRevHours(v); }} className="w-[60px] text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
-                    placeholder="0" />
-                  <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">시간</span>
-                </div>
-                <div className="relative flex items-center">
-                  <input type="text" inputMode="numeric" value={vipRevMinutes} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setVipRevMinutes(v); }} className="w-[44px] text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-5"
-                    placeholder="0" />
-                  <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">분</span>
-                </div>
+                <SimNumInput value={vipRevHours} onChange={setVipRevHours} unit="시간" pad="7" width="w-[60px]" />
+                <SimNumInput value={vipRevMinutes} onChange={setVipRevMinutes} unit="분" pad="5" width="w-[44px]" />
               </div>
             </div>
             <div className="flex items-center justify-between gap-3">

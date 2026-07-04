@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import CardHeader from '@/components/ui/CardHeader';
 import Num from '@/components/ui/Num';
+import SimNumInput from '@/components/expContents/SimNumInput';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 import { LEVEL_EXP } from '@/data/levelExp';
 import { MONSTER_PARK_EXP, getMonsterParkZone } from '@/data/monsterPark';
@@ -70,11 +71,7 @@ export default function MonsterParkSimulator({ charLevel, hasCharacter, todayExp
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 레벨</span>
-            <div className="relative flex items-center">
-              <input type="text" inputMode="numeric" value={simLevel} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setSimLevel(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
-                placeholder="0" />
-              <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">레벨</span>
-            </div>
+            <SimNumInput value={simLevel} onChange={setSimLevel} unit="레벨" pad="7" />
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-500 dark:text-zinc-400">지역</span>
@@ -87,20 +84,11 @@ export default function MonsterParkSimulator({ charLevel, hasCharacter, todayExp
           </div>
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 경험치</span>
-            <div className="relative flex items-center">
-              <input type="text" inputMode="decimal" value={simExpPct} onChange={e => { const v = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'); setSimExpPct(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-4"
-                placeholder="0.000" />
-              <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
-            </div>
+            <SimNumInput value={simExpPct} onChange={setSimExpPct} decimal unit="%" pad="4" placeholder="0.000" />
           </div>
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">보약</span>
-            <div className="relative flex items-center">
-              <input type="text" inputMode="numeric" value={simPotionBuff} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setSimPotionBuff(v); }}
-                className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-4"
-                placeholder="0" />
-              <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
-            </div>
+            <SimNumInput value={simPotionBuff} onChange={setSimPotionBuff} unit="%" pad="4" />
           </div>
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">버닝</span>
