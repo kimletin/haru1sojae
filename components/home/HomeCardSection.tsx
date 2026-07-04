@@ -34,7 +34,7 @@ export default function HomeCardSection() {
   }, []);
 
   return (
-    <div className="grid grid-cols-2 gap-4 w-[905px]">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full max-w-[905px]">
       <HomeCard title="공지사항" entries={data?.notice ?? []} />
       <HomeCard title="업데이트" entries={data?.update ?? []} />
       <EventCard entries={data?.event ?? []} />

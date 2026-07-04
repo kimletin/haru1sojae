@@ -21,14 +21,14 @@ export async function GET(req: NextRequest) {
 
   try {
     const res = await fetchWithTimeout(
-      `https://open.api.nexon.com/maplestory/v1/character/popularity?ocid=${encodeURIComponent(ocid)}`,
+      `https://open.api.nexon.com/maplestory/v1/user/union?ocid=${encodeURIComponent(ocid)}`,
       { headers: { 'x-nxopen-api-key': apiKey }, next: { revalidate: 21600 } }
     );
     if (!res.ok) {
-      return NextResponse.json({ error: '인기도 조회에 실패했습니다' }, { status: 502 });
+      return NextResponse.json({ error: '유니온 조회에 실패했습니다' }, { status: 502 });
     }
     const data = await res.json();
-    return NextResponse.json({ popularity: typeof data.popularity === 'number' ? data.popularity : null });
+    return NextResponse.json({ unionLevel: typeof data.union_level === 'number' ? data.union_level : null });
   } catch (e) {
     if (e instanceof Error && e.name === 'AbortError') {
       return NextResponse.json({ error: 'API 응답 시간이 초과됐습니다' }, { status: 504 });

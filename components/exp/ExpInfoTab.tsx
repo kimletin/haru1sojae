@@ -39,13 +39,13 @@ export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs, hasCh
 
   return (
     <div>
-      <div className="flex flex-row gap-4 items-stretch">
+      <div className="flex flex-col lg:flex-row gap-4 lg:items-stretch">
         {/* 레벨별 필요 경험치 */}
         <div className="flex-[55] min-w-0 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
           <CardHeader title="레벨별 필요 경험치" className="shrink-0" />
-          <div className="relative flex-1 min-h-0">
-          <div ref={scrollRef} className="absolute inset-0 overflow-y-auto">
-          <table className="table-fixed text-sm border-collapse w-full">
+          <div className="relative lg:flex-1 lg:min-h-0">
+          <div ref={scrollRef} className="lg:absolute lg:inset-0 overflow-y-auto">
+          <table className="table-fixed text-[12px] lg:text-sm border-collapse w-full">
             <colgroup>
               <col style={{width:'25%'}} />
               <col style={{width:'27%'}} />
@@ -85,7 +85,7 @@ export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs, hasCh
         {/* 경험치 패널티 */}
         <div className="flex-[45] min-w-0 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden">
           <CardHeader title="경험치 패널티" />
-          <table className="table-fixed text-sm border-collapse w-full">
+          <table className="table-fixed text-[12px] lg:text-sm border-collapse w-full">
             <colgroup>
               <col style={{width:'30%'}} />
               <col style={{width:'34%'}} />

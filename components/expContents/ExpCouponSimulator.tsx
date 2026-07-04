@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import CardHeader from '@/components/ui/CardHeader';
 import Num from '@/components/ui/Num';
+import SimNumInput from '@/components/expContents/SimNumInput';
 import { LEVEL_EXP } from '@/data/levelExp';
 import { calcCouponByCount, calcCouponByTarget, findStartForTarget, type RevStartResult } from '@/components/expContents/simMath';
 
@@ -82,19 +83,11 @@ export default function ExpCouponSimulator({ charLevel, hasCharacter, todayExpRa
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 레벨</span>
-              <div className="relative flex items-center">
-                <input type="text" inputMode="numeric" value={couponSimLevel} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setCouponSimLevel(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
-                  placeholder="0" />
-                <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">레벨</span>
-              </div>
+              <SimNumInput value={couponSimLevel} onChange={setCouponSimLevel} unit="레벨" pad="7" />
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 경험치</span>
-              <div className="relative flex items-center">
-                <input type="text" inputMode="decimal" value={couponSimExpPct} onChange={e => { const v = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'); setCouponSimExpPct(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-4"
-                  placeholder="0.000" />
-                <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
-              </div>
+              <SimNumInput value={couponSimExpPct} onChange={setCouponSimExpPct} decimal unit="%" pad="4" placeholder="0.000" />
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">버닝</span>
@@ -129,21 +122,13 @@ export default function ExpCouponSimulator({ charLevel, hasCharacter, todayExpRa
             {couponSimMode === '개수' && (
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">쿠폰 개수</span>
-                <div className="relative flex items-center">
-                  <input type="text" inputMode="numeric" value={couponSimCount} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setCouponSimCount(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-5"
-                    placeholder="0" />
-                  <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">개</span>
-                </div>
+                <SimNumInput value={couponSimCount} onChange={setCouponSimCount} unit="개" pad="5" />
               </div>
             )}
             {couponSimMode === '목표' && (
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">목표 레벨</span>
-                <div className="relative flex items-center">
-                  <input type="text" inputMode="numeric" value={couponSimTarget} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setCouponSimTarget(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
-                    placeholder="0" />
-                  <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">레벨</span>
-                </div>
+                <SimNumInput value={couponSimTarget} onChange={setCouponSimTarget} unit="레벨" pad="7" />
               </div>
             )}
           </div>
@@ -204,19 +189,11 @@ export default function ExpCouponSimulator({ charLevel, hasCharacter, todayExpRa
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">목표 레벨</span>
-              <div className="relative flex items-center">
-                <input type="text" inputMode="numeric" value={couponRevTarget} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setCouponRevTarget(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
-                  placeholder="0" />
-                <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">레벨</span>
-              </div>
+              <SimNumInput value={couponRevTarget} onChange={setCouponRevTarget} unit="레벨" pad="7" />
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">개수</span>
-              <div className="relative flex items-center">
-                <input type="text" inputMode="numeric" value={couponRevCount} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setCouponRevCount(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-5"
-                  placeholder="0" />
-                <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">개</span>
-              </div>
+              <SimNumInput value={couponRevCount} onChange={setCouponRevCount} unit="개" pad="5" />
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">버닝</span>

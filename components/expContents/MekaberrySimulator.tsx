@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import CardHeader from '@/components/ui/CardHeader';
 import Num from '@/components/ui/Num';
+import SimNumInput from '@/components/expContents/SimNumInput';
 import { LEVEL_EXP } from '@/data/levelExp';
 import { calcMekaberryByCount, calcMekaberryByTarget, findStartForTarget, type RevStartResult } from '@/components/expContents/simMath';
 
@@ -80,19 +81,11 @@ export default function MekaberrySimulator({ charLevel, hasCharacter, todayExpRa
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 레벨</span>
-              <div className="relative flex items-center">
-                <input type="text" inputMode="numeric" value={mekaSimLevel} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setMekaSimLevel(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
-                  placeholder="0" />
-                <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">레벨</span>
-              </div>
+              <SimNumInput value={mekaSimLevel} onChange={setMekaSimLevel} unit="레벨" pad="7" />
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 경험치</span>
-              <div className="relative flex items-center">
-                <input type="text" inputMode="decimal" value={mekaSimExpPct} onChange={e => { const v = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1'); setMekaSimExpPct(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-4"
-                  placeholder="0.000" />
-                <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
-              </div>
+              <SimNumInput value={mekaSimExpPct} onChange={setMekaSimExpPct} decimal unit="%" pad="4" placeholder="0.000" />
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">종류</span>
@@ -107,21 +100,13 @@ export default function MekaberrySimulator({ charLevel, hasCharacter, todayExpRa
             {mekaSimMode === '개수' && (
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">개수</span>
-                <div className="relative flex items-center">
-                  <input type="text" inputMode="numeric" value={mekaSimCount} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setMekaSimCount(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-5"
-                    placeholder="0" />
-                  <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">개</span>
-                </div>
+                <SimNumInput value={mekaSimCount} onChange={setMekaSimCount} unit="개" pad="5" />
               </div>
             )}
             {mekaSimMode === '목표' && (
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">목표 레벨</span>
-                <div className="relative flex items-center">
-                  <input type="text" inputMode="numeric" value={mekaSimTarget} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setMekaSimTarget(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
-                    placeholder="0" />
-                  <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">레벨</span>
-                </div>
+                <SimNumInput value={mekaSimTarget} onChange={setMekaSimTarget} unit="레벨" pad="7" />
               </div>
             )}
           </div>
@@ -184,19 +169,11 @@ export default function MekaberrySimulator({ charLevel, hasCharacter, todayExpRa
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">목표 레벨</span>
-              <div className="relative flex items-center">
-                <input type="text" inputMode="numeric" value={mekaRevTarget} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setMekaRevTarget(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-7"
-                  placeholder="0" />
-                <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">레벨</span>
-              </div>
+              <SimNumInput value={mekaRevTarget} onChange={setMekaRevTarget} unit="레벨" pad="7" />
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">개수</span>
-              <div className="relative flex items-center">
-                <input type="text" inputMode="numeric" value={mekaRevCount} onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); setMekaRevCount(v); }} className="w-20 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[24px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-5"
-                  placeholder="0" />
-                <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">개</span>
-              </div>
+              <SimNumInput value={mekaRevCount} onChange={setMekaRevCount} unit="개" pad="5" />
             </div>
           </div>
           {(() => {

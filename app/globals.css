@@ -1,14 +1,18 @@
 @import "tailwindcss";
 
-
-body {
-  min-width: 1000px;
+@theme {
+  --breakpoint-sm: 42.6667rem;   /* 640px / 15 */
+  --breakpoint-md: 51.2rem;      /* 768px / 15 */
+  --breakpoint-lg: 60.3333rem;   /* 905px / 15 */
+  --breakpoint-xl: 85.3333rem;   /* 1280px / 15 */
+  --breakpoint-2xl: 102.4rem;    /* 1536px / 15 */
 }
 
 html {
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: auto;
   font-size: 15px;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* 카드 제목은 원래 크기(14px) 유지 */

@@ -10,17 +10,18 @@ interface Props {
   initialInputs: InputValues;
   onApply: (inputs: InputValues) => void;
   onClose: () => void;
+  loadSources?: { name: string; inputs: InputValues }[];
 }
 
-export default function CharacterInfoModal({ charName, initialInputs, onApply, onClose }: Props) {
+export default function CharacterInfoModal({ charName, initialInputs, onApply, onClose, loadSources }: Props) {
   useEffect(() => {
     lockScroll();
     return unlockScroll;
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-xl p-6 w-[820px] max-h-[88vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-xl p-6 w-[calc(100%-2rem)] max-w-[820px] max-h-[88vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-bold text-gray-900 dark:text-zinc-100">정보 수정</h2>
           <button
@@ -33,6 +34,7 @@ export default function CharacterInfoModal({ charName, initialInputs, onApply, o
           initialInputs={initialInputs}
           submitLabel="적용"
           disableIfUnchanged
+          loadSources={loadSources}
           onSubmit={inputs => { onApply(inputs); onClose(); }}
         />
       </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import CardHeader from '@/components/ui/CardHeader';
+import SimNumInput from '@/components/expContents/SimNumInput';
 
 import { useEffect, useState } from 'react';
 import { VIP_SAUNA_EXP } from '@/data/vipSauna';
@@ -11,7 +12,7 @@ import { BLUEBERRY_EXP } from '@/data/blueberry';
 import type { SundayType } from '@/types';
 import Num from '@/components/ui/Num';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
-import { pctNoSign, type ExpTableProps, type BonusEntry } from '@/components/expContents/shared';
+import { pctNoSign, type ExpTableProps } from '@/components/expContents/shared';
 import { SingleTable } from '@/components/expContents/SingleTable';
 import EpicDungeonSection from '@/components/expContents/EpicDungeonSection';
 import TreasureHunterSection from '@/components/expContents/TreasureHunterSection';
@@ -26,13 +27,13 @@ const LEVELS = Array.from({ length: 40 }, (_, i) => i + 260);
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const MENU_ITEMS = [
+  { key: 'treasurehunter', label: '트레져 헌터', icon: '트레져 헌터' },
   { key: 'epicdungeon', label: '에픽 던전', icon: '앵글러컴퍼니' },
   { key: 'monsterpark', label: '몬스터파크', icon: '몬스터파크' },
   { key: 'vipsauna',    label: 'VIP 사우나', icon: 'VIP사우나' },
-  { key: 'expcoupon',   label: '상급\nEXP 쿠폰', icon: '상급 EXP 교환권' },
-  { key: 'blueberry',   label: '블루베리\n농장', icon: '블루베리 농장' },
-  { key: 'mekaberry',   label: '메카베리\n농장', icon: '메카베리 농장' },
-  { key: 'treasurehunter', label: '트레져 헌터', icon: '트레져 헌터' },
+  { key: 'expcoupon',   label: '상급 EXP 쿠폰', icon: '상급 EXP 교환권' },
+  { key: 'blueberry',   label: '블루베리 농장', icon: '블루베리 농장' },
+  { key: 'mekaberry',   label: '메카베리 농장', icon: '메카베리 농장' },
 ];
 
 // 경험치 콘텐츠 서브탭 키 (URL 검증용)
@@ -44,7 +45,6 @@ interface Props {
   monsterLevel: number;
   monsterParkBonus: number;
   epicDungeonBonus?: number;
-  epicDungeonBonuses?: BonusEntry[];
   treasureBonus?: number;
   todayExpRate?: number | null;
   slotKey?: number;
@@ -54,10 +54,10 @@ interface Props {
 
 const SUNDAY_MULT: Record<SundayType, number> = { '일반': 1, '썬데이': 1.5, '스페셜': 4 };
 
-export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBonus, epicDungeonBonus = 0, epicDungeonBonuses = [], treasureBonus = 0, todayExpRate, slotKey, initialSelected, hasCharacter = true }: Props) {
+export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBonus, epicDungeonBonus = 0, treasureBonus = 0, todayExpRate, slotKey, initialSelected, hasCharacter = true }: Props) {
   const myParkZone = getMonsterParkZone(charLevel);
 
-  const [selected, setSelected] = useState(initialSelected ?? 'epicdungeon');
+  const [selected, setSelected] = useState(initialSelected ?? 'treasurehunter');
 
   useEffect(() => {
     window.history.replaceState({}, '', '/cont');
@@ -92,15 +92,15 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
     : null;
 
   return (
-    <div className="flex gap-4 items-stretch">
-      {/* 좌측 메뉴 */}
-      <div className="grid grid-cols-1 gap-1.5 shrink-0 w-[90px] self-start">
+    <div className="flex flex-col lg:flex-row gap-4 lg:items-stretch">
+      {/* 좌측 메뉴 (모바일/태블릿: 4열 2행 그리드 / lg(905px)~: 세로 90px 정사각형 고정) */}
+      <div className="grid grid-cols-4 lg:grid-cols-1 gap-1.5 shrink-0 w-full lg:w-[90px] self-start">
         {MENU_ITEMS.map(item => (
           <button
             key={item.key}
             onClick={() => setSelected(item.key)}
             className={
-              'aspect-square rounded-lg shadow-sm text-xs font-medium transition-colors cursor-pointer flex flex-col items-center justify-center gap-1 whitespace-pre-line text-center ' +
+              'h-16 lg:h-auto lg:aspect-square rounded-lg shadow-sm text-xs font-medium transition-colors cursor-pointer flex flex-col items-center justify-center gap-1 text-center ' +
               (selected === item.key
                 ? 'bg-orange-500 text-white border border-orange-500'
                 : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
@@ -112,10 +112,10 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
         ))}
       </div>
 
-      {/* 우측 콘텐츠 */}
-      <div className={'flex flex-1 gap-4 ' + (newLayout ? 'flex-row-reverse ' + (selected === 'mekaberry' ? 'items-start' : 'items-stretch') : selected === 'monsterpark' ? 'flex-row-reverse' : 'items-stretch')}>
+      {/* 우측 콘텐츠 (모바일/태블릿: 세로 스택, 시뮬레이터가 위로 오도록 flex-col-reverse / lg(905px)~: 좌우 배치) */}
+      <div className={'flex flex-1 gap-4 flex-col-reverse items-stretch lg:flex-row ' + (newLayout ? 'lg:flex-row-reverse ' + (selected === 'mekaberry' ? 'lg:items-start' : 'lg:items-stretch') : selected === 'monsterpark' ? 'lg:flex-row-reverse lg:items-stretch' : 'lg:items-stretch')}>
         {isEpic ? (
-          <EpicDungeonSection charLevel={charLevel} epicDungeonBonus={epicDungeonBonus} epicDungeonBonuses={epicDungeonBonuses} hasCharacter={hasCharacter} />
+          <EpicDungeonSection charLevel={charLevel} epicDungeonBonus={epicDungeonBonus} hasCharacter={hasCharacter} />
         ) : (
           <>
             {/* 좌측 카드 */}
@@ -125,7 +125,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                   <CardHeader title="몬스터파크" className="shrink-0" />
                   <div className="flex-1 min-h-0 overflow-y-auto">
                     <div>
-                      <table className="table-fixed w-full text-sm border-collapse">
+                      <table className="table-fixed w-full text-[12px] lg:text-sm border-collapse">
                         <colgroup>
                           <col style={{width:'50%'}} />
                           <col style={{width:'50%'}} />
@@ -183,17 +183,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs text-gray-500 dark:text-zinc-400">보약</span>
-                      <div className="relative flex items-center">
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={parkBonusInput}
-                          onChange={e => { const v = e.target.value.replace(/[^0-9]/g, ''); const n = parseInt(v); setParkBonusInput(v === '' ? '' : String(Math.min(n, 200))); }}
-                          className="w-14 text-center text-[12px] border-2 border-yellow-400 dark:border-yellow-600 bg-yellow-50 dark:bg-zinc-800 rounded px-1.5 py-0 h-[22px] text-gray-900 dark:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-yellow-400 pr-4"
-                          placeholder="0"
-                        />
-                        <span className="absolute right-1.5 text-[10px] text-gray-400 dark:text-zinc-500 pointer-events-none">%</span>
-                      </div>
+                      <SimNumInput value={parkBonusInput} onChange={setParkBonusInput} unit="%" pad="4" width="w-14" height="h-[22px]" max={200} />
                     </div>
                   </div>
                 </div>
@@ -202,7 +192,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
               {newLayout && splitProps && (
                 selected === 'mekaberry'
                   ? <SingleTable {...splitProps} fillHeight={false} />
-                  : <div className="absolute inset-0"><SingleTable {...splitProps} /></div>
+                  : <div className="lg:absolute lg:inset-0"><SingleTable {...splitProps} /></div>
               )}
 
               {selected === 'treasurehunter' && <TreasureHunterSection monsterLevel={monsterLevel} charLevel={charLevel} treasureBonus={treasureBonus} hasCharacter={hasCharacter} />}
@@ -210,7 +200,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
             </div>
 
             {/* 시뮬레이터 카드 */}
-            {selected !== 'treasurehunter' && <div className={newLayout ? 'flex-1 flex flex-col gap-4' : 'flex-1 self-start flex flex-col gap-4'}>
+            {selected !== 'treasurehunter' && <div className={newLayout ? 'flex-1 flex flex-col gap-4' : 'flex-1 lg:self-start flex flex-col gap-4'}>
               {selected === 'vipsauna' ? (
                 <VipSaunaSimulator charLevel={charLevel} hasCharacter={hasCharacter} todayExpRate={todayExpRate} slotKey={slotKey} />
               ) : selected === 'expcoupon' ? (

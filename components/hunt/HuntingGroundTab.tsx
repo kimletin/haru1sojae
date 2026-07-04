@@ -68,15 +68,15 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
 
   return (
     <>
-    <div className="flex gap-4 items-start">
-      {/* 지역 선택 (1열) */}
-      <div className="grid grid-cols-1 gap-1.5 shrink-0 w-[90px] self-start">
+    <div className="flex flex-col lg:flex-row gap-4 lg:items-start">
+      {/* 지역 선택 (모바일: 4열 그리드 / 데스크톱: 세로 90px 정사각형 고정) */}
+      <div className="grid grid-cols-4 lg:grid-cols-1 gap-1.5 shrink-0 w-full lg:w-[90px] self-start">
         {HUNTING_REGIONS.map(r => (
           <button
             key={r.name}
             onClick={() => setSelectedRegion(r.name)}
             className={
-              'aspect-square rounded-lg shadow-sm text-xs font-medium transition-colors cursor-pointer text-center flex flex-col items-center justify-center gap-0.5 ' +
+              'h-20 lg:h-auto lg:aspect-square rounded-lg shadow-sm text-xs font-medium transition-colors cursor-pointer text-center flex flex-col items-center justify-center gap-0.5 ' +
               (selectedRegion === r.name
                 ? 'bg-orange-500 text-white border border-orange-500'
                 : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
@@ -92,10 +92,10 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
       </div>
 
       {/* 테이블 카드 */}
-      <div className="flex-1 max-h-[762px] bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+      <div className="flex-1 min-w-0 lg:max-h-[762px] bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
         <CardHeader title={region.name} className="shrink-0" />
         <div ref={scrollRef} className="overflow-y-auto flex-1 min-h-0">
-          <table className="table-fixed text-sm border-collapse w-full">
+          <table className="table-fixed text-[12px] lg:text-sm border-collapse w-full">
             <colgroup>
               <col style={{ width: '42%' }} />
               <col style={{ width: '22%' }} />
@@ -179,16 +179,17 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
         // 계산값(score)이 같으면 공동 순위 — 표시 반올림이 아닌 원본 값 기준
         const ranks = computeTieRanks(top15, (it) => it.score);
         return (
-          <div className="w-[300px] shrink-0 h-[762px] bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
+          <div className="w-full lg:w-[300px] lg:shrink-0 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
             <CardHeader title="사냥터 효율 순위" className="shrink-0 flex items-center justify-center gap-1.5">
               <TooltipWrapper
                 className="inline-flex"
-                tip={<div className="w-56 whitespace-normal text-center leading-relaxed">캐릭터 레벨 기준 (순경험치) × (마리수) × (경험치 패널티)를 계산하여 매긴 순위입니다.</div>}
+                tipClassName="w-56 text-center"
+                tip="캐릭터 레벨 기준 (순경험치) × (마리수) × (경험치 패널티)를 계산하여 매긴 순위입니다."
               >
                 <span className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-500 dark:border-zinc-400 text-gray-600 dark:text-zinc-300 text-[10px] font-bold leading-none cursor-help">?</span>
               </TooltipWrapper>
             </CardHeader>
-            <div className="overflow-y-auto flex-1 min-h-0 flex flex-col">
+            <div className="flex flex-col">
               {!hasCharacter ? (
                 <div className="flex-1 flex flex-col items-center justify-center gap-3">
                   <p className="text-sm text-gray-400 dark:text-zinc-500">캐릭터를 추가해주세요</p>
@@ -203,16 +204,16 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
                 return (
                   <div
                     key={item.name}
-                    className={'flex items-center gap-2 px-4 h-[36px] border-b border-gray-100 dark:border-zinc-700 transition-colors ' + (isMe ? 'bg-orange-50 dark:bg-orange-900/40' : 'hover:bg-gray-50 dark:hover:bg-gray-700')}
+                    className={'flex items-center gap-2 px-4 py-1.5 border-b border-gray-100 dark:border-zinc-700 transition-colors ' + (isMe ? 'bg-orange-50 dark:bg-orange-900/40' : 'hover:bg-gray-50 dark:hover:bg-gray-700')}
                   >
                     <RankBadge rank={rank} />
                     <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                      <span className={'text-sm truncate ' + (isMe ? 'font-bold text-orange-600' : 'text-gray-700 dark:text-zinc-300')}>
+                      <span className={'text-[12px] lg:text-sm truncate ' + (isMe ? 'font-bold text-orange-600' : 'text-gray-700 dark:text-zinc-300')}>
                         {item.name}
                       </span>
                       {isMe && <span className="text-xs bg-orange-500 dark:bg-orange-700 text-white px-1.5 py-0.5 rounded-full shrink-0">나</span>}
                     </div>
-                    <span className="text-sm font-semibold shrink-0" style={{ color: rankColor(rank, top15.length) }}>
+                    <span className="text-[12px] lg:text-sm font-semibold shrink-0" style={{ color: rankColor(rank, top15.length) }}>
                       {pct}%
                     </span>
                   </div>

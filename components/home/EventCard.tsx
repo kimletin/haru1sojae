@@ -1,8 +1,7 @@
 'use client';
 
 import CardHeader from '@/components/ui/CardHeader';
-
-import { useEffect, useRef, useState } from 'react';
+import { useSwipeCarousel } from '@/components/home/useSwipeCarousel';
 
 const PAGE_SIZE = 8; // 4열 x 2행
 
@@ -14,32 +13,14 @@ interface EventEntry {
 }
 
 export default function EventCard({ entries }: { entries: EventEntry[] }) {
-  const [page, setPage] = useState(0);
   const pageCount = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
-  const cur = Math.min(page, pageCount - 1);
-  const rows = entries.slice(cur * PAGE_SIZE, cur * PAGE_SIZE + PAGE_SIZE);
+  const { page: cur, setPage, trackRef, containerRef, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, handleClickCapture } = useSwipeCarousel(pageCount);
 
-  const cardRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = cardRef.current;
-    if (!el || pageCount <= 1) return;
-    function onWheel(e: WheelEvent) {
-      e.preventDefault(); // 페이지만 넘기고 화면 스크롤은 막음
-      const dir = e.deltaY > 0 ? 1 : -1;
-      setPage((p) => Math.min(pageCount - 1, Math.max(0, Math.min(p, pageCount - 1) + dir)));
-    }
-    el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
-  }, [pageCount]);
-
-  return (
-    <div
-      ref={cardRef}
-      className="col-span-2 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col"
-    >
-      <CardHeader title="이벤트" className="shrink-0" />
-      <div className="flex-1 p-4">
-        <div className="grid grid-cols-4 gap-3">
+  const renderPage = (idx: number) => {
+    const rows = idx >= 0 && idx < pageCount ? entries.slice(idx * PAGE_SIZE, idx * PAGE_SIZE + PAGE_SIZE) : [];
+    return (
+      <div key={idx} className="w-full shrink-0 p-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {Array.from({ length: PAGE_SIZE }).map((_, i) => {
             const entry = rows[i];
             if (!entry) return <div key={i} />;
@@ -66,6 +47,26 @@ export default function EventCard({ entries }: { entries: EventEntry[] }) {
               </a>
             );
           })}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
+      onClickCapture={handleClickCapture}
+      className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col touch-pan-y">
+      <CardHeader title="이벤트" className="shrink-0" />
+      <div className="flex-1 overflow-hidden">
+        <div ref={trackRef} className="flex h-full" style={{ transform: 'translateX(calc(-100% + 0px))' }}>
+          {renderPage(cur - 1)}
+          {renderPage(cur)}
+          {renderPage(cur + 1)}
         </div>
       </div>
       <div className="shrink-0 flex items-center justify-center gap-1.5 py-2 border-t border-gray-100 dark:border-zinc-700">
