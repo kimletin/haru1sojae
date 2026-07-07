@@ -117,7 +117,7 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]" onClick={e => { if (e.target === e.currentTarget && step !== 'info') onClose?.(); }}>
       <div className={'bg-white dark:bg-zinc-900 rounded-xl shadow-xl p-6 ' + (step === 'info' ? 'w-[calc(100%-2rem)] max-w-[820px] max-h-[88vh] overflow-y-auto' : 'w-96 max-w-[calc(100%-2rem)]')}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-bold text-gray-900 dark:text-zinc-100">캐릭터 추가</h2>
