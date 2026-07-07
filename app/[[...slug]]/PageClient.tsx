@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import type { InputValues, MobGroup } from '@/types';
 import { calcAllItems } from '@/lib/calculator';
 import CharacterInfoModal from '@/components/character/CharacterInfoModal';
+import CharacterDetailModal from '@/components/character/CharacterDetailModal';
 import RankingPanel from '@/components/table/RankingPanel';
 import InputSummaryCard from '@/components/table/InputSummaryCard';
 import EfficiencyTab from '@/components/table/EfficiencyTab';
@@ -167,6 +168,7 @@ export default function Home() {
   const [numSlots, setNumSlots] = useState(DEFAULT_NUM_SLOTS);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [searchModalTarget, setSearchModalTarget] = useState(0);
   const [charMetas, setCharMetas] = useState<(CharMeta | null)[]>(makeDefaultMetas());
   const [todayExpRate, setTodayExpRate] = useState<number | null>(null);
@@ -182,7 +184,6 @@ export default function Home() {
   const presetsRef = useRef<InputValues[]>(makeDefaultPresets());
   const activePresetRef = useRef(0);
   const charRefreshedAtMap = useRef<Record<string, number>>({});
-  const charFetchingRef = useRef(false);
   const charMetasRef = useRef<(CharMeta | null)[]>(charMetas);
   charMetasRef.current = charMetas;
   const refreshCharRef = useRef<(presetIdx: number) => void>(() => {});
@@ -444,7 +445,7 @@ export default function Home() {
   refreshCharRef.current = async (presetIdx: number) => {
     const meta = charMetasRef.current[presetIdx];
     const ocid = meta?.ocid;
-    if (!ocid || charFetchingRef.current) return;
+    if (!ocid) return;
 
     let lastAttempt = charRefreshedAtMap.current[ocid] ?? null;
     if (lastAttempt == null) {
@@ -456,9 +457,7 @@ export default function Home() {
     if (lastAttempt != null && Date.now() - lastAttempt < REFRESH_COOLDOWN) return;
 
     charRefreshedAtMap.current[ocid] = Date.now(); // 시도 시각(실패해도 쿨다운 유지)
-    charFetchingRef.current = true;
     setCharLoading(true);
-    const isActive = presetIdx === activePreset;
     try {
       const rankParams = new URLSearchParams({ ocid });
       if (meta.world) rankParams.set('world', meta.world);
@@ -480,12 +479,16 @@ export default function Home() {
       const skillOk = skillData && skillData.monsterParkBonus !== undefined;
       const unionOk = unionData && typeof unionData.unionLevel === 'number';
 
-      if (histOk && isActive) {
+      // await 도중 슬롯이 바뀌었을 수 있으므로, 화면 상태에 반영하기 직전에
+      // 현재 활성 슬롯(ref는 항상 최신)과 다시 비교한다.
+      // (늦게 도착한 A 슬롯 응답이 B 슬롯 화면에 표시되는 레이스 컨디션 방지)
+      const stillActive = presetIdx === activePresetRef.current;
+      if (histOk && stillActive) {
         setCharHistory(histArr);
         const todayPoint = histArr.find(pt => pt.date === kstToday()) ?? null;
         setTodayExpRate(todayPoint?.expRate ?? null);
       }
-      if (rankOk && isActive) setCharRanking(rankData);
+      if (rankOk && stillActive) setCharRanking(rankData);
 
       if (imageOk || skillOk || unionOk) {
         const metaUpdate: Record<string, unknown> = {};
@@ -533,7 +536,6 @@ export default function Home() {
     } catch {
       // 실패: 조용히 마지막 정상 데이터 유지. 쿨다운은 시도 시각으로 이미 설정됨.
     } finally {
-      charFetchingRef.current = false;
       setCharLoading(false);
     }
   };
@@ -667,6 +669,14 @@ export default function Home() {
           onApply={handleApply}
           onClose={() => setShowInfoModal(false)}
           loadSources={Array.from({ length: numSlots }, (_, i) => ({ name: presetNames[i], inputs: presetsRef.current[i] })).filter((_, i) => i !== activePreset)}
+        />
+      )}
+      {showDetailModal && charMetas[activePreset]?.ocid && (
+        <CharacterDetailModal
+          name={presetNames[activePreset]}
+          history={charHistory}
+          ranking={charRanking}
+          onClose={() => setShowDetailModal(false)}
         />
       )}
       <header className="sticky top-0 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-600 shrink-0 z-50 shadow-sm">
@@ -907,6 +917,7 @@ export default function Home() {
                       history={charHistory}
                       ranking={charRanking}
                       loading={charLoading}
+                      onOpenDetail={() => setShowDetailModal(true)}
                     />
                   </div>
                   {/* 모바일 전용: 입력정보·보약정보를 캐릭터카드 바로 아래에 (데스크톱은 우측 aside에서 표시) */}
