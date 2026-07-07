@@ -49,8 +49,7 @@ function ExpHistory14({ history }: { history: HistoryPoint[] }) {
       const remaining = required - last.exp;
       if (remaining > 0) {
         daysToLevelUp = Math.ceil(remaining / avgExp);
-        const d = new Date(kstDate(-daysToLevelUp) + 'T00:00:00Z');
-        levelUpDateLabel = `${d.getUTCFullYear()}년 ${d.getUTCMonth() + 1}월 ${d.getUTCDate()}일`;
+        levelUpDateLabel = formatDateKR(kstDate(-daysToLevelUp)); // 예: 2026년 8월 7일 화요일
       }
     }
   }
@@ -61,7 +60,7 @@ function ExpHistory14({ history }: { history: HistoryPoint[] }) {
         <div className="mb-6">
           {avgExp !== null && (
             <p className="text-[11px] text-gray-400 dark:text-zinc-500">
-              일평균 획득 경험치 <span className="text-gray-800 dark:text-zinc-100">{formatExpKR(avgExp)}</span>
+              하루 평균 경험치 <span className="text-gray-800 dark:text-zinc-100">{formatExpKR(avgExp)}</span>
             </p>
           )}
           {daysToLevelUp !== null && (
@@ -272,7 +271,7 @@ export default function CharacterDetailModal({ name, history, ranking, onClose }
 
           {/* 랭킹 추이 (7일) */}
           <div>
-            <p className="text-xs font-semibold text-gray-600 dark:text-zinc-300 mb-2">랭킹 추이 (7일)</p>
+            <p className="text-xs font-semibold text-gray-600 dark:text-zinc-300 mb-2">랭킹 히스토리 (7일)</p>
             {hasRankTrend ? (
               <div className="flex flex-col gap-2.5">
                 <RankTrend label="종합 랭킹" history={ranking?.overallHistory ?? []} />
