@@ -1,30 +1,20 @@
 'use client';
 
 import CardHeader from '@/components/ui/CardHeader';
-
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
-import { LEVEL_EXP } from '@/data/levelExp';
 import type { CharMeta } from '@/types';
+import {
+  type HistoryPoint,
+  type Ranking,
+  kstDate,
+  computeSlots,
+  computeDelta,
+  formatDate,
+  formatDateKR,
+  formatExpKR,
+} from '@/components/table/charHistoryUtils';
 
-export interface HistoryPoint {
-  date: string;
-  expRate: number;
-  level: number;
-  exp?: number;
-}
-
-interface Slot {
-  date: string;
-  expRate: number | null;
-  level: number | null;
-  exp: number | null;
-}
-
-export interface Ranking {
-  overall: number | null;
-  world: number | null;
-  class: number | null;
-}
+export type { HistoryPoint, Ranking, RankPoint } from '@/components/table/charHistoryUtils';
 
 interface Props {
   name: string;
@@ -34,84 +24,20 @@ interface Props {
   history: HistoryPoint[];
   ranking: Ranking | null;
   loading: boolean;
+  onOpenDetail?: () => void;
 }
 
-function kstDate(daysAgo: number): string {
-  const now = new Date();
-  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
-  kst.setUTCDate(kst.getUTCDate() - daysAgo);
-  return kst.toISOString().slice(0, 10);
+// 헤더 우측 "상세" 버튼 아이콘 (돋보기, 헤더 아이콘 톤에 맞춤)
+function DetailIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </svg>
+  );
 }
 
-function getDisplayDates(): string[] {
-  return Array.from({ length: 7 }, (_, i) => kstDate(6 - i));
-}
-
-function computeSlots(points: HistoryPoint[]): Slot[] {
-  const map = new Map(points.map(p => [p.date, p]));
-  return getDisplayDates().map(date => {
-    const p = map.get(date);
-    return { date, expRate: p?.expRate ?? null, level: p?.level ?? null, exp: p?.exp ?? null };
-  });
-}
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00Z');
-  return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
-}
-
-function formatDateKR(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00Z');
-  const days = ['일', '월', '화', '수', '목', '금', '토'];
-  return `${d.getUTCFullYear()}년 ${d.getUTCMonth() + 1}월 ${d.getUTCDate()}일 ${days[d.getUTCDay()]}요일`;
-}
-
-function formatExpKR(exp: number): string {
-  if (exp === 0) return '0';
-  const jo = Math.floor(exp / 1_000_000_000_000);
-  const eok = Math.floor((exp % 1_000_000_000_000) / 100_000_000);
-  const man = Math.floor((exp % 100_000_000) / 10_000);
-  const rest = exp % 10_000;
-  const parts: string[] = [];
-  if (jo > 0) parts.push(`${jo}조`);
-  if (eok > 0) parts.push(`${eok}억`);
-  if (man > 0) parts.push(`${man}만`);
-  if (rest > 0) parts.push(String(rest));
-  return parts.join(' ');
-}
-
-// 두 슬롯 사이 경험치 증가량 계산 (레벨업 가로질러 반영)
-// character_exp는 현재 레벨 내 누적치라 레벨업 시 리셋되므로, levelExp 테이블로 보정한다.
-function computeDelta(prev: Slot | null, slot: Slot): { deltaRate: number; deltaExp: number } {
-  if (prev?.expRate == null || slot.expRate == null) return { deltaRate: 0, deltaExp: 0 };
-  const l1 = prev.level, l2 = slot.level;
-  const p1 = prev.expRate, p2 = slot.expRate;
-
-  // 레벨 정보가 없거나 동일 레벨: 단순 차이
-  if (l1 == null || l2 == null || l1 === l2) {
-    const deltaExp = slot.exp != null && prev.exp != null ? slot.exp - prev.exp : 0;
-    return { deltaRate: p2 - p1, deltaExp };
-  }
-
-  // 레벨이 내려간 비정상 케이스: 폴백
-  if (l2 < l1) return { deltaRate: p2 - p1, deltaExp: 0 };
-
-  // 레벨업: (어제 레벨 잔여%) + (중간 레벨 100%씩) + (오늘 레벨%)
-  const deltaRate = (100 - p1) + 100 * (l2 - l1 - 1) + p2;
-
-  let deltaExp = 0;
-  if (slot.exp != null && prev.exp != null) {
-    const req1 = LEVEL_EXP[l1]?.required;
-    if (req1 != null) {
-      deltaExp = req1 - prev.exp; // 어제 레벨 마무리분
-      for (let L = l1 + 1; L < l2; L++) deltaExp += LEVEL_EXP[L]?.required ?? 0; // 중간 레벨 전체
-      deltaExp += slot.exp; // 오늘 레벨 누적분
-    }
-  }
-  return { deltaRate, deltaExp };
-}
-
-export default function CharacterCard({ name, level, meta, isEmpty, history, ranking, loading }: Props) {
+export default function CharacterCard({ name, level, meta, isEmpty, history, ranking, loading, onOpenDetail }: Props) {
   const hasApi = !!meta?.ocid;
   const todayData = history.find(p => p.date === kstDate(0)) ?? null;
   const slots = computeSlots(history);
@@ -139,7 +65,17 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
 
   return (
     <div className="character-card bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden">
-      <CardHeader title="캐릭터 정보" />
+      <CardHeader title="캐릭터 정보" className="relative">
+        {hasApi && onOpenDetail && (
+          <button
+            onClick={onOpenDetail}
+            aria-label="캐릭터 상세 정보"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors cursor-pointer"
+          >
+            <DetailIcon />
+          </button>
+        )}
+      </CardHeader>
 
       <div className="relative flex flex-col lg:flex-row lg:items-stretch lg:h-[172px]">
         {/* 좌측: 캐릭터 정보 */}
@@ -217,10 +153,13 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
 
         {/* 우측: 경험치 히스토리 */}
         <div className="w-full lg:w-[44%] lg:shrink-0 px-5 py-2 min-w-0 flex flex-col justify-center">
-          <p className="text-xs text-gray-700 dark:text-zinc-500 mb-2 mt-4 px-2">
-            경험치 히스토리(7일)
-            {!hasApi && <span className="ml-1 text-gray-300 dark:text-zinc-600">· API 미연동</span>}
-          </p>
+          {/* 타이틀을 막대 영역과 동일한 px-2 + max-w-[234px] mx-auto 컨텍스트에 넣어 가장 왼쪽 막대에 정렬 */}
+          <div className="px-2 mb-2 mt-4">
+            <p className="text-xs text-gray-700 dark:text-zinc-500 max-w-[234px] mx-auto">
+              경험치 히스토리(7일)
+              {!hasApi && <span className="ml-1 text-gray-300 dark:text-zinc-600">· API 미연동</span>}
+            </p>
+          </div>
 
           {!hasApi ? (
             <div className="flex-1 flex items-center justify-center text-xs text-gray-300 dark:text-zinc-600 text-center leading-relaxed">
@@ -255,29 +194,27 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
                     tip={barTip}
                     followCursor
                   >
-                  <div
-                    className="flex flex-col items-center gap-1 w-full relative cursor-pointer"
-                  >
-                    <div className="w-full relative flex items-end" style={{ height: 84 }}>
+                  <div className="flex flex-col items-center gap-1 w-full relative cursor-pointer">
+                    <div className="w-full relative flex items-end" style={{ height: 74 }}>
                       {slot.expRate !== null ? (
                         <>
                           {slot.level !== null && (i === 0 || slots.slice(0, i).reverse().find(s => s.level !== null)?.level !== slot.level) && (
                             <span
                               className="absolute left-0 right-0 text-center text-[8px] text-gray-900 dark:text-white leading-none pointer-events-none"
-                              style={{ bottom: Math.max((slot.expRate / 100) * 84, 2) + 12 }}
+                              style={{ bottom: Math.max((slot.expRate / 100) * 74, 2) + 12 }}
                             >
                               {slot.level}
                             </span>
                           )}
                           <span
                             className="absolute left-0 right-0 text-center text-[8px] text-gray-500 dark:text-zinc-400 leading-none pointer-events-none"
-                            style={{ bottom: Math.max((slot.expRate / 100) * 84, 2) + 2 }}
+                            style={{ bottom: Math.max((slot.expRate / 100) * 74, 2) + 2 }}
                           >
                             {slot.expRate.toFixed(1)}%
                           </span>
                           <div
                             className="w-full rounded-t bg-orange-400 dark:bg-orange-500 transition-all"
-                            style={{ height: Math.max((slot.expRate / 100) * 84, 2) }}
+                            style={{ height: Math.max((slot.expRate / 100) * 74, 2) }}
                           />
                         </>
                       ) : (

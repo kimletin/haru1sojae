@@ -51,6 +51,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `}} />
         {/* 넥슨 Open API Analytics */}
         <script type="text/javascript" src="https://openapi.nexon.com/js/analytics.js?app_id=301803" async></script>
+        {/* Google AdSense */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9335356894491039"
+          crossOrigin="anonymous"
+        ></script>
       </head>
       <body className={`min-h-screen bg-gray-50 text-gray-900 antialiased font-bold overflow-x-hidden ${notoSansKR.className}`}>
         {children}
