@@ -33,15 +33,15 @@ export default function EpicDungeonSection({ charLevel, epicDungeonBonus, hasCha
                   key={d.name}
                   onClick={() => setSelectedDungeon(d.name)}
                   className={
-                    'flex-1 rounded-lg text-sm font-medium transition-colors cursor-pointer py-2 px-3 flex items-center justify-center gap-2 ' +
+                    'flex-1 rounded-lg text-sm font-medium transition-colors cursor-pointer py-2 px-2 lg:px-3 flex items-center justify-center gap-1.5 lg:gap-2 ' +
                     (selectedDungeon === d.name
                       ? 'bg-orange-500 text-white border border-orange-500'
                       : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
                   }
                 >
-                  <img src={`/icons/${encodeURIComponent(d.name)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
+                  <img src={`/icons/${encodeURIComponent(d.name)}.png`} alt="" className="w-10 h-10 lg:w-12 lg:h-12 shrink-0 object-contain" />
                   <div className="flex flex-col items-center">
-                    <div className="text-xs font-semibold whitespace-nowrap">{d.name}</div>
+                    <div className="text-[12px] lg:text-sm font-semibold whitespace-nowrap">{d.name}</div>
                     <div className={'text-xs mt-0.5 ' + (selectedDungeon === d.name ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>
                       Lv.{d.minLv}~
                     </div>

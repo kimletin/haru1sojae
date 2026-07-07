@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const TIMEOUT_MS = 8000;
-const DAYS = 14; // 오늘 1 + 과거 13일
+const DAYS = 15; // 오늘 1 + 과거 14일
 
 function fetchWithTimeout(url: string, options: RequestInit) {
   const controller = new AbortController();

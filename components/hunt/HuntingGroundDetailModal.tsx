@@ -22,7 +22,7 @@ export default function HuntingGroundDetailModal({ region, groundName, imageSrc,
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-xl p-6 w-[960px] max-w-[95vw] max-h-[88vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">

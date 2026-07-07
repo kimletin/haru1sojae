@@ -23,13 +23,13 @@ interface Props {
   onClose: () => void;
 }
 
-// 경험치 히스토리 14일 막대그래프 (툴팁: 커서 따라감)
-function ExpHistory14({ history }: { history: HistoryPoint[] }) {
-  const slots = computeSlots(history, 14);
+// 경험치 히스토리 15일 막대그래프 (툴팁: 커서 따라감)
+function ExpHistory15({ history }: { history: HistoryPoint[] }) {
+  const slots = computeSlots(history, 15);
   const H = 130;
   const gridVals = [100, 75, 50, 25, 0];
 
-  // 오늘~13일 전 일일 획득 경험치 평균 (데이터가 있는 인접 날짜 쌍만 집계)
+  // 오늘~14일 전 일일 획득 경험치 평균 (데이터가 있는 인접 날짜 쌍만 집계)
   let expSum = 0, expDays = 0;
   for (let i = 1; i < slots.length; i++) {
     if (slots[i - 1].expRate != null && slots[i].expRate != null) {
@@ -39,18 +39,19 @@ function ExpHistory14({ history }: { history: HistoryPoint[] }) {
   }
   const avgExp = expDays > 0 ? Math.round(expSum / expDays) : null;
 
-  // 레벨업 예상일: (현재 레벨의 필요 경험치 - 현재 경험치) / 하루 평균 획득 경험치
   const last = slots[slots.length - 1];
+  const required = last.level != null ? (LEVEL_EXP[last.level]?.required ?? null) : null;
+  // 하루 평균 경험치가 현재 레벨 경험치통에서 차지하는 비율(%)
+  const avgExpPct = (avgExp != null && required != null && required > 0) ? (avgExp / required) * 100 : null;
+
+  // 레벨업 예상일: (현재 레벨의 필요 경험치 - 현재 경험치) / 하루 평균 획득 경험치
   let daysToLevelUp: number | null = null;
   let levelUpDateLabel = '';
-  if (avgExp != null && avgExp > 0 && last.level != null && last.exp != null) {
-    const required = LEVEL_EXP[last.level]?.required;
-    if (required != null) {
-      const remaining = required - last.exp;
-      if (remaining > 0) {
-        daysToLevelUp = Math.ceil(remaining / avgExp);
-        levelUpDateLabel = formatDateKR(kstDate(-daysToLevelUp)); // 예: 2026년 8월 7일 화요일
-      }
+  if (avgExp != null && avgExp > 0 && required != null && last.exp != null) {
+    const remaining = required - last.exp;
+    if (remaining > 0) {
+      daysToLevelUp = Math.ceil(remaining / avgExp);
+      levelUpDateLabel = formatDateKR(kstDate(-daysToLevelUp)); // 예: 2026년 8월 7일 화요일
     }
   }
 
@@ -61,11 +62,12 @@ function ExpHistory14({ history }: { history: HistoryPoint[] }) {
           {avgExp !== null && (
             <p className="text-[11px] text-gray-400 dark:text-zinc-500">
               하루 평균 경험치 <span className="text-gray-800 dark:text-zinc-100">{formatExpKR(avgExp)}</span>
+              {avgExpPct !== null && <span className="text-red-500 dark:text-red-400"> (+{avgExpPct.toFixed(2)}%)</span>}
             </p>
           )}
           {daysToLevelUp !== null && (
             <p className="text-[11px] text-gray-400 dark:text-zinc-500">
-              예상 레벨업 날짜 <span className="text-gray-800 dark:text-zinc-100">{levelUpDateLabel} ({daysToLevelUp}일 후)</span>
+              예상 레벨업 날짜 <span className="text-gray-800 dark:text-zinc-100">{levelUpDateLabel}</span> <span className="text-orange-400 dark:text-orange-300">({daysToLevelUp}일 후)</span>
             </p>
           )}
         </div>
@@ -153,13 +155,16 @@ function ExpHistory14({ history }: { history: HistoryPoint[] }) {
         </div>
         </div>
       </div>
-      {/* x축 날짜(5일 간격 + 마지막) */}
+      {/* x축 날짜 — 실제 날짜(M/D)를 이틀 간격으로 표기 */}
       <div className="flex gap-[4px] mt-1 pl-6">
-        {slots.map((slot, i) => (
-          <span key={slot.date} className="flex-1 min-w-0 text-center text-[9px] text-gray-400 dark:text-zinc-500 whitespace-nowrap overflow-visible">
-            {i % 5 === 0 || i === slots.length - 1 ? formatDate(slot.date) : ''}
-          </span>
-        ))}
+        {slots.map((slot, i) => {
+          const daysAgo = (slots.length - 1) - i; // 마지막(오늘)=0, 첫칸=14
+          return (
+            <span key={slot.date} className="flex-1 min-w-0 text-center text-[9px] text-gray-400 dark:text-zinc-500 whitespace-nowrap overflow-visible">
+              {daysAgo % 2 === 0 ? formatDate(slot.date) : ''}
+            </span>
+          );
+        })}
       </div>
     </div>
   );
@@ -242,12 +247,12 @@ export default function CharacterDetailModal({ name, history, ranking, onClose }
     .some(h => (h ?? []).some(p => p.ranking != null));
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-xl p-6 w-[520px] max-w-[95vw] max-h-[88vh] overflow-y-auto">
         {/* 헤더 */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-bold text-gray-900 dark:text-zinc-100">
-            {currentLevel != null && `Lv.${currentLevel} `}{name}
+            {currentLevel != null && <span className="text-orange-500">Lv.{currentLevel} </span>}{name}
           </h2>
           <button
             onClick={onClose}
@@ -259,10 +264,10 @@ export default function CharacterDetailModal({ name, history, ranking, onClose }
         <div className="flex flex-col gap-5">
           {/* 경험치 히스토리 (14일) */}
           <div>
-            <p className="text-xs font-semibold text-gray-600 dark:text-zinc-300 mb-2">경험치 히스토리 (14일)</p>
+            <p className="text-xs font-semibold text-gray-600 dark:text-zinc-300 mb-2">경험치 히스토리 (15일)</p>
             <div className="rounded-lg border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/40 px-3 py-3">
               {hasHistory ? (
-                <ExpHistory14 history={history} />
+                <ExpHistory15 history={history} />
               ) : (
                 <div className="py-8 text-center text-xs text-gray-400 dark:text-zinc-500">데이터를 불러올 수 없습니다</div>
               )}
