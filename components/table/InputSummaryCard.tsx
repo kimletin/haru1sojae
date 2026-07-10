@@ -92,7 +92,7 @@ export default function InputSummaryCard({ inputs, meta, onEditInfo }: Props) {
                       <div className="text-orange-200 font-semibold mb-0.5">{b.name}</div>
                       {b.mp != null && <div className="text-gray-200">몬스터파크 추가 경험치 <span className="text-orange-300">+{b.mp}%</span></div>}
                       {b.ep != null && <div className="text-gray-200">에픽 던전 기본 보상 <span className="text-orange-300">+{b.ep}%</span></div>}
-                      {b.tr != null && <div className="text-gray-200">트레져 헌터 경험치 <span className="text-orange-300">+{b.tr}%</span></div>}
+                      {b.tr != null && <div className="text-gray-200">트레져 헌터 추가 경험치 <span className="text-orange-300">+{b.tr}%</span></div>}
                     </>}
                   >
                     {b.icon
