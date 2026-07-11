@@ -31,17 +31,20 @@ export async function GET(req: NextRequest) {
   // 오늘 호출 응답에서 표시용 기본 정보(basic)도 함께 추출해 별도 basic 호출을 없앤다.
   const allDates: (string | null)[] = [null, ...Array.from({ length: DAYS - 1 }, (_, i) => kstDate(i + 1))];
   // 날짜 신선도별 캐시(Vercel Data Cache, 전 방문자 공유):
-  // - 오늘(null): 실시간 → 60초
+  // - 오늘(null): no-store — 매번 NEXON 신선값. revalidate는 만료 후 첫 요청에 stale 값을 먼저
+  //   내주는 stale-while-revalidate라, 오늘값이 옛 값으로 ~1분 보이는 문제가 있어 캐시하지 않는다.
   // - 어제(index 1): 0~새벽 갱신 중 결측 가능 → 30분으로 self-heal
   // - 2~6일 전: 확정·불변 → 7일 (다음날 어제값이 이 구간으로 흡수돼 자동 장기화)
-  const revalidateFor = (i: number) => (i === 0 ? 60 : i === 1 ? 1800 : 604800);
+  const revalidateFor = (i: number) => (i === 1 ? 1800 : 604800);
   const raws = await Promise.all(
     allDates.map(async (date, i) => {
       const url = date
         ? `https://open.api.nexon.com/maplestory/v1/character/basic?ocid=${encodeURIComponent(ocid)}&date=${date}`
         : `https://open.api.nexon.com/maplestory/v1/character/basic?ocid=${encodeURIComponent(ocid)}`;
       try {
-        const res = await fetchWithTimeout(url, { headers, next: { revalidate: revalidateFor(i) } });
+        const res = await fetchWithTimeout(url, i === 0
+          ? { headers, cache: 'no-store' }
+          : { headers, next: { revalidate: revalidateFor(i) } });
         if (!res.ok) return null;
         return await res.json();
       } catch {

@@ -471,9 +471,25 @@ export default function Home() {
       ]);
 
       // history 응답은 { history: HistoryPoint[], basic: {...} } — basic은 오늘 호출에서 추출(별도 basic 호출 제거)
-      const histArr: HistoryPoint[] | null = Array.isArray(histData?.history) ? histData.history : null;
+      let histArr: HistoryPoint[] | null = Array.isArray(histData?.history) ? histData.history : null;
       const basic = histData?.basic ?? null;
-      const histOk  = histArr !== null;
+
+      // 오늘 호출은 no-store로 매번 신선하게 받되, 특정 날짜(오늘 등) 호출이 실패해 빠지면 캐시의 값을 유지한다.
+      // 부분 실패: 새 응답에 없는 날짜만 캐시로 보충 / 전체 실패(점검 등): 캐시 전체 유지 → 빈 그래프 방지.
+      let prevCache: { savedAt?: number; history?: HistoryPoint[]; ranking?: Ranking | null } = {};
+      try { const raw = localStorage.getItem(CHAR_CACHE_KEY(ocid)); if (raw) prevCache = JSON.parse(raw); } catch {}
+      if (histArr && histArr.length > 0) {
+        const newDates = new Set(histArr.map(p => p.date));
+        const oldest = histArr[0].date; // 라우트가 오름차순 정렬해 반환
+        for (const p of (prevCache.history ?? [])) {
+          if (!newDates.has(p.date) && p.date >= oldest) histArr.push(p);
+        }
+        histArr.sort((a, b) => a.date.localeCompare(b.date));
+      } else if (Array.isArray(histData?.history)) {
+        histArr = prevCache.history ?? []; // 응답은 왔지만 전 날짜 실패 → 캐시 유지
+      }
+
+      const histOk  = histArr !== null && histArr.length > 0;
       const rankOk  = rankData && typeof rankData === 'object' && rankData.error === undefined;
       const imageOk = basic != null;
       const skillOk = skillData && skillData.monsterParkBonus !== undefined;
@@ -483,7 +499,7 @@ export default function Home() {
       // 현재 활성 슬롯(ref는 항상 최신)과 다시 비교한다.
       // (늦게 도착한 A 슬롯 응답이 B 슬롯 화면에 표시되는 레이스 컨디션 방지)
       const stillActive = presetIdx === activePresetRef.current;
-      if (histOk && stillActive) {
+      if (histOk && stillActive && histArr) {
         setCharHistory(histArr);
         const todayPoint = histArr.find(pt => pt.date === kstToday()) ?? null;
         setTodayExpRate(todayPoint?.expRate ?? null);
@@ -521,11 +537,6 @@ export default function Home() {
       }
 
       if (histOk || rankOk) {
-        let prevCache: { savedAt?: number; history?: HistoryPoint[]; ranking?: Ranking | null } = {};
-        try {
-          const raw = localStorage.getItem(CHAR_CACHE_KEY(ocid));
-          if (raw) prevCache = JSON.parse(raw);
-        } catch {}
         const cache = {
           savedAt: histOk ? Date.now() : (prevCache.savedAt ?? Date.now()),
           history: histOk ? histArr : (prevCache.history ?? []),
