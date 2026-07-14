@@ -191,7 +191,7 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
             </CardHeader>
             <div className="flex flex-col">
               {!hasCharacter ? (
-                <div className="flex-1 flex flex-col items-center justify-center gap-3">
+                <div className="flex-1 flex flex-col items-center justify-center gap-3 py-10">
                   <p className="text-sm text-gray-400 dark:text-zinc-500">캐릭터를 추가해주세요</p>
                   {onAddCharacter && (
                     <button onClick={onAddCharacter} className="px-5 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold transition-colors cursor-pointer">캐릭터 추가</button>
