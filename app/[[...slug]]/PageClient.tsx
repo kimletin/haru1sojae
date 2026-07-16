@@ -50,7 +50,7 @@ function loadMetas(): (CharMeta | null)[] {
 }
 
 const DEFAULT_INPUTS: InputValues = {
-  waterBottleRate: 0,
+  waterBottleRate: 1800,
   mesoMarketRate: 2280,
   charLevel: 260,
   monsterLevel: 260,
@@ -71,7 +71,6 @@ const DEFAULT_INPUTS: InputValues = {
   price4x: 200_000_000,
   priceSmallBooster: 1_300_000,
   priceLargeBooster: 4_600_000,
-  priceAzmos: 3_500_000,
   priceHunterTitle: 1_650_000_000,
   priceBloodRingMeso: 300_000_000,
   priceBoostringMeso: 450_000_000,
@@ -474,19 +473,23 @@ export default function Home() {
       let histArr: HistoryPoint[] | null = Array.isArray(histData?.history) ? histData.history : null;
       const basic = histData?.basic ?? null;
 
-      // 오늘 호출은 no-store로 매번 신선하게 받되, 특정 날짜(오늘 등) 호출이 실패해 빠지면 캐시의 값을 유지한다.
-      // 부분 실패: 새 응답에 없는 날짜만 캐시로 보충 / 전체 실패(점검 등): 캐시 전체 유지 → 빈 그래프 방지.
+      // 캐시 보충은 '오늘'에만 적용한다(오늘 호출은 no-store라 실패 시 값이 사라지므로 캐시로 유지).
+      // 과거 날짜(어제 포함)는 NEXON 일자 스냅샷이 있을 때만 표시 — 자정 직후 전일 스냅샷이 아직
+      // 없으면 막대를 비워두고, NEXON이 스냅샷을 제공하는 순간부터 보이게 한다.
+      // 단 전체 실패(점검 등)면 캐시 전체를 유지해 빈 그래프를 막는다.
       let prevCache: { savedAt?: number; history?: HistoryPoint[]; ranking?: Ranking | null } = {};
       try { const raw = localStorage.getItem(CHAR_CACHE_KEY(ocid)); if (raw) prevCache = JSON.parse(raw); } catch {}
       if (histArr && histArr.length > 0) {
-        const newDates = new Set(histArr.map(p => p.date));
-        const oldest = histArr[0].date; // 라우트가 오름차순 정렬해 반환
-        for (const p of (prevCache.history ?? [])) {
-          if (!newDates.has(p.date) && p.date >= oldest) histArr.push(p);
+        const today = kstToday();
+        if (!histArr.some(p => p.date === today)) {
+          const cachedToday = (prevCache.history ?? []).find(p => p.date === today);
+          if (cachedToday) {
+            histArr.push(cachedToday);
+            histArr.sort((a, b) => a.date.localeCompare(b.date));
+          }
         }
-        histArr.sort((a, b) => a.date.localeCompare(b.date));
       } else if (Array.isArray(histData?.history)) {
-        histArr = prevCache.history ?? []; // 응답은 왔지만 전 날짜 실패 → 캐시 유지
+        histArr = prevCache.history ?? []; // 응답은 왔지만 전 날짜 실패(점검 등) → 캐시 전체 유지
       }
 
       const histOk  = histArr !== null && histArr.length > 0;

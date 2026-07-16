@@ -19,9 +19,9 @@ interface Props {
 
 // 초기화/불러오기가 건드리는 1열(시세+도핑 가격) 필드
 const PRICE_KEYS = [
-  'mesoMarketRate',
+  'waterBottleRate', 'mesoMarketRate',
   'price50', 'price70', 'price2x', 'price3x', 'price4x',
-  'priceSmallBooster', 'priceLargeBooster', 'priceAzmos',
+  'priceSmallBooster', 'priceLargeBooster',
   'priceHunterTitle', 'priceBloodRingMeso', 'priceBoostringMeso', 'priceJungpenMeso',
 ] as const;
 
@@ -127,9 +127,9 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
     const firstGround = firstRegion.grounds[0];
     setD(prev => ({
       ...prev,
-      mesoMarketRate: 0,
+      waterBottleRate: 0, mesoMarketRate: 0,
       price50: 0, price70: 0, price2x: 0, price3x: 0, price4x: 0,
-      priceSmallBooster: 0, priceLargeBooster: 0, priceAzmos: 0,
+      priceSmallBooster: 0, priceLargeBooster: 0,
       priceHunterTitle: 0, priceBloodRingMeso: 0, priceBoostringMeso: 0, priceJungpenMeso: 0,
       dailySessions: 0,
       booster30min: 0, eternal30min: 0, booster1day: 0, eternal1day: 0,
@@ -186,7 +186,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
         {/* 1열: 시세 정보 */}
         <div className="min-w-0">
           <p className={sectionLabel}>시세 정보</p>
-          <NumField label="물통 시세" disabled unit="" icon="메소" />
+          <NumField label="물통 시세" value={d.waterBottleRate} onChange={v => set('waterBottleRate', v)} unit="원" max={9999} icon="메소" />
           <NumField label="메소마켓 시세" value={d.mesoMarketRate} onChange={v => set('mesoMarketRate', v)} unit="메포" max={9999} icon="메포" />
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-1.5 pt-1.5">
             <p className="text-[11px] text-orange-500 dark:text-orange-400 font-semibold mb-0.5">30분 도핑</p>
@@ -197,7 +197,6 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
             <NumField label="경험치 4배 쿠폰" value={d.price4x} onChange={v => set('price4x', v)} icon="경험치 4배 쿠폰" />
             <NumField label="소경축비" value={d.priceSmallBooster} onChange={v => set('priceSmallBooster', v)} icon="소경축비" />
             <NumField label="고농축비" value={d.priceLargeBooster} onChange={v => set('priceLargeBooster', v)} icon="고농축비" />
-            <NumField label="아즈모스 영약" value={d.priceAzmos} onChange={v => set('priceAzmos', v)} icon="아즈모스 영약" />
           </div>
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-1.5 pt-1.5">
             <p className="text-[11px] text-orange-500 dark:text-orange-400 font-semibold mb-0.5">30일 도핑</p>

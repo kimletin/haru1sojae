@@ -1,7 +1,7 @@
 'use client';
 
 import { InputValues, EfficiencyItem } from '@/types';
-import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency } from '@/lib/calculator';
+import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getMekaberryExp, getMekaberryPrice, getBlueberryExp, getBlueberryPrice, getPrimePassExp, getPrimePassPrice } from '@/lib/calculator';
 import Num from '@/components/ui/Num';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
@@ -124,7 +124,6 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
     { name: '4배 쿠폰',                  rate: 3,   ...effRow(base30 * 3,   inputs.price4x) },
     { name: '소경축비', rate: 0.1, ...effRow(base30 * 0.1, inputs.priceSmallBooster) },
     { name: '소경축비→고농축비', rate: 0.1, ...effRow(base30 * 0.1, inputs.priceLargeBooster - inputs.priceSmallBooster) },
-    { name: '아즈모스 영약', rate: 0.2, ...effRow(base30 * 0.2, inputs.priceAzmos) },
   ];
 
   const doping30dRows: TableRow[] = [
@@ -149,6 +148,9 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
     { name: '몬스터파크(' + parkZone + ') 썬데이', ...effRow(getMonsterParkExp(parkZone, '썬데이', monsterParkBonus), parkPrice) },
     { name: '몬스터파크(' + parkZone + ') 스페셜', ...effRow(getMonsterParkExp(parkZone, '스페셜', monsterParkBonus), parkPrice) },
     { name: 'VIP 사우나',            ...effRow(vipExp, getVipSaunaPrice(inputs.mesoMarketRate)) },
+    { name: '메카베리 농장 입장권',  ...effRow(getMekaberryExp(inputs.charLevel), getMekaberryPrice(inputs.mesoMarketRate)) },
+    { name: '블루베리 농장 입장권',  ...effRow(getBlueberryExp(inputs.charLevel), getBlueberryPrice(inputs.mesoMarketRate)) },
+    { name: '프라임 모멘텀 패스',    ...effRow(getPrimePassExp(inputs.charLevel, base30), getPrimePassPrice(inputs.waterBottleRate)) },
   ];
 
   return (
