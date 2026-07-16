@@ -5,12 +5,11 @@ import type { TreasureBox } from '@/data/treasureHunter';
 
 interface Props {
   monsterLevel: number;
-  charLevel: number;
   treasureBonus?: number;
   hasCharacter: boolean;
 }
 
-export default function TreasureHunterSection({ monsterLevel, charLevel, treasureBonus = 0, hasCharacter }: Props) {
+export default function TreasureHunterSection({ monsterLevel, treasureBonus = 0, hasCharacter }: Props) {
   const [treasureBox, setTreasureBox] = useState<TreasureBox>('폴로/프리토');
   return (
                 <div className="flex flex-col gap-1.5 lg:h-[664px]">
@@ -39,7 +38,6 @@ export default function TreasureHunterSection({ monsterLevel, charLevel, treasur
                   <div className="flex-1 min-h-0">
                     <TreasureHunterTable
                       monsterLevel={monsterLevel}
-                      charLevel={charLevel}
                       treasureBonus={treasureBonus}
                       selectedBox={treasureBox}
                       hasCharacter={hasCharacter}

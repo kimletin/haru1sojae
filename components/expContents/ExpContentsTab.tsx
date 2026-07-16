@@ -195,7 +195,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                   : <div className="lg:absolute lg:inset-0"><SingleTable {...splitProps} /></div>
               )}
 
-              {selected === 'treasurehunter' && <TreasureHunterSection monsterLevel={monsterLevel} charLevel={charLevel} treasureBonus={treasureBonus} hasCharacter={hasCharacter} />}
+              {selected === 'treasurehunter' && <TreasureHunterSection monsterLevel={monsterLevel} treasureBonus={treasureBonus} hasCharacter={hasCharacter} />}
 
             </div>
 

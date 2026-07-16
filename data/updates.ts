@@ -6,6 +6,13 @@ export interface UpdateEntry {
 
 export const UPDATES: UpdateEntry[] = [
   {
+    date: '2026.07.17.',
+    title: '오류 수정',
+    items: [
+      '트레져 헌터 경험치 %가 선택된 캐릭터 슬롯에 따라 다르게 표시되던 오류 수정',
+    ],
+  },
+  {
     date: '2026.07.16.',
     title: '가성비 표시 개선',
     items: [
