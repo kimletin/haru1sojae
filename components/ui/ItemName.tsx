@@ -96,7 +96,7 @@ export default function ItemName({ name }: { name: string }) {
           {iconEl}
           {displayLabel(stageMatch[1])}
         </span>
-        <span className="inline-flex items-center gap-0.5">
+        <span className="inline-flex items-center gap-0.5 ml-1">
           <StageBadge stage={stageMatch[2]} />
           <span className="mx-0.5 text-gray-400">→</span>
           <StageBadge stage={stageMatch[3]} />
