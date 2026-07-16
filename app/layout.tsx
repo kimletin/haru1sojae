@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Noto_Sans_KR } from 'next/font/google';
+import AdSenseScript from '@/components/ui/AdSenseScript';
 import './globals.css';
 
 const notoSansKR = Noto_Sans_KR({
@@ -51,17 +52,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `}} />
         {/* 넥슨 Open API Analytics */}
         <script type="text/javascript" src="https://openapi.nexon.com/js/analytics.js?app_id=301803" async></script>
-        {/* Google AdSense — 애드센스 권장대로 head에 raw script로 둔다.
-            next/script로 옮기면 data-nscript 속성 때문에 애드센스가 경고를 찍어서 되돌림.
-            (개발 모드에서 hydration mismatch 경고가 뜨지만 동작엔 영향 없음) */}
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9335356894491039"
-          crossOrigin="anonymous"
-        ></script>
       </head>
       <body className={`min-h-screen bg-gray-50 text-gray-900 antialiased font-bold overflow-x-hidden ${notoSansKR.className}`}>
         {children}
+        {/* 애드센스 로더 — hydration 후 <head>에 직접 주입 (사유는 컴포넌트 주석 참고) */}
+        <AdSenseScript />
       </body>
     </html>
   );

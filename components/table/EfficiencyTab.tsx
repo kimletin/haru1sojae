@@ -1,7 +1,7 @@
 'use client';
 
 import { InputValues, EfficiencyItem } from '@/types';
-import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getMekaberryExp, getMekaberryPrice, getBlueberryExp, getBlueberryPrice, getPrimePassExp, getPrimePassPrice } from '@/lib/calculator';
+import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getMekaberryExp, getMekaberryPrice, getBlueberryExp, getBlueberryPrice, getPrimePassExp, getPrimePassPrice, getDoping30Tiers } from '@/lib/calculator';
 import Num from '@/components/ui/Num';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
@@ -116,14 +116,17 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
     ratio: vipEff > 0 && price > 0 ? (exp / price) / vipEff : 0,
   });
 
+  // 상위 티어는 상황에 따라 '상위 단일' 또는 '하위→상위 마진'으로 표시된다 (calculator.tierRow 주석 참고)
+  const tiers = getDoping30Tiers(inputs, base30);
+
   const doping30Rows: TableRow[] = [
     { name: '추가경험치 50%', rate: 0.5, ...effRow(base30 * 0.5, inputs.price50) },
-    { name: '추가경험치 50%→70%', rate: 0.2, ...effRow(base30 * 0.2, inputs.price70 - inputs.price50) },
+    { name: tiers.exp70.name,   ...effRow(tiers.exp70.exp,   tiers.exp70.priceMeso) },
     { name: '2배 쿠폰',                  rate: 1,   ...effRow(base30 * 1,   inputs.price2x) },
-    { name: '3배 쿠폰',                  rate: 2,   ...effRow(base30 * 2,   inputs.price3x) },
-    { name: '4배 쿠폰',                  rate: 3,   ...effRow(base30 * 3,   inputs.price4x) },
+    { name: tiers.coupon3.name, ...effRow(tiers.coupon3.exp, tiers.coupon3.priceMeso) },
+    { name: tiers.coupon4.name, ...effRow(tiers.coupon4.exp, tiers.coupon4.priceMeso) },
     { name: '소경축비', rate: 0.1, ...effRow(base30 * 0.1, inputs.priceSmallBooster) },
-    { name: '소경축비→고농축비', rate: 0.1, ...effRow(base30 * 0.1, inputs.priceLargeBooster - inputs.priceSmallBooster) },
+    { name: tiers.booster.name, ...effRow(tiers.booster.exp, tiers.booster.priceMeso) },
   ];
 
   const doping30dRows: TableRow[] = [

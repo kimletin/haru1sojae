@@ -204,6 +204,36 @@ export function getPrimePassPrice(waterBottleRate: number): number {
   return cashToMeso(PRIME_PASS_CASH, waterBottleRate);
 }
 
+/** 하위→상위 티어 행을 어떻게 보여줄지 결정.
+ *
+ *  수학적으로 `마진효율 > 상위단일효율` ⟺ `상위단일효율 > 하위단일효율` 이 항상 성립한다.
+ *  즉 상위가 더 효율적일 땐 마진이 두 단일 효율보다도 높게 나와 순위 1위로 뻥튀기되는데,
+ *  증분(예: +20%)만 따로 살 수는 없으므로 과대평가다. 이 경우엔 실제로 살 수 있는
+ *  '상위 단일'을 보여준다("그냥 상위를 사라").
+ *  반대로 상위가 더 비효율적이면 마진을 보여준다(이미 하위를 쓰는 사람의 갈아타기 판단용). */
+export function tierRow(
+  upgradeName: string, standaloneName: string,
+  lowerExp: number, lowerPrice: number,
+  upperExp: number, upperPrice: number,
+): { name: string; exp: number; priceMeso: number; isUpgrade: boolean } {
+  const effLower = lowerPrice > 0 ? lowerExp / lowerPrice : 0;
+  const effUpper = upperPrice > 0 ? upperExp / upperPrice : 0;
+  if (effUpper > effLower) {
+    return { name: standaloneName, exp: upperExp, priceMeso: upperPrice, isUpgrade: false };
+  }
+  return { name: upgradeName, exp: upperExp - lowerExp, priceMeso: upperPrice - lowerPrice, isUpgrade: true };
+}
+
+/** 30분 도핑 티어 4종(추경 70% / 경3쿠 / 경4쿠 / 고농축비)의 표시 행 계산 — 순위·효율표 공용 */
+export function getDoping30Tiers(inputs: InputValues, base30: number) {
+  return {
+    exp70:   tierRow('추가경험치 50%→70%', '추가경험치 70%', base30 * 0.5, inputs.price50,             base30 * 0.7, inputs.price70),
+    coupon3: tierRow('2배 쿠폰→3배 쿠폰',   '3배 쿠폰',       base30 * 1,   inputs.price2x,             base30 * 2,   inputs.price3x),
+    coupon4: tierRow('3배 쿠폰→4배 쿠폰',   '4배 쿠폰',       base30 * 2,   inputs.price3x,             base30 * 3,   inputs.price4x),
+    booster: tierRow('소경축비→고농축비',   '고농축비',       base30 * 0.1, inputs.priceSmallBooster,   base30 * 0.2, inputs.priceLargeBooster),
+  };
+}
+
 /** 전체 가성비 아이템 목록 계산 */
 export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0): EfficiencyItem[] {
   const vipEff = getVipEfficiency(inputs);
@@ -239,13 +269,20 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
   const boostringMetaPrice = mepoToMeso(29900, mesoMarketRate);
   const jungpenMetaPrice   = mepoToMeso(49900, mesoMarketRate);
 
+  // 상위 티어는 상황에 따라 '상위 단일' 또는 '하위→상위 마진'으로 표시된다 (tierRow 주석 참고)
+  const tiers = getDoping30Tiers(inputs, base30);
+  const tierItem = (t: ReturnType<typeof tierRow>) =>
+    item(t.name, t.isUpgrade ? '마진' : '30분 도핑', t.exp, t.priceMeso);
+
   const items: EfficiencyItem[] = [
     // 30분 도핑
     item('추가경험치 50%',     '30분 도핑', base30 * 0.5, inputs.price50),
+    tierItem(tiers.exp70),
     item('2배 쿠폰',            '30분 도핑', base30 * 1,   inputs.price2x),
-    item('3배 쿠폰',            '30분 도핑', base30 * 2,   inputs.price3x),
-    item('4배 쿠폰',            '30분 도핑', base30 * 3,   inputs.price4x),
+    tierItem(tiers.coupon3),
+    tierItem(tiers.coupon4),
     item('소경축비',            '30분 도핑', base30 * 0.1, inputs.priceSmallBooster),
+    tierItem(tiers.booster),
     // 30일 도핑
     item('부티크 사냥 칭호',           '30일 도핑', base30d * 1,    inputs.priceHunterTitle),
     item('혈맹의 반지(메소)',    '30일 도핑', base30d * 0.1,  inputs.priceBloodRingMeso),
@@ -264,9 +301,6 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
     item('메카베리 농장 입장권', 'BM', getMekaberryExp(charLevel), getMekaberryPrice(mesoMarketRate)),
     item('블루베리 농장 입장권', 'BM', getBlueberryExp(charLevel), getBlueberryPrice(mesoMarketRate)),
     item('프라임 모멘텀 패스', 'BM', getPrimePassExp(charLevel, base30), getPrimePassPrice(inputs.waterBottleRate)),
-    // 마진 비교
-    item('추가경험치 50%→70%',  '마진', base30 * 0.2, inputs.price70 - inputs.price50),
-    item('소경축비→고농축비',   '마진', base30 * 0.1, inputs.priceLargeBooster - inputs.priceSmallBooster),
   ];
 
   return items.sort((a, b) => b.ratio - a.ratio);
