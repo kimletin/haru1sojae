@@ -26,7 +26,7 @@ export default function TreasureHunterSection({ monsterLevel, treasureBonus = 0,
                         }
                       >
                         <div className="w-10 h-10 lg:w-12 lg:h-12 shrink-0 flex items-center justify-center">
-                          <img src={`/icons/${encodeURIComponent(TREASURE_BOX_META[d].icon)}.png`} alt="" className="w-full h-full object-contain scale-125" />
+                          <img src={`/icons/${encodeURIComponent(TREASURE_BOX_META[d].icon)}.webp`} alt="" className="w-full h-full object-contain scale-125" />
                         </div>
                         <div className="flex flex-col items-center min-w-0">
                           <div className="font-semibold whitespace-nowrap text-[12px] lg:text-sm">{TREASURE_BOX_META[d].label}</div>
