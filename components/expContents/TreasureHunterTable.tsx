@@ -17,8 +17,8 @@ export const TREASURE_BOX_META: Record<TreasureBox, { label: string; sub: string
   '에스페시아':  { label: '다이아 트레져 박스', sub: '에스페시아', icon: '다이아 트레져 박스' },
 };
 
-export function TreasureHunterTable({ monsterLevel, charLevel, treasureBonus = 0, selectedBox, hasCharacter = true }: {
-  monsterLevel: number; charLevel: number; treasureBonus?: number; selectedBox: TreasureBox; hasCharacter?: boolean;
+export function TreasureHunterTable({ monsterLevel, treasureBonus = 0, selectedBox, hasCharacter = true }: {
+  monsterLevel: number; treasureBonus?: number; selectedBox: TreasureBox; hasCharacter?: boolean;
 }) {
   const [bonusInput, setBonusInput] = useState(treasureBonus > 0 ? String(treasureBonus) : '');
   const [sunday, setSunday] = useState(false);
@@ -90,21 +90,22 @@ export function TreasureHunterTable({ monsterLevel, charLevel, treasureBonus = 0
                     {lv}
                     {isMe && <span className="ml-1 text-[9px] bg-orange-500 dark:bg-orange-700 text-white px-1 py-0.5 rounded-full">나</span>}
                   </td>
+                  {/* %는 그 행의 레벨 기준으로 고정 — 선택된 캐릭터 슬롯과 무관 (다른 레벨별 표와 동일) */}
                   <td className={'px-2 py-1.5 text-center ' + baseColor}>
                     <Num n={rare} />
-                    <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(rare, charLevel)})</span>
+                    <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(rare, lv)})</span>
                   </td>
                   <td className={'px-2 py-1.5 text-center ' + baseColor}>
                     <Num n={epic} />
-                    <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(epic, charLevel)})</span>
+                    <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(epic, lv)})</span>
                   </td>
                   <td className={'px-2 py-1.5 text-center ' + baseColor}>
                     <Num n={unique} />
-                    <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(unique, charLevel)})</span>
+                    <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(unique, lv)})</span>
                   </td>
                   <td className={'px-2 py-1.5 text-center ' + baseColor}>
                     <Num n={legendary} />
-                    <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(legendary, charLevel)})</span>
+                    <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(legendary, lv)})</span>
                   </td>
                 </tr>
               );
