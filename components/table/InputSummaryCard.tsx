@@ -71,9 +71,11 @@ export default function InputSummaryCard({ inputs, meta, onEditInfo }: Props) {
         </CardHeader>
         <div className="py-3">
           <Row label="일 평균 재획" value={toTimeStr(inputs.dailySessions)} />
+          <Row label="30분 부스터" value={`VIP ${inputs.booster30min}개 · 영겁 ${inputs.eternal30min}개`} />
+          <Row label="1일 부스터" value={`VIP ${inputs.booster1day}개 · 영겁 ${inputs.eternal1day}개`} />
           <Row label="에픽 던전" value={inputs.epicDungeonZone} />
           <Row label="몬스터파크" value={inputs.monsterParkZone} />
-          <Row label="사냥터" value={`${inputs.huntingRegion} · ${inputs.huntingGround}`} />
+          <Row label="사냥터" value={`[${inputs.huntingRegion}] ${inputs.huntingGround}`} />
         </div>
       </div>
 

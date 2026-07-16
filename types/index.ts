@@ -28,7 +28,6 @@ export interface InputValues {
   price4x: number;              // 4배 쿠폰
   priceSmallBooster: number;    // 소경축비
   priceLargeBooster: number;    // 고농축비
-  priceAzmos: number;           // 아즈모스 영약
   priceHunterTitle: number;     // 사냥 칭호 (30일)
   priceBloodRingMeso: number;   // 혈맹의 반지 (메소)
   priceBoostringMeso: number;   // 부스트링 (메소)

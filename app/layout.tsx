@@ -51,7 +51,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `}} />
         {/* 넥슨 Open API Analytics */}
         <script type="text/javascript" src="https://openapi.nexon.com/js/analytics.js?app_id=301803" async></script>
-        {/* Google AdSense */}
+        {/* Google AdSense — 애드센스 권장대로 head에 raw script로 둔다.
+            next/script로 옮기면 data-nscript 속성 때문에 애드센스가 경고를 찍어서 되돌림.
+            (개발 모드에서 hydration mismatch 경고가 뜨지만 동작엔 영향 없음) */}
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9335356894491039"

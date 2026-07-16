@@ -6,6 +6,14 @@ export interface UpdateEntry {
 
 export const UPDATES: UpdateEntry[] = [
   {
+    date: '2026.07.16.',
+    title: 'ver.1.2.417 업데이트',
+    items: [
+      '메포샵 메카베리 농장, 블루베리 농장 입장권 추가',
+      '프라임 모멘텀 패스 추가',
+    ],
+  },
+  {
     date: '2026.06.18.',
     title: 'ver.1.2.416 업데이트',
     items: [
