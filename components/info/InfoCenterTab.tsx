@@ -50,6 +50,14 @@ export default function InfoCenterTab() {
               <p>가성비 배율은 <span className="font-semibold text-orange-500">VIP 사우나</span>를 기준(100%)으로 계산됩니다. 배율이 높을수록 VIP 사우나 대비 더 효율적인 아이템입니다.</p>
             </div>
             <div>
+              <p className="font-semibold text-gray-900 dark:text-zinc-100 mb-1">💰 가격 환산 기준</p>
+              <p><span className="font-semibold text-orange-500">넥슨캐시</span>로만 구매 가능한 아이템은 <span className="font-semibold text-orange-500">물통 시세</span>를 기준으로 메소 가격을 환산합니다. <span className="font-semibold text-orange-500">메이플포인트</span>로 구매 가능한 아이템은 <span className="font-semibold text-orange-500">메소마켓 수수료 1%</span>가 반영되어 있습니다.</p>
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900 dark:text-zinc-100 mb-1">🪙 에픽 던전 세라자르 주화</p>
+              <p>에픽 던전 보너스 보상에는 <span className="font-semibold text-orange-500">세라자르 주화 4개</span>가 계산에 반영되어 있습니다. <span className="font-semibold text-orange-500">주화 가치</span>만큼 에픽 던전 비용에서 차감해 계산합니다.</p>
+            </div>
+            <div>
               <p className="font-semibold text-gray-900 dark:text-zinc-100 mb-1">⚠️ 도핑류 계산 주의사항</p>
               <p>경험치 도핑류 아이템의 계산에는 엘리트 몬스터, 엘리트 보스, 경험치 획득량과 관련된 경험치 이벤트 등이 반영되어 있지 않기 때문에, 해당 아이템의 효율은 다소 <span className="font-semibold text-orange-500">저평가</span>되어 있습니다.</p>
             </div>

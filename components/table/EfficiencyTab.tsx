@@ -1,7 +1,7 @@
 'use client';
 
 import { InputValues, EfficiencyItem } from '@/types';
-import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getMekaberryExp, getMekaberryPrice, getBlueberryExp, getBlueberryPrice, getPrimePassExp, getPrimePassPrice, getDoping30Tiers } from '@/lib/calculator';
+import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getMekaberryExp, getMekaberryPrice, getBlueberryExp, getBlueberryPrice, getPrimePassExp, getPrimePassPrice, getDoping30Tiers, MEKABERRY_MIN_LEVEL } from '@/lib/calculator';
 import Num from '@/components/ui/Num';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
@@ -25,6 +25,8 @@ interface TableRow {
   inputValue?: number;
   onEdit?: (v: number) => void;
   isEvent?: boolean;
+  /** 캐릭터 레벨이 모자라 아직 못 쓰는 항목. 흐리게 + 전 열을 '-'로 표시한다. */
+  locked?: boolean;
 }
 
 function EffTable({ title, rows, color = 'green', headerExtra }: {
@@ -62,32 +64,35 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
           </tr>
         </thead>
         <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} style={{ height: 36 }} className={"border-b transition-colors " + (row.isEvent ? "bg-amber-50 dark:bg-amber-900/40 hover:bg-amber-100 border-amber-100 dark:border-amber-800" : "border-gray-50 hover:bg-gray-50 dark:hover:bg-gray-700:bg-gray-700")}>
+          {rows.map((row, i) => {
+            const locked = !!row.locked;
+            return (
+            <tr key={i} style={{ height: 36 }} className={"border-b transition-colors " + (row.isEvent ? "bg-amber-50 dark:bg-amber-900/40 hover:bg-amber-100 border-amber-100 dark:border-amber-800" : "border-gray-50 hover:bg-gray-50 dark:hover:bg-gray-700:bg-gray-700") + (locked ? " opacity-40" : "")}>
               <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300">
                 <span className="inline-flex items-center justify-center gap-0.5 flex-wrap">
                   <ItemName name={row.name} />
                   {row.isEvent && <span className="text-xs font-medium bg-amber-400 text-white px-1.5 py-0.5 rounded-full">E</span>}
                 </span>
               </td>
-              <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300 whitespace-nowrap"><Num n={row.exp} /></td>
+              <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300 whitespace-nowrap">{locked ? '-' : <Num n={row.exp} />}</td>
               <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300 whitespace-nowrap">
-                {row.priceMeso > 0 ? (
+                {locked || row.priceMeso <= 0 ? '-' : (
                   <>
                     <span className="lg:hidden"><Num n={row.priceMeso} /></span>
                     <span className="hidden lg:inline">{Math.round(row.priceMeso).toLocaleString('ko-KR')}</span>
                   </>
-                ) : '-'}
+                )}
               </td>
               <td className="px-2 py-1.5 text-center font-semibold text-orange-500 whitespace-nowrap">
-                {row.ratio > 0 ? (
+                {!locked && row.ratio > 0 ? (
                   <TooltipWrapper tip={expPer100M(row.efficiency)}>
                     <span className="cursor-default">{(row.ratio * 100).toFixed(1) + '%'}</span>
                   </TooltipWrapper>
                 ) : '-'}
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -143,6 +148,8 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
   const parkZone = inputs.monsterParkZone;
   const parkPrice = mepoToMeso(600, inputs.mesoMarketRate);
   const vipExp   = getVipSaunaExp(inputs.charLevel);
+  // 메카베리 농장 입장권과, 그걸 구성품으로 포함하는 프라임 모멘텀 패스는 280부터 사용 가능
+  const mekaberryLocked = inputs.charLevel < MEKABERRY_MIN_LEVEL;
 
   const bmRows: TableRow[] = [
     { name: epicName + ' 0→1단계', ...effRow(getEpicDungeonStage01Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage01Price(inputs.epicDungeonZone, inputs.mesoMarketRate)) },
@@ -151,9 +158,10 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
     { name: '몬스터파크(' + parkZone + ') 썬데이', ...effRow(getMonsterParkExp(parkZone, '썬데이', monsterParkBonus), parkPrice) },
     { name: '몬스터파크(' + parkZone + ') 스페셜', ...effRow(getMonsterParkExp(parkZone, '스페셜', monsterParkBonus), parkPrice) },
     { name: 'VIP 사우나',            ...effRow(vipExp, getVipSaunaPrice(inputs.mesoMarketRate)) },
-    { name: '메카베리 농장 입장권',  ...effRow(getMekaberryExp(inputs.charLevel), getMekaberryPrice(inputs.mesoMarketRate)) },
     { name: '블루베리 농장 입장권',  ...effRow(getBlueberryExp(inputs.charLevel), getBlueberryPrice(inputs.mesoMarketRate)) },
-    { name: '프라임 모멘텀 패스',    ...effRow(getPrimePassExp(inputs.charLevel, base30), getPrimePassPrice(inputs.waterBottleRate)) },
+    // 280 미만에서 비활성화되는 두 항목은 표 맨 아래에 붙여 둔다
+    { name: '메카베리 농장 입장권',  locked: mekaberryLocked, ...effRow(getMekaberryExp(inputs.charLevel), getMekaberryPrice(inputs.mesoMarketRate)) },
+    { name: '프라임 모멘텀 패스',    locked: mekaberryLocked, ...effRow(getPrimePassExp(inputs.charLevel, base30), getPrimePassPrice(inputs.waterBottleRate)) },
   ];
 
   return (

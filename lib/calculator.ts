@@ -138,7 +138,7 @@ export function getEpicDungeonStage12Exp(zone: EpicDungeonZone, charLevel: numbe
   return data.stage2 - data.stage1;
 }
 
-/** 세라자르 주화 1개당 메소 가치 (에픽 던전 기본 보상에서 차감) */
+/** 세라자르 주화 1개당 메소 가치 (메포를 내고 받는 보상이므로 에픽 던전 비용에서 차감) */
 const SERAJAR_COIN_PRICE = 40_000_000;
 const EPIC_SERAJAR_COIN_COUNT = 4;
 
@@ -154,8 +154,12 @@ export function getEpicDungeonStage12Price(zone: EpicDungeonZone, mesoMarketRate
   return mepoToMeso(metacoin, mesoMarketRate) - SERAJAR_COIN_PRICE * EPIC_SERAJAR_COIN_COUNT;
 }
 
+/** 메카베리 농장 / 프라임 모멘텀 패스 사용 가능 최소 레벨 */
+export const MEKABERRY_MIN_LEVEL = 280;
+
 /** 메카베리 농장 경험치 */
 export function getMekaberryExp(charLevel: number): number {
+  if (charLevel < MEKABERRY_MIN_LEVEL) return 0;
   return MEKABERRY_EXP[charLevel] ?? 0;
 }
 
@@ -190,8 +194,11 @@ const PRIME_PASS_MEKABERRY_COUNT = 10;
 const PRIME_PASS_SUPER_COUPON_COUNT = 9_000;
 const PRIME_PASS_4X_COUPON_COUNT = 6;
 
-/** 프라임 모멘텀 패스 총 경험치 (base30 = 30분 사냥 기본 경험치, 4배 쿠폰 1개 = base30 * 3) */
+/** 프라임 모멘텀 패스 총 경험치 (base30 = 30분 사냥 기본 경험치, 4배 쿠폰 1개 = base30 * 3)
+ *  구성품에 메카베리 입장권이 들어 있어 280 미만은 상품 자체를 쓸 수 없다. 메카베리분만 0이 되게
+ *  두면 상급쿠폰·4배쿠폰분이 남아 그럴듯한 값이 나오므로 전체를 0으로 막는다. */
 export function getPrimePassExp(charLevel: number, base30: number): number {
+  if (charLevel < MEKABERRY_MIN_LEVEL) return 0;
   return (
     getMekaberryExp(charLevel) * PRIME_PASS_MEKABERRY_COUNT +
     getSuperExpCouponExp(charLevel) * PRIME_PASS_SUPER_COUPON_COUNT +
