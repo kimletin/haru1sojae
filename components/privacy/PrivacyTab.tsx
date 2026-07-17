@@ -56,7 +56,7 @@ export default function PrivacyTab() {
 
         <Section title="8. 개인정보 보호책임자 및 문의">
           <p>개인정보 관련 문의는 아래로 연락주시기 바랍니다.</p>
-          <p>담당: 하루1소재 운영팀<br />이메일: haru1sojae@gmail.com</p>
+          <p>담당: 하루1소재 운영팀<br />이메일: contact@haru1sojae.kr</p>
         </Section>
 
         <Section title="9. 정보주체의 권익침해 구제방법">

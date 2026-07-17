@@ -981,7 +981,7 @@ export default function Home() {
       <footer className="bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-600 shrink-0">
         <div className="w-full max-w-[905px] mx-auto px-4 py-6 flex flex-col items-center gap-2.5 text-center">
           <div className="flex items-center gap-2 text-xs">
-            <a href="mailto:haru1sojae@gmail.com" className="text-gray-600 dark:text-zinc-300 hover:text-orange-500 transition-colors">문의하기</a>
+            <a href="mailto:contact@haru1sojae.kr" className="text-gray-600 dark:text-zinc-300 hover:text-orange-500 transition-colors">문의하기</a>
             <span className="text-gray-300 dark:text-zinc-600">|</span>
             <a href="/privacy" onClick={(e) => { e.preventDefault(); goPrivacy(); }} className="text-gray-600 dark:text-zinc-300 hover:text-orange-500 transition-colors">개인정보처리방침</a>
           </div>
