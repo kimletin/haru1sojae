@@ -1,3 +1,5 @@
+import { assetSlug } from '@/lib/assetSlug';
+
 const STAGE_COLORS: Record<string, string> = {
   '0': 'bg-purple-400 text-white',
   '1': 'bg-purple-600 text-white',
@@ -55,7 +57,7 @@ function displayLabel(text: string): string {
 }
 
 function Icon({ name }: { name: string }) {
-  return <img src={`/icons/${encodeURIComponent(name)}.png`} alt="" className="w-5 h-5 shrink-0 object-contain" />;
+  return <img src={`/icons/${assetSlug(name)}.png`} alt="" className="w-5 h-5 shrink-0 object-contain" />;
 }
 
 function StageBadge({ stage }: { stage: string }) {

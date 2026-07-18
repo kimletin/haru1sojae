@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { assetSlug } from '@/lib/assetSlug';
 import type { InputValues } from '@/types';
 import { HUNTING_REGIONS } from '@/data/huntingGrounds';
 import type { HuntingGround, HuntingRegion } from '@/data/huntingGrounds';
@@ -48,7 +49,7 @@ function NumField({ label, value, onChange, unit = '메소', max = 9_999_999_999
 
   return (
     <div className="flex items-center gap-2 py-0.5">
-      {icon && <img src={`/icons/${encodeURIComponent(icon)}.png`} alt="" className={`w-5 h-5 shrink-0 object-contain ${disabled ? 'opacity-40' : ''}`} />}
+      {icon && <img src={`/icons/${assetSlug(icon)}.png`} alt="" className={`w-5 h-5 shrink-0 object-contain ${disabled ? 'opacity-40' : ''}`} />}
       <label className={`text-[13px] lg:text-xs whitespace-nowrap flex-1 ${disabled ? 'text-gray-400 dark:text-zinc-500' : 'text-gray-700 dark:text-zinc-300'}`}>{label}</label>
       {/* 모바일: 입력창 실제 font-size는 16px(확대 방지), scale로 시각적으로만 12px처럼 보이게 축소. 데스크톱(lg)은 원래 11px 그대로 */}
       <div className={`relative ${width} h-[24px] overflow-visible`}>
@@ -80,7 +81,7 @@ function StepperField({ label, icon, value, onChange, min = 0, max = 99, unit = 
   const stepBtn = 'w-6 h-6 lg:w-5 lg:h-5 flex items-center justify-center text-xs lg:text-[10px] text-gray-500 dark:text-zinc-400 hover:text-orange-500 cursor-pointer border border-gray-300 dark:border-zinc-600 rounded hover:border-orange-400';
   return (
     <div className="flex items-center gap-2 py-0.5">
-      {icon && <img src={`/icons/${encodeURIComponent(icon)}.png`} alt="" className="w-6 h-6 lg:w-5 lg:h-5 shrink-0 object-contain" />}
+      {icon && <img src={`/icons/${assetSlug(icon)}.png`} alt="" className="w-6 h-6 lg:w-5 lg:h-5 shrink-0 object-contain" />}
       <label className="text-[13px] lg:text-xs whitespace-nowrap flex-1 text-gray-700 dark:text-zinc-300">{label}</label>
       <div className="flex items-center gap-0.5">
         <span className="text-[13px] lg:text-xs font-semibold text-gray-700 dark:text-zinc-100">{value}{unit}</span>
@@ -211,7 +212,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
         <div className="min-w-0 pt-2 border-t border-gray-100 dark:border-zinc-700 lg:pt-0 lg:border-t-0 lg:border-l lg:pl-4">
           <p className={sectionLabel}>사냥 시간</p>
           <div className="flex items-center gap-2 py-0.5">
-            <img src={`/icons/${encodeURIComponent('소재비')}.png`} alt="" className="w-6 h-6 lg:w-5 lg:h-5 shrink-0 object-contain" />
+            <img src={`/icons/${assetSlug('소재비')}.png`} alt="" className="w-6 h-6 lg:w-5 lg:h-5 shrink-0 object-contain" />
             <label className="text-[13px] lg:text-xs whitespace-nowrap flex-1 text-gray-700 dark:text-zinc-300">일 평균 재획</label>
             <div className="flex items-center gap-0.5">
               <span className="text-[13px] lg:text-xs font-semibold text-gray-700 dark:text-zinc-100">{toTimeStr(d.dailySessions)}</span>
@@ -264,7 +265,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
                           : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400 cursor-pointer')
                     }
                   >
-                    <img src={`/icons/${encodeURIComponent(val)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
+                    <img src={`/icons/${assetSlug(val)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
                     <span className="font-medium leading-tight text-center px-0.5">{label}</span>
                   </button>
                 );
@@ -292,7 +293,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
                           : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400 cursor-pointer')
                     }
                   >
-                    <img src={`/icons/${encodeURIComponent(zone)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
+                    <img src={`/icons/${assetSlug(zone)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
                     <span className="font-medium leading-tight text-center px-0.5">{zone}</span>
                   </button>
                 );
@@ -323,7 +324,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
                           : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-300 hover:border-orange-400 cursor-pointer')
                     }
                   >
-                    <img src={`/icons/${encodeURIComponent(r.name)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
+                    <img src={`/icons/${assetSlug(r.name)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
                     <span className="text-[10px] lg:text-[9px] font-medium leading-tight text-center px-0.5">{r.name}</span>
                   </button>
                 );

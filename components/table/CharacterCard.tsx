@@ -1,6 +1,7 @@
 'use client';
 
 import CardHeader from '@/components/ui/CardHeader';
+import { assetSlug } from '@/lib/assetSlug';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 import type { CharMeta } from '@/types';
 import {
@@ -93,7 +94,7 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
               <div className="flex items-center gap-1.5 mb-1.5">
                 {meta?.world && (
                   <img
-                    src={`/worlds/${encodeURIComponent(meta.world.startsWith('챌린저스') ? '챌린저스' : meta.world)}.webp`}
+                    src={`/worlds/${assetSlug(meta.world.startsWith('챌린저스') ? '챌린저스' : meta.world)}.webp`}
                     alt=""
                     className="w-4 h-4 object-contain shrink-0 -mr-0.5"
                     onError={e => { e.currentTarget.style.display = 'none'; }}

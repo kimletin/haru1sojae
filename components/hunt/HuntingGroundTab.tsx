@@ -1,6 +1,7 @@
 'use client';
 
 import CardHeader from '@/components/ui/CardHeader';
+import { assetSlug } from '@/lib/assetSlug';
 
 import { useState, useRef, useEffect } from 'react';
 import { HUNTING_REGIONS, type HuntingGround } from '@/data/huntingGrounds';
@@ -64,7 +65,7 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
   const regionIndex = HUNTING_REGIONS.findIndex(r => r.name === selectedRegion);
   const regionFolder = `${regionIndex + 1}.${selectedRegion}`;
   const imgSrcFor = (g: HuntingGround) =>
-    `/maps/${encodeURIComponent(regionFolder)}/${encodeURIComponent(g.name)}.webp`;
+    `/maps/${assetSlug(regionFolder)}/${assetSlug(g.name)}.webp`;
 
   return (
     <>
@@ -82,7 +83,7 @@ export default function HuntingGroundTab({ charLevel, huntingRegion, huntingGrou
                 : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
             }
           >
-            <img src={`/icons/${encodeURIComponent(r.name)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
+            <img src={`/icons/${assetSlug(r.name)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
             <div className="font-semibold">{r.name}</div>
             <div className={'text-[10px] mt-0.5 ' + (selectedRegion === r.name ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>
               {REGION_LEVEL_RANGE[r.name]}

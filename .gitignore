@@ -45,3 +45,6 @@ progress.md
 
 # preview 도구 로컬 설정
 .claude/launch.json
+
+# 자산 슬러그 편집 원본 (data/assetSlugs.ts 생성용, 로컬 보관)
+asset-slugs.txt

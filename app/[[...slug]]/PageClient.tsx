@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { assetSlug } from '@/lib/assetSlug';
 import type { InputValues, MobGroup } from '@/types';
 import { calcAllItems } from '@/lib/calculator';
 import CharacterInfoModal from '@/components/character/CharacterInfoModal';
@@ -786,7 +787,7 @@ export default function Home() {
       <div className="flex flex-col items-center justify-center gap-4 px-4 py-6 text-center">
         <div className="relative w-full max-w-[905px] aspect-[905/300] rounded-2xl overflow-hidden shadow-sm">
           <img
-            src={`/main/${encodeURIComponent('main banner')}.webp`}
+            src={`/main/${assetSlug('main banner')}.webp`}
             alt="하루1소재"
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
