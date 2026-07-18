@@ -1,6 +1,7 @@
 'use client';
 
 import CardHeader from '@/components/ui/CardHeader';
+import { assetSlug } from '@/lib/assetSlug';
 import SimNumInput from '@/components/expContents/SimNumInput';
 
 import { useEffect, useState } from 'react';
@@ -106,7 +107,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                 : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
             }
           >
-            <img src={`/icons/${encodeURIComponent(item.icon)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
+            <img src={`/icons/${assetSlug(item.icon)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
             {item.label}
           </button>
         ))}

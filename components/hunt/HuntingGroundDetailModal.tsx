@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { assetSlug } from '@/lib/assetSlug';
 import type { RegionMonster } from '@/data/regionMonsters';
 import { lockScroll, unlockScroll } from '@/lib/scrollLock';
 
@@ -62,7 +63,7 @@ export default function HuntingGroundDetailModal({ region, groundName, imageSrc,
             <div key={mon.name} className="w-80 rounded-lg border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/50 p-4 flex items-center gap-3">
               <div className="w-28 h-28 shrink-0 flex items-center justify-center">
                 <img
-                  src={`/mobs/${encodeURIComponent(mobDir)}/${encodeURIComponent(mon.name)}.png`}
+                  src={`/mobs/${assetSlug(mobDir)}/${assetSlug(mon.name)}.png`}
                   alt={mon.name}
                   className="max-w-full max-h-full object-contain"
                 />

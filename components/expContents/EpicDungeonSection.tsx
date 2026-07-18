@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { assetSlug } from '@/lib/assetSlug';
 import { DungeonTable } from '@/components/expContents/DungeonTable';
 import { HAIMOUNTAIN, ANGLER_COMPANY, NIGHTMARE_SANCTUARY } from '@/data/epicDungeon';
 
@@ -39,7 +40,7 @@ export default function EpicDungeonSection({ charLevel, epicDungeonBonus, hasCha
                       : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
                   }
                 >
-                  <img src={`/icons/${encodeURIComponent(d.name)}.png`} alt="" className="w-10 h-10 lg:w-12 lg:h-12 shrink-0 object-contain" />
+                  <img src={`/icons/${assetSlug(d.name)}.png`} alt="" className="w-10 h-10 lg:w-12 lg:h-12 shrink-0 object-contain" />
                   <div className="flex flex-col items-center">
                     <div className="text-[12px] lg:text-sm font-semibold whitespace-nowrap">{d.name}</div>
                     <div className={'text-xs mt-0.5 ' + (selectedDungeon === d.name ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>
