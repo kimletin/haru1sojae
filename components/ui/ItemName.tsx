@@ -36,8 +36,8 @@ const EPIC_ZONES = ['하이마운틴', '앵글러컴퍼니', '악몽선경'];
 const UPGRADE_MAP: Record<string, { from: { icon: string; label: string }; to: { icon: string; label: string } }> = {
   '추가경험치 50%→70%': { from: { icon: '추가 경험치 50%', label: '추경 50%' }, to: { icon: '추가 경험치 70%', label: '추경 70%' } },
   '소경축비→고농축비': { from: { icon: '소경축비', label: '소경축비' }, to: { icon: '고농축비', label: '고농축비' } },
-  '2배 쿠폰→3배 쿠폰': { from: { icon: '경험치 2배 쿠폰', label: '경2쿠' }, to: { icon: '경험치 3배 쿠폰', label: '경3쿠' } },
-  '3배 쿠폰→4배 쿠폰': { from: { icon: '경험치 3배 쿠폰', label: '경3쿠' }, to: { icon: '경험치 4배 쿠폰', label: '경4쿠' } },
+  '2배 쿠폰→3배 쿠폰': { from: { icon: '경험치 2배 쿠폰', label: '2배 쿠폰' }, to: { icon: '경험치 3배 쿠폰', label: '3배 쿠폰' } },
+  '3배 쿠폰→4배 쿠폰': { from: { icon: '경험치 3배 쿠폰', label: '3배 쿠폰' }, to: { icon: '경험치 4배 쿠폰', label: '4배 쿠폰' } },
 };
 
 function iconFor(name: string): string | null {
@@ -49,8 +49,15 @@ function iconFor(name: string): string | null {
   return null;
 }
 
+// 항목명(계산 키) → 표시명 치환 (입장권 → (메포샵) 등)
+const DISPLAY_NAME: Record<string, string> = {
+  '메카베리 농장 입장권': '메카베리 농장 (메포샵)',
+  '블루베리 농장 입장권': '블루베리 농장 (메포샵)',
+};
+
 // 표시용 라벨 변환
 function displayLabel(text: string): string {
+  if (DISPLAY_NAME[text]) return DISPLAY_NAME[text];
   return text
     .replace('추가경험치', '추가 경험치')
     .replace(/^(\d배 쿠폰)$/, '경험치 $1');
@@ -98,7 +105,7 @@ export default function ItemName({ name }: { name: string }) {
           {iconEl}
           {displayLabel(stageMatch[1])}
         </span>
-        <span className="inline-flex items-center gap-0.5 ml-1">
+        <span className="inline-flex items-center gap-0.5 ml-0.5">
           <StageBadge stage={stageMatch[2]} />
           <span className="mx-0.5 text-gray-400">→</span>
           <StageBadge stage={stageMatch[3]} />
@@ -116,7 +123,7 @@ export default function ItemName({ name }: { name: string }) {
         {iconEl}
         몬스터파크
         {variant && (
-          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ml-1 ${variantCls ?? 'bg-fuchsia-500 text-white'}`}>{variant === '스페셜' ? '스페셜썬데이' : variant}</span>
+          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ml-0.5 ${variantCls ?? 'bg-fuchsia-500 text-white'}`}>{variant === '스페셜' ? '스페셜썬데이' : variant}</span>
         )}
       </>
     );
@@ -139,5 +146,5 @@ export default function ItemName({ name }: { name: string }) {
       </>
     );
   }
-  return <>{iconEl}{displayLabel(name)}</>;
+  return <>{iconEl}{displayLabel(name)}{name === 'VIP 사우나' && <span className="shrink-0"> (1시간)</span>}</>;
 }

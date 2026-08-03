@@ -221,7 +221,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
                 className="w-6 h-6 lg:w-5 lg:h-5 flex items-center justify-center text-xs lg:text-[10px] text-gray-500 dark:text-zinc-400 hover:text-orange-500 cursor-pointer border border-gray-300 dark:border-zinc-600 rounded hover:border-orange-400"
               >▲</button>
               <button
-                onClick={() => set('dailySessions', Math.max(1, d.dailySessions - 1))}
+                onClick={() => set('dailySessions', Math.max(0, d.dailySessions - 1))}
                 className="w-6 h-6 lg:w-5 lg:h-5 flex items-center justify-center text-xs lg:text-[10px] text-gray-500 dark:text-zinc-400 hover:text-orange-500 cursor-pointer border border-gray-300 dark:border-zinc-600 rounded hover:border-orange-400"
               >▼</button>
             </div>
