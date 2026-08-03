@@ -92,6 +92,32 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
     : selected === 'blueberry' ? { title: '블루베리 농장', headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100', levelLabel: '레벨', rows: LEVELS.map(lv => ({ level: lv, value: BLUEBERRY_EXP[lv] ?? 0, isMe: hasCharacter && lv === charLevel, ...commonRowProps })) }
     : null;
 
+  // 블루베리/메카베리 농장 팁 콜아웃 (경험치표 위에 표시)
+  const tipCalloutClass = 'rounded-xl border border-orange-200 dark:border-orange-900/50 border-l-4 border-l-orange-500 bg-orange-50 dark:bg-orange-900/20 px-3 py-2.5 text-[11px] lg:text-[12px] leading-relaxed shrink-0';
+  const tipIcon = <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>;
+  const berryTip =
+    selected === 'blueberry' ? (
+      <div className={tipCalloutClass}>
+        <div className="flex items-center gap-1 mb-1 font-bold text-orange-600 dark:text-orange-400">{tipIcon}블루베리 농장 팁</div>
+        <ul className="space-y-0.5 text-gray-600 dark:text-zinc-300">
+          <li>Lv.260–269 = 동렙몹 <span className="font-semibold">475,200마리</span></li>
+          <li>Lv.270–279 = 동렙몹 <span className="font-semibold">712,800마리</span> <span className="text-orange-500 dark:text-orange-400">(전 구간 대비 50% ↑)</span></li>
+          <li>Lv.280 이상 = 279레벨과 동일</li>
+        </ul>
+        <p className="mt-1.5 text-gray-700 dark:text-zinc-200">270레벨 이상에서 가중치가 <span className="font-bold text-orange-600 dark:text-orange-400">50% 상승</span>하므로, 블루베리 입장권은 가급적 <span className="font-bold text-orange-600 dark:text-orange-400">270레벨 이상</span>에서 사용을 추천합니다.</p>
+      </div>
+    ) : selected === 'mekaberry' ? (
+      <div className={tipCalloutClass}>
+        <div className="flex items-center gap-1 mb-1 font-bold text-orange-600 dark:text-orange-400">{tipIcon}메카베리 농장 팁</div>
+        <ul className="space-y-0.5 text-gray-600 dark:text-zinc-300">
+          <li>Lv.280–284 = 동렙몹 <span className="font-semibold">950,400마리</span></li>
+          <li>Lv.285–289 = 동렙몹 <span className="font-semibold">1,267,200마리</span> <span className="text-orange-500 dark:text-orange-400">(전 구간 대비 33.3% ↑)</span></li>
+          <li>Lv.290–299 = 동렙몹 <span className="font-semibold">1,372,800마리</span> <span className="text-orange-500 dark:text-orange-400">(전 구간 대비 8.3% ↑)</span></li>
+        </ul>
+        <p className="mt-1.5 text-gray-700 dark:text-zinc-200">레벨이 높을수록 가중치가 <span className="font-bold text-orange-600 dark:text-orange-400">상승</span>하므로, 메카베리 입장권은 가급적 <span className="font-bold text-orange-600 dark:text-orange-400">높은 레벨</span>에서 사용을 추천합니다.</p>
+      </div>
+    ) : null;
+
   return (
     <div className="flex flex-col lg:flex-row gap-4 lg:items-stretch">
       {/* 좌측 메뉴 (모바일/태블릿: 4열 2행 그리드 / lg(905px)~: 세로 90px 정사각형 고정) */}
@@ -113,8 +139,11 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
         ))}
       </div>
 
-      {/* 우측 콘텐츠 (모바일/태블릿: 세로 스택, 시뮬레이터가 위로 오도록 flex-col-reverse / lg(905px)~: 좌우 배치) */}
-      <div className={'flex flex-1 gap-4 flex-col-reverse items-stretch lg:flex-row ' + (newLayout ? 'lg:flex-row-reverse ' + (selected === 'mekaberry' ? 'lg:items-start' : 'lg:items-stretch') : selected === 'monsterpark' ? 'lg:flex-row-reverse lg:items-stretch' : 'lg:items-stretch')}>
+      {/* 우측 콘텐츠 영역: 콜아웃(블루베리/메카베리) + 표/시뮬레이터 */}
+      <div className="flex-1 min-w-0 flex flex-col gap-4">
+        {berryTip}
+        {/* 표/시뮬레이터 (모바일/태블릿: 세로 스택, 시뮬레이터가 위로 오도록 flex-col-reverse / lg(905px)~: 좌우 배치) */}
+        <div className={'flex gap-4 flex-col-reverse items-stretch lg:flex-row ' + (newLayout ? 'lg:flex-row-reverse ' + (selected === 'mekaberry' ? 'lg:items-start' : 'lg:items-stretch') : selected === 'monsterpark' ? 'lg:flex-row-reverse lg:items-stretch' : 'lg:items-stretch')}>
         {isEpic ? (
           <EpicDungeonSection charLevel={charLevel} epicDungeonBonus={epicDungeonBonus} hasCharacter={hasCharacter} />
         ) : (
@@ -216,6 +245,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
               </div>}
           </>
         )}
+        </div>
       </div>
 
     </div>

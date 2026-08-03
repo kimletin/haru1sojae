@@ -38,10 +38,27 @@ function DetailIcon() {
   );
 }
 
+// 보약(몬스터파크/에픽던전/트레져 보너스)을 아이콘별로 병합 — 예전 InputSummaryCard에서 이동
+type MergedBonus = { name: string; icon?: string | null; mp?: number; ep?: number; tr?: number };
+function mergeBonuses(meta: CharMeta | null): MergedBonus[] {
+  const map = new Map<string, MergedBonus>();
+  for (const b of meta?.monsterParkBonuses ?? []) map.set(b.name, { name: b.name, icon: b.icon, mp: b.pct });
+  for (const b of meta?.epicDungeonBonuses ?? []) {
+    const ex = map.get(b.name);
+    if (ex) ex.ep = b.pct; else map.set(b.name, { name: b.name, icon: b.icon, ep: b.pct });
+  }
+  for (const b of meta?.treasureBonuses ?? []) {
+    const ex = map.get(b.name);
+    if (ex) ex.tr = b.pct; else map.set(b.name, { name: b.name, icon: b.icon, tr: b.pct });
+  }
+  return Array.from(map.values());
+}
+
 export default function CharacterCard({ name, level, meta, isEmpty, history, ranking, loading, onOpenDetail }: Props) {
   const hasApi = !!meta?.ocid;
   const todayData = history.find(p => p.date === kstDate(0)) ?? null;
   const slots = computeSlots(history);
+  const bonuses = mergeBonuses(meta);
 
   if (isEmpty) {
     return (
@@ -65,8 +82,8 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
   }
 
   return (
-    <div className="character-card bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden">
-      <CardHeader title="캐릭터 정보" className="relative">
+    <div className="character-card bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden lg:h-full flex flex-col">
+      <CardHeader title="캐릭터 정보" className="relative shrink-0">
         {hasApi && onOpenDetail && (
           <button
             onClick={onOpenDetail}
@@ -78,7 +95,7 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
         )}
       </CardHeader>
 
-      <div className="relative flex flex-col lg:flex-row lg:items-stretch lg:h-[172px]">
+      <div className="relative flex flex-col lg:flex-row lg:items-stretch lg:flex-1 lg:min-h-[172px]">
         {/* 좌측: 캐릭터 정보 */}
         <div className="flex flex-col px-4 py-5 lg:py-0 flex-1 min-w-0 justify-center gap-4">
           <div className="flex items-center justify-center gap-5">
@@ -131,10 +148,26 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
                     <span className="text-gray-700 dark:text-zinc-300">{meta.class}</span>
                   </div>
                 )}
-                {meta?.unionLevel != null && (
-                  <div className="flex gap-2">
-                    <span className="text-gray-400 dark:text-zinc-500 shrink-0 whitespace-nowrap">유뇬</span>
-                    <span className="text-gray-700 dark:text-zinc-300">{meta.unionLevel.toLocaleString('ko-KR')}</span>
+                {bonuses.length > 0 && (
+                  <div className="flex gap-2 items-center pt-0.5">
+                    <span className="text-gray-400 dark:text-zinc-500 shrink-0 whitespace-nowrap">보약</span>
+                    <div className="flex items-center gap-1 flex-wrap min-w-0">
+                      {bonuses.map(b => (
+                        <TooltipWrapper
+                          key={b.name}
+                          tip={<>
+                            <div className="text-orange-200 font-semibold mb-0.5">{b.name}</div>
+                            {b.mp != null && <div className="text-gray-200">몬스터파크 추가 경험치 <span className="text-orange-300">+{b.mp}%</span></div>}
+                            {b.ep != null && <div className="text-gray-200">에픽 던전 기본 보상 <span className="text-orange-300">+{b.ep}%</span></div>}
+                            {b.tr != null && <div className="text-gray-200">트레져 헌터 추가 경험치 <span className="text-orange-300">+{b.tr}%</span></div>}
+                          </>}
+                        >
+                          {b.icon
+                            ? <img src={b.icon} alt={b.name} className="w-5 h-5 rounded block" />
+                            : <span className="w-5 h-5 flex items-center justify-center text-[10px] font-bold bg-orange-100 dark:bg-orange-900/40 text-orange-500 rounded">E</span>}
+                        </TooltipWrapper>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

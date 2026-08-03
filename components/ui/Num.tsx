@@ -7,11 +7,15 @@ interface NumProps {
   className?: string;
 }
 
+// 소수 2자리로 자르되 끝의 불필요한 0 제거: 3.00→3, 1.20→1.2, 1.23→1.23
+function trimZeros(v: number): string {
+  return v.toFixed(2).replace(/\.?0+$/, '');
+}
 export function fmtNum(n: number): string {
   const abs = Math.abs(n);
-  if (abs >= 1e12) return (n / 1e12).toFixed(2) + '조';
-  if (abs >= 1e8)  return (n / 1e8).toFixed(2) + '억';
-  if (abs >= 1e4)  return (n / 1e4).toFixed(2) + '만';
+  if (abs >= 1e12) return trimZeros(n / 1e12) + '조';
+  if (abs >= 1e8)  return trimZeros(n / 1e8) + '억';
+  if (abs >= 1e4)  return trimZeros(n / 1e4) + '만';
   return n.toLocaleString('ko-KR');
 }
 

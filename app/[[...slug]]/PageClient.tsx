@@ -51,8 +51,8 @@ function loadMetas(): (CharMeta | null)[] {
 }
 
 const DEFAULT_INPUTS: InputValues = {
-  waterBottleRate: 1800,
-  mesoMarketRate: 2280,
+  waterBottleRate: 1550,
+  mesoMarketRate: 2200,
   charLevel: 260,
   monsterLevel: 260,
   dailySessions: 10,
@@ -66,16 +66,16 @@ const DEFAULT_INPUTS: InputValues = {
   booster1day: 6,
   eternal1day: 0,
   price50: 1_000_000,
-  price70: 6_000_000,
+  price70: 9_000_000,
   price2x: 60_000_000,
   price3x: 130_000_000,
   price4x: 200_000_000,
-  priceSmallBooster: 1_300_000,
-  priceLargeBooster: 4_600_000,
-  priceHunterTitle: 1_650_000_000,
-  priceBloodRingMeso: 300_000_000,
-  priceBoostringMeso: 450_000_000,
-  priceJungpenMeso: 2_000_000_000,
+  priceSmallBooster: 700_000,
+  priceLargeBooster: 4_000_000,
+  priceHunterTitle: 1_720_000_000,
+  priceBloodRingMeso: 360_000_000,
+  priceBoostringMeso: 900_000_000,
+  priceJungpenMeso: 2_200_000_000,
   epicDungeonZone: '하이마운틴',
   monsterParkZone: '세르니움',
   boosterRate: 0.5,
@@ -387,7 +387,6 @@ export default function Home() {
       class: info.class ?? null,
       world: info.world ?? null,
       dateCreate: null,
-      unionLevel: null,
       monsterParkBonus: mpBonus || null,
       epicDungeonBonus: epBonus || null,
       treasureBonus: trBonus || null,
@@ -463,11 +462,10 @@ export default function Home() {
       if (meta.world) rankParams.set('world', meta.world);
       if (meta.class) rankParams.set('class', meta.class);
 
-      const [histData, rankData, skillData, unionData] = await Promise.all([
+      const [histData, rankData, skillData] = await Promise.all([
         fetch(`/api/character/history?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
         fetch(`/api/character/ranking?${rankParams}`).then(r => r.json()),
         fetch(`/api/character/skill?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
-        fetch(`/api/character/union?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
       ]);
 
       // history 응답은 { history: HistoryPoint[], basic: {...} } — basic은 오늘 호출에서 추출(별도 basic 호출 제거)
@@ -497,7 +495,6 @@ export default function Home() {
       const rankOk  = rankData && typeof rankData === 'object' && rankData.error === undefined;
       const imageOk = basic != null;
       const skillOk = skillData && skillData.monsterParkBonus !== undefined;
-      const unionOk = unionData && typeof unionData.unionLevel === 'number';
 
       // await 도중 슬롯이 바뀌었을 수 있으므로, 화면 상태에 반영하기 직전에
       // 현재 활성 슬롯(ref는 항상 최신)과 다시 비교한다.
@@ -510,9 +507,8 @@ export default function Home() {
       }
       if (rankOk && stillActive) setCharRanking(rankData);
 
-      if (imageOk || skillOk || unionOk) {
+      if (imageOk || skillOk) {
         const metaUpdate: Record<string, unknown> = {};
-        if (unionOk) metaUpdate.unionLevel = unionData.unionLevel;
         if (imageOk) {
           metaUpdate.imageUpdatedAt = Date.now();
           metaUpdate.image = basic.image;
@@ -921,9 +917,10 @@ export default function Home() {
                 <button onClick={handleAddCharacter} className="px-5 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold transition-colors cursor-pointer">캐릭터 추가</button>
               </div>
             ) : (
-            <div className="flex flex-col lg:flex-row gap-4">
-                <main className="w-full lg:w-[560px] lg:shrink-0">
-                  <div className="mb-4">
+            <div className="flex flex-col gap-4">
+                {/* 상단: 캐릭터카드 + 입력정보 좌우 (lg:items-stretch로 높이 맞춤) */}
+                <div className="flex flex-col lg:flex-row gap-4 lg:items-stretch">
+                  <div className="w-full lg:w-[560px] lg:shrink-0">
                     <CharacterCard
                       name={presetNames[activePreset]}
                       level={presetsRef.current[activePreset]?.charLevel ?? inputs.charLevel}
@@ -935,18 +932,19 @@ export default function Home() {
                       onOpenDetail={() => setShowDetailModal(true)}
                     />
                   </div>
-                  {/* 모바일 전용: 입력정보·보약정보를 캐릭터카드 바로 아래에 (데스크톱은 우측 aside에서 표시) */}
-                  <div className="lg:hidden flex flex-col gap-4 mb-4">
+                  <div className="flex-1 min-w-0">
                     <InputSummaryCard inputs={inputs} meta={charMetas[activePreset]} onEditInfo={() => setShowInfoModal(true)} />
                   </div>
-                  <EfficiencyTab inputs={inputs} onChange={handleChange} items={rankedItems} monsterParkBonus={charMetas[activePreset]?.monsterParkBonus ?? 0} />
-                </main>
-                <aside className="flex-1 min-w-0 flex flex-col gap-4">
-                  <div className="hidden lg:flex flex-col gap-4">
-                    <InputSummaryCard inputs={inputs} meta={charMetas[activePreset]} onEditInfo={() => setShowInfoModal(true)} />
+                </div>
+                {/* 하단: 효율표 + 가성비 순위 좌우 (items-start로 각자 자연 높이) */}
+                <div className="flex flex-col lg:flex-row gap-4 lg:items-start">
+                  <div className="w-full lg:w-[560px] lg:shrink-0">
+                    <EfficiencyTab inputs={inputs} onChange={handleChange} items={rankedItems} monsterParkBonus={charMetas[activePreset]?.monsterParkBonus ?? 0} />
                   </div>
-                  <RankingPanel items={rankedItems} />
-                </aside>
+                  <div className="flex-1 min-w-0">
+                    <RankingPanel items={rankedItems} />
+                  </div>
+                </div>
             </div>
             )
           ) : (

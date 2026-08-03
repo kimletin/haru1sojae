@@ -76,12 +76,7 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
               </td>
               <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300 whitespace-nowrap">{locked ? '-' : <Num n={row.exp} />}</td>
               <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300 whitespace-nowrap">
-                {locked || row.priceMeso <= 0 ? '-' : (
-                  <>
-                    <span className="lg:hidden"><Num n={row.priceMeso} /></span>
-                    <span className="hidden lg:inline">{Math.round(row.priceMeso).toLocaleString('ko-KR')}</span>
-                  </>
-                )}
+                {locked || row.priceMeso <= 0 ? '-' : <Num n={row.priceMeso} />}
               </td>
               <td className="px-2 py-1.5 text-center font-semibold text-orange-500 whitespace-nowrap">
                 {!locked && row.ratio > 0 ? (

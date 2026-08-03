@@ -45,7 +45,6 @@ export interface CharMeta {
   class: string | null;
   world: string | null;
   dateCreate: string | null;    // 캐릭터 생성일 (Nexon character_date_create)
-  unionLevel: number | null;    // 유니온 레벨 (Nexon user/union)
   monsterParkBonus: number | null;
   epicDungeonBonus: number | null;
   monsterParkBonuses: { name: string; pct: number; icon: string | null }[] | null;

@@ -32,7 +32,8 @@ export function getExpMultiplier(charLevel: number, monsterLevel: number): numbe
 
 /** 메포 가격 → 메소 환산 (메소마켓에서 메소를 메포로 바꿀 때 수수료 1% 차감되므로 /0.99 보정) */
 export function mepoToMeso(mepo: number, mesoMarketRate: number): number {
-  return mepo / 0.99 / mesoMarketRate * 100_000_000;
+  // 시세 미입력(0)이면 계산 불가로 0을 반환한다(효율 계산에서 "-" 처리됨). 0으로 나눠 Infinity가 되는 것 방지.
+  return mesoMarketRate > 0 ? mepo / 0.99 / mesoMarketRate * 100_000_000 : 0;
 }
 
 /** 넥슨캐시 가격 → 메소 환산. waterBottleRate(물통 시세)는 1억 메소당 원 단위.
@@ -77,6 +78,8 @@ export function getBase30MinExp(inputs: InputValues): number {
 
 /** 30일 사냥 기본 경험치 (배율 적용 전) */
 export function getBase30DayExp(inputs: InputValues): number {
+  // 사냥을 아예 안 하면(일 평균 재획 0) 부스터를 쓸 몹이 없으므로 30일 도핑 경험치도 0
+  if (inputs.dailySessions <= 0) return 0;
   const mobs    = getMobs(inputs);
   const huntExp = getHuntingExpCore(inputs.charLevel, mobs) * 240 * inputs.dailySessions;
   const repExp  = getBoosterMonsterExp(inputs);
