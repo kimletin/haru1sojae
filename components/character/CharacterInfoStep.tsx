@@ -136,7 +136,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
       priceHunterTitle: 0, priceBloodRingMeso: 0, priceBoostringMeso: 0, priceJungpenMeso: 0,
       dailySessions: 0,
       booster30min: 0, eternal30min: 0, booster1day: 0, eternal1day: 0,
-      masterLabelCount: 0, masterLabelManual: false,
+      masterLabelCount: 0,
       epicDungeonZone: '하이마운틴',
       monsterParkZone: MONSTER_PARK_ZONES[0].zone,
       huntingRegion: firstRegion.name,
@@ -261,7 +261,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
                     <button
                       key={n}
                       // 실착 값(점 표시)을 다시 고르면 수동 고정을 풀어 API를 따라가게 한다
-                      onClick={() => { set('masterLabelCount', n); set('masterLabelManual', apiMasterLabelCount !== n); }}
+                      onClick={() => set('masterLabelCount', n)}
                       className={
                         'relative w-6 h-6 lg:w-5 lg:h-5 flex items-center justify-center text-[12px] lg:text-[10px] font-medium rounded border-2 transition-colors cursor-pointer ' +
                         (selected

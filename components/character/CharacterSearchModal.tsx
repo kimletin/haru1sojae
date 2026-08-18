@@ -36,6 +36,8 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
   const [step, setStep] = useState<'select' | 'info'>('select');
   const [mode, setMode] = useState<'search' | 'manual'>('search');
   const [selectedInfo, setSelectedInfo] = useState<CharacterInfo | null>(null);
+  // 추가 시점에 실제 착용 개수를 미리 조회한다 — 없으면 사용자가 감으로 눌러 수동값이 고정돼 버린다
+  const [apiMasterLabel, setApiMasterLabel] = useState<number | null>(null);
 
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -92,9 +94,20 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
   };
   const manualExpRateVal = manualExpRate === '' ? undefined : expRateNum;
 
-  // 검색 결과 → 다음
-  const handleNextFromSearch = () => {
+  // 검색 결과 → 다음. 착용 중인 마스터라벨 개수를 먼저 받아와 입력 화면 초깃값·점 표시에 쓴다.
+  // (조회 실패해도 추가는 계속 진행 — 추가 후 갱신에서 다시 채워진다)
+  const handleNextFromSearch = async () => {
     if (!result) return;
+    setApiMasterLabel(null);
+    if (result.ocid) {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/character/cashitem?ocid=${encodeURIComponent(result.ocid)}`);
+        const data = await res.json();
+        if (typeof data?.masterLabelCount === 'number') setApiMasterLabel(data.masterLabelCount);
+      } catch {}
+      setLoading(false);
+    }
     setSelectedInfo(result);
     setStep('info');
   };
@@ -132,9 +145,10 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
         {step === 'info' && selectedInfo ? (
           <CharacterInfoStep
             charName={selectedInfo.name}
-            initialInputs={getInitialInputs(selectedInfo.level)}
+            initialInputs={{ ...getInitialInputs(selectedInfo.level), masterLabelCount: apiMasterLabel ?? 0 }}
             onBack={() => setStep('select')}
             loadSources={loadSources}
+            apiMasterLabelCount={apiMasterLabel}
             onSubmit={inputs => onConfirm(selectedInfo, inputs)}
           />
         ) : mode === 'search' ? (
