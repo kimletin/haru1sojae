@@ -97,7 +97,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
     : selected === 'blueberry' ? { title: '블루베리 농장', headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100', levelLabel: '레벨', rows: LEVELS.map(lv => ({ level: lv, value: BLUEBERRY_EXP[lv] ?? 0, isMe: hasCharacter && lv === charLevel, ...commonRowProps })) }
     : null;
 
-  // 블루베리/메카베리 농장 팁 콜아웃 (경험치표 위에 표시)
+  // 블루베리/메카베리/크림슨 메카베리 농장 팁 콜아웃 (경험치표 위에 표시)
   const tipCalloutClass = 'rounded-xl border border-orange-200 dark:border-orange-900/50 border-l-4 border-l-orange-500 bg-orange-50 dark:bg-orange-900/20 px-3 py-2.5 text-[11px] lg:text-[12px] leading-relaxed shrink-0';
   const tipIcon = <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>;
   const berryTip =
@@ -120,6 +120,14 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
           <li>Lv.290–299 = 동렙몹 <span className="font-semibold">1,372,800마리</span> <span className="text-orange-500 dark:text-orange-400">(전 구간 대비 8.3% ↑)</span></li>
         </ul>
         <p className="mt-1.5 text-gray-700 dark:text-zinc-200">레벨이 높을수록 가중치가 <span className="font-bold text-orange-600 dark:text-orange-400">상승</span>하므로, 메카베리 입장권은 가급적 <span className="font-bold text-orange-600 dark:text-orange-400">높은 레벨</span>에서 사용을 추천합니다.</p>
+      </div>
+    ) : selected === 'crimsonmekaberry' ? (
+      <div className={tipCalloutClass}>
+        <div className="flex items-center gap-1 mb-1 font-bold text-orange-600 dark:text-orange-400">{tipIcon}크림슨 메카베리 농장 팁</div>
+        <ul className="space-y-0.5 text-gray-600 dark:text-zinc-300">
+          <li>Lv.280–299 = 동렙몹 <span className="font-semibold">1,478,400마리</span> <span className="text-orange-500 dark:text-orange-400">(전 구간 동일)</span></li>
+        </ul>
+        <p className="mt-1.5 text-gray-700 dark:text-zinc-200">메카베리 농장과 달리 <span className="font-bold text-orange-600 dark:text-orange-400">모든 레벨 구간의 가중치가 동일</span>하므로, 레벨과 관계없이 언제 사용해도 획득 경험치 비율이 같습니다.</p>
       </div>
     ) : null;
 
