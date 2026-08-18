@@ -6,6 +6,7 @@ import type { InputValues } from '@/types';
 import { HUNTING_REGIONS } from '@/data/huntingGrounds';
 import type { HuntingGround, HuntingRegion } from '@/data/huntingGrounds';
 import { MONSTER_PARK_ZONES } from '@/data/monsterPark';
+import { MASTER_LABEL_MAX } from '@/lib/calculator';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
   submitLabel?: string;           // 제출 버튼 라벨 (기본 '추가')
   disableIfUnchanged?: boolean;   // 변경 없으면 제출 버튼 비활성화
   loadSources?: { name: string; inputs: InputValues }[]; // "불러오기"로 시세·가격 복사할 다른 캐릭터 목록
+  apiMasterLabelCount?: number | null; // API가 조회한 실제 착용 개수 (해당 버튼에 점 표시)
 }
 
 // 초기화/불러오기가 건드리는 1열(시세+도핑 가격) 필드
@@ -102,7 +104,7 @@ function TooltipIcon({ text }: { text: React.ReactNode }) {
   );
 }
 
-export default function CharacterInfoStep({ charName, initialInputs, onSubmit, onBack, submitLabel = '추가', disableIfUnchanged = false, loadSources = [] }: Props) {
+export default function CharacterInfoStep({ charName, initialInputs, onSubmit, onBack, submitLabel = '추가', disableIfUnchanged = false, loadSources = [], apiMasterLabelCount = null }: Props) {
   const [d, setD] = useState<InputValues>(initialInputs);
   const [showLoad, setShowLoad] = useState(false);
   const set = <K extends keyof InputValues>(key: K, value: InputValues[K]) =>
@@ -134,6 +136,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
       priceHunterTitle: 0, priceBloodRingMeso: 0, priceBoostringMeso: 0, priceJungpenMeso: 0,
       dailySessions: 0,
       booster30min: 0, eternal30min: 0, booster1day: 0, eternal1day: 0,
+      masterLabelCount: 0, masterLabelManual: false,
       epicDungeonZone: '하이마운틴',
       monsterParkZone: MONSTER_PARK_ZONES[0].zone,
       huntingRegion: firstRegion.name,
@@ -240,6 +243,42 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
             </div>
             <StepperField label="VIP/HEXA 부스터" icon="VIP 부스터" value={d.booster1day} onChange={v => set('booster1day', v)} />
             <StepperField label="영겁의 황금태엽" icon="영겁의 황금태엽" value={d.eternal1day} onChange={v => set('eternal1day', v)} />
+          </div>
+
+          <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
+            <div className="flex items-center gap-1 mb-1">
+              <span className="text-xs text-orange-500 dark:text-orange-400 font-bold">마스터라벨</span>
+              <TooltipIcon text={<>착용 부위 수에 따라 마스터라벨 성장<br />플러스의 추가 경험치가 달라집니다<br /><br />버튼 우측 상단의 점은 실제 착용 중인<br />마스터라벨 부위 개수입니다</>} />
+            </div>
+            <div className="flex items-center gap-2 py-0.5">
+              <img src={`/icons/${assetSlug('마스터라벨 성장 플러스')}.png`} alt="" className="w-6 h-6 lg:w-5 lg:h-5 shrink-0 object-contain" />
+              <label className="text-[13px] lg:text-xs whitespace-nowrap flex-1 text-gray-700 dark:text-zinc-300">착용 부위 수</label>
+              <div className="flex gap-1">
+                {Array.from({ length: MASTER_LABEL_MAX + 1 }, (_, n) => {
+                  const selected = d.masterLabelCount === n;
+                  const isApi = apiMasterLabelCount === n;
+                  return (
+                    <button
+                      key={n}
+                      // 실착 값(점 표시)을 다시 고르면 수동 고정을 풀어 API를 따라가게 한다
+                      onClick={() => { set('masterLabelCount', n); set('masterLabelManual', apiMasterLabelCount !== n); }}
+                      className={
+                        'relative w-6 h-6 lg:w-5 lg:h-5 flex items-center justify-center text-[12px] lg:text-[10px] font-medium rounded border-2 transition-colors cursor-pointer ' +
+                        (selected
+                          ? 'bg-orange-500 border-orange-500 text-white'
+                          : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400')
+                      }
+                    >
+                      {n}
+                      {/* API가 조회한 실제 착용 개수 표시 — 선택 상태와 무관하게 항상 보이게 */}
+                      {isApi && (
+                        <span className={'absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full ring-1 ' + (selected ? 'bg-white ring-orange-500' : 'bg-orange-500 ring-white dark:ring-zinc-900')} />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">

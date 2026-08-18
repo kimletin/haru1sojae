@@ -21,6 +21,8 @@ export interface InputValues {
   eternal30min: number;         // 영겁의 황금태엽 (30분 내)
   booster1day: number;          // 황금태엽/VIP/헥사 부스터 (1일 평균)
   eternal1day: number;          // 영겁의 황금태엽 (1일 평균)
+  masterLabelCount: number;     // 마스터라벨 부위 수 (0~5, 성장 플러스 배율 결정)
+  masterLabelManual: boolean;   // 사용자가 직접 지정했는지. true면 API 실착 개수가 덮어쓰지 않음
   price50: number;              // 추가경험치 50% 가격
   price70: number;              // 추가경험치 70% 가격
   price2x: number;              // 2배 쿠폰
@@ -53,6 +55,7 @@ export interface CharMeta {
   treasureBonuses: { name: string; pct: number; icon: string | null }[] | null;
   skillUpdatedAt: number | null;
   manualExpRate: number | null;
+  masterLabelCount: number | null;  // API가 조회한 실제 착용 개수 (입력값과 별개, 표시용)
 }
 
 export interface EfficiencyItem {

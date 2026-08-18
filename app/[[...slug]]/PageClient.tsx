@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { assetSlug } from '@/lib/assetSlug';
 import type { InputValues, MobGroup } from '@/types';
-import { calcAllItems } from '@/lib/calculator';
+import { calcAllItems, MASTER_LABEL_MAX } from '@/lib/calculator';
 import CharacterInfoModal from '@/components/character/CharacterInfoModal';
 import CharacterDetailModal from '@/components/character/CharacterDetailModal';
 import RankingPanel from '@/components/table/RankingPanel';
@@ -65,6 +65,8 @@ const DEFAULT_INPUTS: InputValues = {
   eternal30min: 0,
   booster1day: 6,
   eternal1day: 0,
+  masterLabelCount: 0,
+  masterLabelManual: false,
   price50: 1_000_000,
   price70: 9_000_000,
   price2x: 60_000_000,
@@ -395,6 +397,7 @@ export default function Home() {
       treasureBonuses: trBonus > 0 ? [{ name: '보약', pct: trBonus, icon: null }] : null,
       skillUpdatedAt: mpBonus > 0 || epBonus > 0 || trBonus > 0 ? Date.now() : null,
       manualExpRate: !info.ocid && info.expRate != null ? info.expRate : null,
+      masterLabelCount: null,
     };
     setCharMetas(prev => {
       const next = [...prev];
@@ -425,6 +428,19 @@ export default function Home() {
     presetsRef.current = newPresets;
     savePresets(newPresets);
     if (idx === activePresetRef.current) setInputs(prev => ({ ...prev, charLevel: clamped }));
+  };
+
+  // API가 조회한 실제 착용 개수를 입력값에 반영. 단 사용자가 직접 지정한 경우(masterLabelManual)는 건드리지 않는다.
+  const handleMasterLabelUpdate = (idx: number, count: number) => {
+    const preset = presetsRef.current[idx];
+    if (preset?.masterLabelManual) return;
+    const clamped = Math.min(Math.max(count, 0), MASTER_LABEL_MAX);
+    if (preset?.masterLabelCount === clamped) return;
+    const newPresets = [...presetsRef.current];
+    newPresets[idx] = { ...newPresets[idx], masterLabelCount: clamped };
+    presetsRef.current = newPresets;
+    savePresets(newPresets);
+    if (idx === activePresetRef.current) setInputs(prev => ({ ...prev, masterLabelCount: clamped }));
   };
 
   const handleMetaUpdate = (idx: number, patch: Partial<CharMeta>) => {
@@ -462,10 +478,11 @@ export default function Home() {
       if (meta.world) rankParams.set('world', meta.world);
       if (meta.class) rankParams.set('class', meta.class);
 
-      const [histData, rankData, skillData] = await Promise.all([
+      const [histData, rankData, skillData, cashData] = await Promise.all([
         fetch(`/api/character/history?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
         fetch(`/api/character/ranking?${rankParams}`).then(r => r.json()),
         fetch(`/api/character/skill?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
+        fetch(`/api/character/cashitem?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
       ]);
 
       // history 응답은 { history: HistoryPoint[], basic: {...} } — basic은 오늘 호출에서 추출(별도 basic 호출 제거)
@@ -495,6 +512,7 @@ export default function Home() {
       const rankOk  = rankData && typeof rankData === 'object' && rankData.error === undefined;
       const imageOk = basic != null;
       const skillOk = skillData && skillData.monsterParkBonus !== undefined;
+      const cashOk  = cashData && typeof cashData.masterLabelCount === 'number';
 
       // await 도중 슬롯이 바뀌었을 수 있으므로, 화면 상태에 반영하기 직전에
       // 현재 활성 슬롯(ref는 항상 최신)과 다시 비교한다.
@@ -507,8 +525,10 @@ export default function Home() {
       }
       if (rankOk && stillActive) setCharRanking(rankData);
 
-      if (imageOk || skillOk) {
+      if (imageOk || skillOk || cashOk) {
         const metaUpdate: Record<string, unknown> = {};
+        // 실제 착용 개수는 입력값(수동 우선)과 별개로 보관 — 입력정보에서 "실착" 표시에 쓰인다
+        if (cashOk) metaUpdate.masterLabelCount = cashData.masterLabelCount;
         if (imageOk) {
           metaUpdate.imageUpdatedAt = Date.now();
           metaUpdate.image = basic.image;
@@ -530,6 +550,9 @@ export default function Home() {
       }
       if (imageOk && basic.level != null) {
         handleCharLevelUpdate(presetIdx, basic.level);
+      }
+      if (cashOk) {
+        handleMasterLabelUpdate(presetIdx, cashData.masterLabelCount);
       }
 
       if (histOk) {
@@ -680,6 +703,7 @@ export default function Home() {
           onApply={handleApply}
           onClose={() => setShowInfoModal(false)}
           loadSources={Array.from({ length: numSlots }, (_, i) => ({ name: presetNames[i], inputs: presetsRef.current[i] })).filter((_, i) => i !== activePreset)}
+          apiMasterLabelCount={charMetas[activePreset]?.masterLabelCount ?? null}
         />
       )}
       {showDetailModal && charMetas[activePreset]?.ocid && (

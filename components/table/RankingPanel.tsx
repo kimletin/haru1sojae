@@ -3,7 +3,7 @@
 import CardHeader from '@/components/ui/CardHeader';
 
 import { EfficiencyItem } from '@/types';
-import ItemName from '@/components/ui/ItemName';
+import ItemName, { isNewItem } from '@/components/ui/ItemName';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 import { rankColor, RankBadge, computeTieRanks } from '@/components/ui/ranking';
 
@@ -33,10 +33,14 @@ export default function RankingPanel({ items }: Props) {
       <div>
         {ordered.map((item, i) => {
           const isValid = i < valid.length;
+          // New 태그가 붙은 신규 상품은 행 배경을 옅은 주황으로 강조 (효율표와 동일)
+          const rowCls = isNewItem(item.name)
+            ? 'bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 border-orange-100 dark:border-orange-900/40'
+            : 'hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-100 dark:border-zinc-700';
           return (
           <div
             key={item.name}
-            className="flex items-center gap-2 px-4 py-1.5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-zinc-700"
+            className={'flex items-center gap-2 px-4 py-1.5 transition-colors border-b ' + rowCls}
           >
             {isValid ? (
               <RankBadge rank={ranks[i]} />

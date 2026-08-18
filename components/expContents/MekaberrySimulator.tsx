@@ -4,6 +4,7 @@ import CardHeader from '@/components/ui/CardHeader';
 import Num from '@/components/ui/Num';
 import SimNumInput from '@/components/expContents/SimNumInput';
 import { LEVEL_EXP } from '@/data/levelExp';
+import { MEKABERRY_EXP } from '@/data/mekaberry';
 import { calcMekaberryByCount, calcMekaberryByTarget, findStartForTarget, type RevStartResult } from '@/components/expContents/simMath';
 
 interface Props {
@@ -11,13 +12,15 @@ interface Props {
   hasCharacter: boolean;
   todayExpRate?: number | null;
   slotKey?: number;
+  /** 레벨별 경험치 테이블 — 미지정 시 일반 메카베리. 크림슨 메카베리는 자체 테이블을 넘긴다. */
+  expTable?: Record<number, number>;
 }
 
 type MekaSimResult =
   | { type: '개수'; gainedExp: number; gainPct: number; finalLevel: number; finalPct: number }
   | { type: '목표'; gainedExp: number; gainPct: number; finalLevel: number; finalPct: number; count: number };
 
-export default function MekaberrySimulator({ charLevel, hasCharacter, todayExpRate, slotKey }: Props) {
+export default function MekaberrySimulator({ charLevel, hasCharacter, todayExpRate, slotKey, expTable = MEKABERRY_EXP }: Props) {
   // 시뮬레이터 state
   const [mekaSimLevel, setMekaSimLevel] = useState(hasCharacter ? String(charLevel) : "");
   const [mekaSimExpPct, setMekaSimExpPct] = useState('');
@@ -51,12 +54,12 @@ export default function MekaberrySimulator({ charLevel, hasCharacter, todayExpRa
     if (mekaSimMode === '개수') {
       const count = parseInt(mekaSimCount);
       if (!count || count < 1 || count > 99) return;
-      const res = calcMekaberryByCount(lv, expPct, count);
+      const res = calcMekaberryByCount(lv, expPct, count, expTable);
       setMekaSimResult({ type: '개수', gainedExp: res.gainedExp, gainPct: res.gainPct, finalLevel: res.finalLevel, finalPct: res.finalPct });
     } else {
       const targetLv = parseInt(mekaSimTarget);
       if (!targetLv || targetLv <= lv || targetLv > 300) return;
-      const res = calcMekaberryByTarget(lv, expPct, targetLv);
+      const res = calcMekaberryByTarget(lv, expPct, targetLv, expTable);
       if (!res) return;
       setMekaSimResult({ type: '목표', gainedExp: res.gainedExp, gainPct: res.gainPct, finalLevel: res.finalLevel, finalPct: res.finalPct, count: res.count });
     }
@@ -67,7 +70,7 @@ export default function MekaberrySimulator({ charLevel, hasCharacter, todayExpRa
     const count = parseInt(mekaRevCount);
     if (!targetLv || targetLv < 281 || targetLv > 300) return;
     if (!count || count < 1 || count > 99) return;
-    const res = findStartForTarget(targetLv, (sl, sp) => calcMekaberryByCount(sl, sp, count));
+    const res = findStartForTarget(targetLv, (sl, sp) => calcMekaberryByCount(sl, sp, count, expTable));
     if (!res) { setMekaRevResult({ ok: false, msg: '재화가 너무 많아요 (280레벨 이전 필요)' }); return; }
     setMekaRevResult({ ok: true, startLevel: res.startLevel, startPct: res.startPct, targetLevel: targetLv });
   };

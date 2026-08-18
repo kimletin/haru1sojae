@@ -1,7 +1,7 @@
 'use client';
 
 import { InputValues, EfficiencyItem } from '@/types';
-import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getMekaberryExp, getMekaberryPrice, getBlueberryExp, getBlueberryPrice, getPrimePassExp, getPrimePassPrice, getDoping30Tiers, MEKABERRY_MIN_LEVEL } from '@/lib/calculator';
+import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getMekaberryExp, getMekaberryPrice, getBlueberryExp, getBlueberryPrice, getPrimePassExp, getPrimePassPrice, getPremiumMomentumExp, getPremiumMomentumPrice, getPrimeMomentumExp, getPrimeMomentumPrice, getMasterLabelPlusExp, getMasterLabelPlusPrice, getMasterLabelRate, getDoping30Tiers, MEKABERRY_MIN_LEVEL } from '@/lib/calculator';
 import Num from '@/components/ui/Num';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
@@ -66,8 +66,13 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
         <tbody>
           {rows.map((row, i) => {
             const locked = !!row.locked;
+            // New 태그가 붙은 이벤트 상품은 행 배경을 옅은 주황으로 강조
+            const tagged = isNewItem(row.name);
+            const rowCls = row.isEvent || tagged
+              ? 'bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 border-orange-100 dark:border-orange-900/40'
+              : 'border-gray-50 hover:bg-gray-50 dark:hover:bg-gray-700';
             return (
-            <tr key={i} style={{ height: 36 }} className={"border-b transition-colors " + (row.isEvent ? "bg-amber-50 dark:bg-amber-900/40 hover:bg-amber-100 border-amber-100 dark:border-amber-800" : "border-gray-50 hover:bg-gray-50 dark:hover:bg-gray-700:bg-gray-700") + (locked ? " opacity-40" : "")}>
+            <tr key={i} style={{ height: 36 }} className={'border-b transition-colors ' + rowCls + (locked ? ' opacity-40' : '')}>
               <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300">
                 <span className="inline-flex items-center justify-center gap-0.5 flex-wrap">
                   <ItemName name={row.name} />
@@ -95,7 +100,7 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
 }
 
 import type { MobGroup } from '@/types';
-import ItemName from '@/components/ui/ItemName';
+import ItemName, { isNewItem } from '@/components/ui/ItemName';
 
 interface Props {
   inputs: InputValues;
@@ -156,7 +161,10 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
     { name: '블루베리 농장 입장권',  ...effRow(getBlueberryExp(inputs.charLevel), getBlueberryPrice(inputs.mesoMarketRate)) },
     // 280 미만에서 비활성화되는 두 항목은 표 맨 아래에 붙여 둔다
     { name: '메카베리 농장 입장권',  locked: mekaberryLocked, ...effRow(getMekaberryExp(inputs.charLevel), getMekaberryPrice(inputs.mesoMarketRate)) },
-    { name: '프라임 모멘텀 패스',    locked: mekaberryLocked, ...effRow(getPrimePassExp(inputs.charLevel, base30), getPrimePassPrice(inputs.waterBottleRate)) },
+    { name: '프라임 모멘텀 패스 (~8/19)', locked: mekaberryLocked, ...effRow(getPrimePassExp(inputs), getPrimePassPrice(inputs.waterBottleRate)) },
+    { name: '마스터라벨 성장 플러스',    rate: getMasterLabelRate(inputs.masterLabelCount), ...effRow(getMasterLabelPlusExp(inputs), getMasterLabelPlusPrice(inputs.waterBottleRate)) },
+    { name: '프리미엄 모멘텀 패스', locked: mekaberryLocked, ...effRow(getPremiumMomentumExp(inputs), getPremiumMomentumPrice(inputs.waterBottleRate)) },
+    { name: '프리미엄+프라임 모멘텀 패스', locked: mekaberryLocked, ...effRow(getPrimeMomentumExp(inputs), getPrimeMomentumPrice(inputs.waterBottleRate)) },
   ];
 
   return (

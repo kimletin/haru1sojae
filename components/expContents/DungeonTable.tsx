@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import Num from '@/components/ui/Num';
 import SimNumInput from '@/components/expContents/SimNumInput';
 import { pctNoSign } from '@/components/expContents/shared';
+import { useRowsViewport } from '@/components/expContents/useRowsViewport';
 
 // ─── DungeonTable ─────────────────────────────────────────────────────────────
 
@@ -22,7 +23,7 @@ interface DungeonTableProps {
 }
 
 export function DungeonTable({ title, levels, data, charLevel, headerColor, titleColor, badgeColor, rowBg, textColor, epicDungeonBonus, scrollKey, hasCharacter = true }: DungeonTableProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRowsViewport(levels.length);
   const activeRef = useRef<HTMLTableRowElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
   const [epicBonusInput, setEpicBonusInput] = useState(epicDungeonBonus > 0 ? String(epicDungeonBonus) : '');
@@ -43,10 +44,10 @@ export function DungeonTable({ title, levels, data, charLevel, headerColor, titl
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [charLevel, scrollKey]);
+  }, [charLevel, scrollKey, scrollRef]);
 
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col lg:h-full">
+    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
       <div className={'px-4 py-2.5 border-b shrink-0 ' + headerColor}>
         <h3 className={'text-sm font-semibold text-center ' + titleColor}>{title}</h3>
       </div>

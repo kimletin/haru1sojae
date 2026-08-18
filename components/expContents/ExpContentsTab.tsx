@@ -9,6 +9,7 @@ import { VIP_SAUNA_EXP } from '@/data/vipSauna';
 import { MONSTER_PARK_EXP, getMonsterParkZone } from '@/data/monsterPark';
 import { SUPER_EXP_COUPON } from '@/data/superExpCoupon';
 import { MEKABERRY_EXP } from '@/data/mekaberry';
+import { CRIMSON_MEKABERRY_EXP } from '@/data/crimsonMekaberry';
 import { BLUEBERRY_EXP } from '@/data/blueberry';
 import type { SundayType } from '@/types';
 import Num from '@/components/ui/Num';
@@ -35,6 +36,7 @@ const MENU_ITEMS = [
   { key: 'expcoupon',   label: '상급 EXP 쿠폰', icon: '상급 EXP 교환권' },
   { key: 'blueberry',   label: '블루베리 농장', icon: '블루베리 농장' },
   { key: 'mekaberry',   label: '메카베리 농장', icon: '메카베리 농장' },
+  { key: 'crimsonmekaberry', label: '크림슨 메카베리 농장', icon: '크림슨 메카베리 농장' },
 ];
 
 // 경험치 콘텐츠 서브탭 키 (URL 검증용)
@@ -82,13 +84,16 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
   };
 
   const isEpic = selected === 'epicdungeon';
-  const newLayout = ['blueberry', 'vipsauna', 'expcoupon', 'mekaberry'].includes(selected);
+  const newLayout = ['blueberry', 'vipsauna', 'expcoupon', 'mekaberry', 'crimsonmekaberry'].includes(selected);
+  // 메카베리 계열(일반/크림슨) — 280+ 전용, 표 높이를 채우지 않는 레이아웃을 공유
+  const isMekaberryLike = selected === 'mekaberry' || selected === 'crimsonmekaberry';
 
   // newLayout 4종 경험치표 props (인라인 + 모달 공용)
   const splitProps: ExpTableProps | null =
     selected === 'vipsauna' ? { title: 'VIP 사우나', valueLabel: '1시간 당 경험치', headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100', levelLabel: '레벨', rows: LEVELS.map(lv => ({ level: lv, value: VIP_SAUNA_EXP[lv] ?? 0, isMe: hasCharacter && lv === charLevel, ...commonRowProps })) }
     : selected === 'expcoupon' ? { title: '상급 EXP 쿠폰', valueLabel: '1000개 당 경험치', headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100', levelLabel: '레벨', rows: LEVELS.map(lv => ({ level: lv, value: (SUPER_EXP_COUPON[lv] ?? 0) * 1000, isMe: hasCharacter && lv === charLevel, ...commonRowProps })) }
     : selected === 'mekaberry' ? { title: '메카베리 농장', headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100', levelLabel: '레벨', rows: LEVELS.filter(lv => lv >= 280).map(lv => ({ level: lv, value: MEKABERRY_EXP[lv] ?? 0, isMe: hasCharacter && lv === charLevel, ...commonRowProps })) }
+    : selected === 'crimsonmekaberry' ? { title: '크림슨 메카베리 농장', headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100', levelLabel: '레벨', rows: LEVELS.filter(lv => lv >= 280).map(lv => ({ level: lv, value: CRIMSON_MEKABERRY_EXP[lv] ?? 0, isMe: hasCharacter && lv === charLevel, ...commonRowProps })) }
     : selected === 'blueberry' ? { title: '블루베리 농장', headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100', levelLabel: '레벨', rows: LEVELS.map(lv => ({ level: lv, value: BLUEBERRY_EXP[lv] ?? 0, isMe: hasCharacter && lv === charLevel, ...commonRowProps })) }
     : null;
 
@@ -143,13 +148,13 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
       <div className="flex-1 min-w-0 flex flex-col gap-4">
         {berryTip}
         {/* 표/시뮬레이터 (모바일/태블릿: 세로 스택, 시뮬레이터가 위로 오도록 flex-col-reverse / lg(905px)~: 좌우 배치) */}
-        <div className={'flex gap-4 flex-col-reverse items-stretch lg:flex-row ' + (newLayout ? 'lg:flex-row-reverse ' + (selected === 'mekaberry' ? 'lg:items-start' : 'lg:items-stretch') : selected === 'monsterpark' ? 'lg:flex-row-reverse lg:items-stretch' : 'lg:items-stretch')}>
+        <div className={'flex gap-4 flex-col-reverse items-stretch lg:flex-row lg:items-start ' + (newLayout || selected === 'monsterpark' ? 'lg:flex-row-reverse' : '')}>
         {isEpic ? (
           <EpicDungeonSection charLevel={charLevel} epicDungeonBonus={epicDungeonBonus} hasCharacter={hasCharacter} />
         ) : (
           <>
             {/* 좌측 카드 */}
-            <div className={(newLayout ? (selected === 'mekaberry' ? 'flex-1 ' : 'relative flex-1 ') : 'flex-1 ') + 'flex flex-col'}>
+            <div className="flex-1 min-w-0 flex flex-col">
               {selected === 'monsterpark' && (
                 <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col" style={{maxHeight:'664px'}}>
                   <CardHeader title="몬스터파크" className="shrink-0" />
@@ -219,11 +224,7 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                 </div>
               )}
 
-              {newLayout && splitProps && (
-                selected === 'mekaberry'
-                  ? <SingleTable {...splitProps} fillHeight={false} />
-                  : <div className="lg:absolute lg:inset-0"><SingleTable {...splitProps} /></div>
-              )}
+              {newLayout && splitProps && <SingleTable {...splitProps} />}
 
               {selected === 'treasurehunter' && <TreasureHunterSection monsterLevel={monsterLevel} treasureBonus={treasureBonus} hasCharacter={hasCharacter} />}
 
@@ -235,8 +236,8 @@ export default function ExpContentsTab({ charLevel, monsterLevel, monsterParkBon
                 <VipSaunaSimulator charLevel={charLevel} hasCharacter={hasCharacter} todayExpRate={todayExpRate} slotKey={slotKey} />
               ) : selected === 'expcoupon' ? (
                 <ExpCouponSimulator charLevel={charLevel} hasCharacter={hasCharacter} todayExpRate={todayExpRate} slotKey={slotKey} />
-              ) : selected === 'mekaberry' ? (
-                <MekaberrySimulator charLevel={charLevel} hasCharacter={hasCharacter} todayExpRate={todayExpRate} slotKey={slotKey} />
+              ) : isMekaberryLike ? (
+                <MekaberrySimulator charLevel={charLevel} hasCharacter={hasCharacter} todayExpRate={todayExpRate} slotKey={slotKey} expTable={selected === 'crimsonmekaberry' ? CRIMSON_MEKABERRY_EXP : MEKABERRY_EXP} />
               ) : selected === 'blueberry' ? (
                 <BlueberrySimulator charLevel={charLevel} hasCharacter={hasCharacter} todayExpRate={todayExpRate} slotKey={slotKey} />
               ) : (

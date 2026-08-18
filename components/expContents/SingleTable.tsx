@@ -2,10 +2,11 @@
 import { useRef, useEffect } from 'react';
 import Num from '@/components/ui/Num';
 import { pctNoSign, type ExpTableProps } from '@/components/expContents/shared';
+import { useRowsViewport } from '@/components/expContents/useRowsViewport';
 
-// ─── SingleTable (단일 컬럼, 부모 높이에 맞춰 스크롤) ──────────────────────────
-export function SingleTable({ title, headerColor, titleColor, rows, levelLabel, valueLabel = '경험치', fillHeight = true }: ExpTableProps & { fillHeight?: boolean }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+// ─── SingleTable (단일 컬럼, 최대 20행까지 표시하고 나머지는 내부 스크롤) ──────
+export function SingleTable({ title, headerColor, titleColor, rows, levelLabel, valueLabel = '경험치' }: ExpTableProps) {
+  const scrollRef = useRowsViewport(rows.length);
   const activeRef = useRef<HTMLTableRowElement>(null);
 
   useEffect(() => {
@@ -18,10 +19,10 @@ export function SingleTable({ title, headerColor, titleColor, rows, levelLabel, 
         container.scrollTop = rowTop - container.clientHeight / 2 + rowHeight / 2;
       }
     });
-  }, [rows]);
+  }, [rows, scrollRef]);
 
   return (
-    <div className={'bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col' + (fillHeight ? ' lg:h-full' : '')}>
+    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
       <div className={'px-4 py-2.5 border-b shrink-0 ' + headerColor}>
         <h3 className={'text-sm font-semibold text-center ' + titleColor}>{title}</h3>
       </div>
