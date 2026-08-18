@@ -53,6 +53,24 @@ function NewBadge() {
   );
 }
 
+// 8/19 정식 업데이트로 판매가 끝나는 구 상품 — 신규 상품과 구분되게 이름 뒤에 Old 태그를 붙인다
+const LEGACY_ITEMS = new Set([
+  '프라임 모멘텀 패스 (~8/19)',
+  '메카베리 농장 입장권',
+  '블루베리 농장 입장권',
+]);
+
+/** Old 태그가 붙는 항목인지 */
+export function isLegacyItem(name: string): boolean {
+  return LEGACY_ITEMS.has(name);
+}
+
+function LegacyBadge() {
+  return (
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-gray-400 dark:bg-zinc-600 text-white text-[10px] font-bold ml-0.5 shrink-0">Old</span>
+  );
+}
+
 // 하위 → 상위 상품으로 갈아타는 업그레이드 행: 두 아이콘을 화살표로 함께 표시
 const UPGRADE_MAP: Record<string, { from: { icon: string; label: string }; to: { icon: string; label: string } }> = {
   '추가경험치 50%→70%': { from: { icon: '추가 경험치 50%', label: '추경 50%' }, to: { icon: '추가 경험치 70%', label: '추경 70%' } },
@@ -74,7 +92,7 @@ function iconFor(name: string): string | null {
 const DISPLAY_NAME: Record<string, string> = {
   '메카베리 농장 입장권': '메카베리 농장 (메포샵)',
   '블루베리 농장 입장권': '블루베리 농장 (메포샵)',
-  // 기간 태그(~8/19)는 뱃지로 따로 붙이므로 이름 텍스트에서는 뺀다
+  // 키의 (~8/19)는 신규 패스와 이름이 겹치지 않게 하려는 것 — 화면에는 Old 뱃지로 표시한다
   '프라임 모멘텀 패스 (~8/19)': '프라임 모멘텀 패스',
   '프리미엄+프라임 모멘텀 패스': '프리미엄+프라임 모멘텀',
 };
@@ -176,6 +194,7 @@ export default function ItemName({ name }: { name: string }) {
       {displayLabel(name)}
       {name === 'VIP 사우나' && <span className="shrink-0"> (1시간)</span>}
       {isNewItem(name) && <NewBadge />}
+      {isLegacyItem(name) && <LegacyBadge />}
     </>
   );
 }
