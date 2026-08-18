@@ -27,10 +27,31 @@ const ICON_MAP: Record<string, string> = {
   '정령의 펜던트': '정령의 펜던트',
   '메카베리 농장 입장권': '메카베리 농장',
   '블루베리 농장 입장권': '블루베리 농장',
-  '프라임 모멘텀 패스': '프라임 모멘텀 패스',
+  '프라임 모멘텀 패스 (~8/19)': '프라임 모멘텀 패스 (~8/19)',
+  '프리미엄 모멘텀 패스': '프리미엄 모멘텀 패스',
+  '프리미엄+프라임 모멘텀 패스': '프라임 모멘텀 패스',
+  '마스터라벨 성장 플러스': '마스터라벨 성장 플러스',
 };
 
 const EPIC_ZONES = ['하이마운틴', '앵글러컴퍼니', '악몽선경'];
+
+// 이번 패치로 추가된 상품 — 이름 뒤에 New 태그를 붙이고 효율표 행을 강조한다
+const NEW_ITEMS = new Set([
+  '마스터라벨 성장 플러스',
+  '프리미엄 모멘텀 패스',
+  '프리미엄+프라임 모멘텀 패스',
+]);
+
+/** New 태그가 붙는 항목인지 (효율표 행 강조에 재사용) */
+export function isNewItem(name: string): boolean {
+  return NEW_ITEMS.has(name);
+}
+
+function NewBadge() {
+  return (
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-orange-500 text-white text-[10px] font-bold ml-0.5 shrink-0">New</span>
+  );
+}
 
 // 하위 → 상위 상품으로 갈아타는 업그레이드 행: 두 아이콘을 화살표로 함께 표시
 const UPGRADE_MAP: Record<string, { from: { icon: string; label: string }; to: { icon: string; label: string } }> = {
@@ -53,6 +74,9 @@ function iconFor(name: string): string | null {
 const DISPLAY_NAME: Record<string, string> = {
   '메카베리 농장 입장권': '메카베리 농장 (메포샵)',
   '블루베리 농장 입장권': '블루베리 농장 (메포샵)',
+  // 기간 태그(~8/19)는 뱃지로 따로 붙이므로 이름 텍스트에서는 뺀다
+  '프라임 모멘텀 패스 (~8/19)': '프라임 모멘텀 패스',
+  '프리미엄+프라임 모멘텀 패스': '프리미엄+프라임 모멘텀',
 };
 
 // 표시용 라벨 변환
@@ -146,5 +170,12 @@ export default function ItemName({ name }: { name: string }) {
       </>
     );
   }
-  return <>{iconEl}{displayLabel(name)}{name === 'VIP 사우나' && <span className="shrink-0"> (1시간)</span>}</>;
+  return (
+    <>
+      {iconEl}
+      {displayLabel(name)}
+      {name === 'VIP 사우나' && <span className="shrink-0"> (1시간)</span>}
+      {isNewItem(name) && <NewBadge />}
+    </>
+  );
 }

@@ -84,14 +84,15 @@ export function calcVipSaunaByTarget(startLevel: number, startExpPct: number, ta
   return { hours: Math.floor(totalSeconds / 3600), minutes: Math.floor((totalSeconds % 3600) / 60), seconds: totalSeconds % 60, gainedExp: Math.round(totalGained), gainPct, finalLevel: lv, finalPct };
 }
 
-export function calcMekaberryByCount(startLevel: number, startExpPct: number, count: number) {
+// 메카베리 계열(일반/크림슨)은 계산이 동일하고 레벨별 경험치 테이블만 다르다 → expTable로 주입
+export function calcMekaberryByCount(startLevel: number, startExpPct: number, count: number, expTable: Record<number, number> = MEKABERRY_EXP) {
   let lv = startLevel;
   let absExp = (startExpPct / 100) * (LEVEL_EXP[lv]?.required ?? 0);
   let remaining = count;
   let levelsGained = 0;
   let totalGained = -absExp;
   while (remaining > 0) {
-    const mekaExp = MEKABERRY_EXP[lv];
+    const mekaExp = expTable[lv];
     const lvReq = LEVEL_EXP[lv]?.required;
     if (!mekaExp || !lvReq) break;
     const expToNext = lvReq - absExp;
@@ -102,7 +103,7 @@ export function calcMekaberryByCount(startLevel: number, startExpPct: number, co
       const lastExpToNext = expToNext - (countNeeded - 1) * mekaExp;
       const progress = lastExpToNext / mekaExp;
       const nextLv = lv + 1;
-      const nextMekaExp = MEKABERRY_EXP[nextLv] ?? mekaExp;
+      const nextMekaExp = expTable[nextLv] ?? mekaExp;
       absExp = (1 - progress) * nextMekaExp;
       lv = nextLv;
       levelsGained++;
@@ -118,7 +119,7 @@ export function calcMekaberryByCount(startLevel: number, startExpPct: number, co
   return { finalLevel: lv, finalPct, gainedExp: Math.round(totalGained), gainPct };
 }
 
-export function calcMekaberryByTarget(startLevel: number, startExpPct: number, targetLevel: number) {
+export function calcMekaberryByTarget(startLevel: number, startExpPct: number, targetLevel: number, expTable: Record<number, number> = MEKABERRY_EXP) {
   if (targetLevel <= startLevel) return null;
   let lv = startLevel;
   let absExp = (startExpPct / 100) * (LEVEL_EXP[lv]?.required ?? 0);
@@ -126,7 +127,7 @@ export function calcMekaberryByTarget(startLevel: number, startExpPct: number, t
   let levelsGained = 0;
   let totalGained = -absExp;
   while (lv < targetLevel) {
-    const mekaExp = MEKABERRY_EXP[lv];
+    const mekaExp = expTable[lv];
     const lvReq = LEVEL_EXP[lv]?.required;
     if (!mekaExp || !lvReq) break;
     totalGained += lvReq;
@@ -136,7 +137,7 @@ export function calcMekaberryByTarget(startLevel: number, startExpPct: number, t
     const lastExpToNext = expToNext - (countNeeded - 1) * mekaExp;
     const progress = lastExpToNext / mekaExp;
     const nextLv = lv + 1;
-    const nextMekaExp = MEKABERRY_EXP[nextLv] ?? mekaExp;
+    const nextMekaExp = expTable[nextLv] ?? mekaExp;
     absExp = (1 - progress) * nextMekaExp;
     lv = nextLv;
     levelsGained++;

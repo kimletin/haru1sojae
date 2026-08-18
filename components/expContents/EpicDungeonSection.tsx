@@ -27,7 +27,7 @@ export default function EpicDungeonSection({ charLevel, epicDungeonBonus, hasCha
 
   return (
           /* 에픽 던전 — 전체 너비 사용 */
-          <div className="flex-1 flex flex-col gap-1.5 lg:h-[664px]">
+          <div className="flex-1 flex flex-col gap-1.5">
             <div className="flex gap-1.5 shrink-0">
               {DUNGEONS.map(d => (
                 <button

@@ -13,7 +13,7 @@ interface Props {
 export default function TreasureHunterSection({ monsterLevel, treasureBonus = 0, hasCharacter }: Props) {
   const [treasureBox, setTreasureBox] = useState<TreasureBox>('폴로/프리토');
   return (
-                <div className="flex flex-col gap-1.5 lg:h-[664px]">
+                <div className="flex flex-col gap-1.5">
                   <div className="flex gap-1.5 shrink-0">
                     {TREASURE_BOXES.map(d => (
                       <button

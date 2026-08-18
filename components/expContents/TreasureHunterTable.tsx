@@ -5,6 +5,7 @@ import Num from '@/components/ui/Num';
 import SimNumInput from '@/components/expContents/SimNumInput';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 import { pctNoSign } from '@/components/expContents/shared';
+import { useRowsViewport } from '@/components/expContents/useRowsViewport';
 import { MONSTER_EXP } from '@/data/monsterExp';
 import { TREASURE_MULTIPLIERS, type TreasureBox } from '@/data/treasureHunter';
 
@@ -22,7 +23,7 @@ export function TreasureHunterTable({ monsterLevel, treasureBonus = 0, selectedB
 }) {
   const [bonusInput, setBonusInput] = useState(treasureBonus > 0 ? String(treasureBonus) : '');
   const [sunday, setSunday] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRowsViewport(TREASURE_LEVELS.length);
   const activeRef = useRef<HTMLTableRowElement>(null);
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export function TreasureHunterTable({ monsterLevel, treasureBonus = 0, selectedB
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [monsterLevel, selectedBox]);
+  }, [monsterLevel, selectedBox, scrollRef]);
 
   const mult = TREASURE_MULTIPLIERS[selectedBox];
   const bonusPct = parseFloat(bonusInput) || 0;
@@ -51,7 +52,7 @@ export function TreasureHunterTable({ monsterLevel, treasureBonus = 0, selectedB
   };
 
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col lg:h-full">
+    <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col">
       <CardHeader title={TREASURE_BOX_META[selectedBox].label} className="shrink-0" />
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         <table className="table-fixed text-[12px] lg:text-sm border-collapse w-full">
