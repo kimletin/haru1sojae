@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { assetSlug } from '@/lib/assetSlug';
 import type { InputValues, MobGroup } from '@/types';
-import { calcAllItems, MASTER_LABEL_MAX } from '@/lib/calculator';
+import { calcAllItems } from '@/lib/calculator';
 import CharacterInfoModal from '@/components/character/CharacterInfoModal';
 import CharacterDetailModal from '@/components/character/CharacterDetailModal';
 import RankingPanel from '@/components/table/RankingPanel';
@@ -66,7 +66,6 @@ const DEFAULT_INPUTS: InputValues = {
   booster1day: 6,
   eternal1day: 0,
   masterLabelCount: 0,
-  masterLabelManual: false,
   price50: 1_000_000,
   price70: 9_000_000,
   price2x: 60_000_000,
@@ -430,19 +429,6 @@ export default function Home() {
     if (idx === activePresetRef.current) setInputs(prev => ({ ...prev, charLevel: clamped }));
   };
 
-  // API가 조회한 실제 착용 개수를 입력값에 반영. 단 사용자가 직접 지정한 경우(masterLabelManual)는 건드리지 않는다.
-  const handleMasterLabelUpdate = (idx: number, count: number) => {
-    const preset = presetsRef.current[idx];
-    if (preset?.masterLabelManual) return;
-    const clamped = Math.min(Math.max(count, 0), MASTER_LABEL_MAX);
-    if (preset?.masterLabelCount === clamped) return;
-    const newPresets = [...presetsRef.current];
-    newPresets[idx] = { ...newPresets[idx], masterLabelCount: clamped };
-    presetsRef.current = newPresets;
-    savePresets(newPresets);
-    if (idx === activePresetRef.current) setInputs(prev => ({ ...prev, masterLabelCount: clamped }));
-  };
-
   const handleMetaUpdate = (idx: number, patch: Partial<CharMeta>) => {
     if (idx === activePresetRef.current && patch.manualExpRate !== undefined) {
       setTodayExpRate(patch.manualExpRate ?? null);
@@ -551,10 +537,6 @@ export default function Home() {
       if (imageOk && basic.level != null) {
         handleCharLevelUpdate(presetIdx, basic.level);
       }
-      if (cashOk) {
-        handleMasterLabelUpdate(presetIdx, cashData.masterLabelCount);
-      }
-
       if (histOk) {
         charRefreshedAtMap.current[ocid] = Date.now();
       }
