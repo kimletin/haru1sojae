@@ -1,7 +1,7 @@
 'use client';
 
-import { InputValues, EfficiencyItem } from '@/types';
-import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getMekaberryExp, getMekaberryPrice, getBlueberryExp, getBlueberryPrice, getPrimePassExp, getPrimePassPrice, getPremiumMomentumExp, getPremiumMomentumPrice, getPrimeMomentumExp, getPrimeMomentumPrice, getMasterLabelPlusExp, getMasterLabelPlusPrice, getMasterLabelRate, getDoping30Tiers, MEKABERRY_MIN_LEVEL } from '@/lib/calculator';
+import { InputValues } from '@/types';
+import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getMekaberryExp, getMekaberryPrice, getBlueberryExp, getBlueberryPrice, getPrimePassExp, getPrimePassPrice, getPremiumMomentumExp, getPremiumMomentumPrice, getPrimeMomentumExp, getPrimeMomentumPrice, getMasterLabelPlusExp, getMasterLabelPlusPrice, getDoping30Tiers, MEKABERRY_MIN_LEVEL } from '@/lib/calculator';
 import Num from '@/components/ui/Num';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
@@ -16,14 +16,10 @@ function expPer100M(efficiency: number): React.ReactNode {
 
 interface TableRow {
   name: string;
-  rate?: number | string;
   exp: number;
   priceMeso: number;
   efficiency: number;
   ratio: number;
-  editable?: boolean;
-  inputValue?: number;
-  onEdit?: (v: number) => void;
   isEvent?: boolean;
   /** 캐릭터 레벨이 모자라 아직 못 쓰는 항목. 흐리게 + 전 열을 '-'로 표시한다. */
   locked?: boolean;
@@ -105,7 +101,6 @@ import ItemName, { isNewItem } from '@/components/ui/ItemName';
 interface Props {
   inputs: InputValues;
   onChange: (key: keyof InputValues, value: number | string | boolean | MobGroup[]) => void;
-  items: EfficiencyItem[];
   monsterParkBonus?: number;
 }
 
@@ -125,23 +120,23 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
   const tiers = getDoping30Tiers(inputs, base30);
 
   const doping30Rows: TableRow[] = [
-    { name: '추가경험치 50%', rate: 0.5, ...effRow(base30 * 0.5, inputs.price50) },
+    { name: '추가경험치 50%', ...effRow(base30 * 0.5, inputs.price50) },
     { name: tiers.exp70.name,   ...effRow(tiers.exp70.exp,   tiers.exp70.priceMeso) },
-    { name: '2배 쿠폰',                  rate: 1,   ...effRow(base30 * 1,   inputs.price2x) },
+    { name: '2배 쿠폰',                  ...effRow(base30 * 1,   inputs.price2x) },
     { name: tiers.coupon3.name, ...effRow(tiers.coupon3.exp, tiers.coupon3.priceMeso) },
     { name: tiers.coupon4.name, ...effRow(tiers.coupon4.exp, tiers.coupon4.priceMeso) },
-    { name: '소경축비', rate: 0.1, ...effRow(base30 * 0.1, inputs.priceSmallBooster) },
+    { name: '소경축비', ...effRow(base30 * 0.1, inputs.priceSmallBooster) },
     { name: tiers.booster.name, ...effRow(tiers.booster.exp, tiers.booster.priceMeso) },
   ];
 
   const doping30dRows: TableRow[] = [
-    { name: '부티크 사냥 칭호',          rate: 1,    ...effRow(base30d * 1,    inputs.priceHunterTitle) },
-    { name: '혈맹의 반지(메소)', rate: 0.1, ...effRow(base30d * 0.1, inputs.priceBloodRingMeso) },
-    { name: '혈맹의 반지(메포)', rate: 0.1, ...effRow(base30d * 0.1,  mepoToMeso(5900,  inputs.mesoMarketRate)) },
-    { name: '경험치 부스트링(메소)', rate: 0.15, ...effRow(base30d * 0.15, inputs.priceBoostringMeso) },
-    { name: '경험치 부스트링(메포)', rate: 0.15, ...effRow(base30d * 0.15, mepoToMeso(29900, inputs.mesoMarketRate)) },
-    { name: '정령의 펜던트(메소)',          rate: 0.3,  ...effRow(base30d * 0.3,  inputs.priceJungpenMeso) },
-    { name: '정령의 펜던트(메포)',          rate: 0.3,  ...effRow(base30d * 0.3,  mepoToMeso(49900, inputs.mesoMarketRate)) },
+    { name: '부티크 사냥 칭호',          ...effRow(base30d * 1,    inputs.priceHunterTitle) },
+    { name: '혈맹의 반지(메소)', ...effRow(base30d * 0.1, inputs.priceBloodRingMeso) },
+    { name: '혈맹의 반지(메포)', ...effRow(base30d * 0.1,  mepoToMeso(5900,  inputs.mesoMarketRate)) },
+    { name: '경험치 부스트링(메소)', ...effRow(base30d * 0.15, inputs.priceBoostringMeso) },
+    { name: '경험치 부스트링(메포)', ...effRow(base30d * 0.15, mepoToMeso(29900, inputs.mesoMarketRate)) },
+    { name: '정령의 펜던트(메소)',          ...effRow(base30d * 0.3,  inputs.priceJungpenMeso) },
+    { name: '정령의 펜던트(메포)',          ...effRow(base30d * 0.3,  mepoToMeso(49900, inputs.mesoMarketRate)) },
   ];
 
   const epicName = inputs.epicDungeonZone;
@@ -162,7 +157,7 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
     // 280 미만에서 비활성화되는 두 항목은 표 맨 아래에 붙여 둔다
     { name: '메카베리 농장 입장권',  locked: mekaberryLocked, ...effRow(getMekaberryExp(inputs.charLevel), getMekaberryPrice(inputs.mesoMarketRate)) },
     { name: '프라임 모멘텀 패스 (~8/19)', locked: mekaberryLocked, ...effRow(getPrimePassExp(inputs), getPrimePassPrice(inputs.waterBottleRate)) },
-    { name: '마스터라벨 성장 플러스',    rate: getMasterLabelRate(inputs.masterLabelCount), ...effRow(getMasterLabelPlusExp(inputs), getMasterLabelPlusPrice(inputs.waterBottleRate)) },
+    { name: '마스터라벨 성장 플러스',    ...effRow(getMasterLabelPlusExp(inputs), getMasterLabelPlusPrice(inputs.waterBottleRate)) },
     { name: '프리미엄 모멘텀 패스', locked: mekaberryLocked, ...effRow(getPremiumMomentumExp(inputs), getPremiumMomentumPrice(inputs.waterBottleRate)) },
     { name: '프리미엄+프라임 모멘텀 패스', locked: mekaberryLocked, ...effRow(getPrimeMomentumExp(inputs), getPrimeMomentumPrice(inputs.waterBottleRate)) },
   ];
