@@ -69,7 +69,7 @@ export default function InfoCenterTab() {
             </div>
             <div>
               <p className={helpHeading}>마스터라벨 성장 플러스</p>
-              <p className={helpBody}><span className={helpDash}>-</span><span><span className="font-semibold text-orange-400 dark:text-orange-300">마스터라벨 아이템</span> 보유를 전제로, <span className="font-semibold text-orange-400 dark:text-orange-300">성장 플러스 구매 비용만</span> 반영합니다. 마스터라벨 구매 비용은 계산에서 제외됩니다.</span></p>
+              <p className={helpBody}><span className={helpDash}>-</span><span>입력한 <span className="font-semibold text-orange-400 dark:text-orange-300">마라벨 비용</span>은 마스터라벨 <span className="font-semibold text-orange-400 dark:text-orange-300">190일</span>, 성장 플러스 <span className="font-semibold text-orange-400 dark:text-orange-300">90일</span>로 사용 기간이 달라, 두 상품을 계속 재구매해 유지하는 기준으로 환산하여 <span className="font-semibold text-orange-400 dark:text-orange-300">90/190(약 47%)</span>이 반영됩니다.</span></p>
             </div>
             <div>
               <p className={helpHeading}>패스 내 아이템 계산 기준</p>

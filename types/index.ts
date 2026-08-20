@@ -22,6 +22,7 @@ export interface InputValues {
   booster1day: number;          // 황금태엽/VIP/헥사 부스터 (1일 평균)
   eternal1day: number;          // 영겁의 황금태엽 (1일 평균)
   masterLabelCount: number;     // 마스터라벨 부위 수 (0~5, 성장 플러스 배율 결정). 추가 시 실착값으로 채우고 이후엔 사용자가 직접 관리
+  masterLabelCost: number;      // 성장 플러스 가격에 함께 얹을 마스터라벨 값 (메소, 선택 입력). 0이면 성장 플러스 값만 계산
   price50: number;              // 추가경험치 50% 가격
   price70: number;              // 추가경험치 70% 가격
   price2x: number;              // 2배 쿠폰

@@ -66,6 +66,7 @@ const DEFAULT_INPUTS: InputValues = {
   booster1day: 6,
   eternal1day: 0,
   masterLabelCount: 0,
+  masterLabelCost: 0,
   price50: 1_000_000,
   price70: 9_000_000,
   price2x: 60_000_000,

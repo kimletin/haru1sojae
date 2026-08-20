@@ -310,6 +310,8 @@ export function getPrimeMomentumPrice(waterBottleRate: number): number {
  *  계산은 30일 도핑과 동일한 공식에 기간만 90일을 적용한다. */
 const MASTER_LABEL_PLUS_CASH = 40_000;
 const MASTER_LABEL_PLUS_DAYS = 90;
+/** 마스터라벨 본체의 사용 기간(일). 성장 플러스(90일)와 달라 값을 그대로 더할 수 없다. */
+const MASTER_LABEL_DAYS = 190;
 
 /** 마스터라벨 착용 부위 수별 추가 경험치 배율 (index = 착용 개수).
  *  유효 기간이 남은 마스터라벨을 착용한 개수만큼 차등 적용되며, 0개면 효과가 없다. */
@@ -329,14 +331,20 @@ export function getMasterLabelPlusExp(inputs: InputValues): number {
   return getBaseDayExp(inputs, MASTER_LABEL_PLUS_DAYS) * getMasterLabelRate(inputs.masterLabelCount);
 }
 
-/** 마스터라벨 성장 플러스 메소 가격 = 성장 플러스 구매 비용만.
+/** 마스터라벨 성장 플러스 메소 가격 = 성장 플러스 + (선택) 마스터라벨 값.
  *
- *  ⚠️ 마스터라벨 본체 값은 일부러 넣지 않는다. 라벨은 경험치 전용 상품이 아니라 스펙 아이템이라,
- *     그 값 중 얼마를 경험치 몫으로 볼지가 사람마다 다르다. 사용자가 금액으로 직접 정하게 해봐도
- *     결국 "이미 가진 부위는 빼고" 넣는 마진성 입력이 되어, 순위표의 표준 잣대와 어긋난다.
- *     (여러 형태로 시도했다가 접었다 — 도움말에도 '보유 전제'라고 명시해 둠) */
-export function getMasterLabelPlusPrice(waterBottleRate: number): number {
-  return cashToMeso(MASTER_LABEL_PLUS_CASH, waterBottleRate);
+ *  라벨은 경험치 전용이 아니라 스펙 아이템이라, 그 값 중 얼마를 경험치 몫으로 볼지는 사람마다
+ *  다르다. 그래서 기준을 우리가 정하지 않고 masterLabelCost로 받는다 — 0이면 기존처럼 성장
+ *  플러스 값만, 넣으면 그만큼 얹힌다. 라벨을 이미 가진 사람은 비워두면 된다.
+ *
+ *  90/190을 곱하는 이유 — 190일치 값을 그대로 더하면 90일치 경험치에 190일치 비용을 물려
+ *  약 2.11배 과대해진다. 성장 플러스와 같은 90일 기준으로 안분한다.
+ *  (190일 기준으로 통일해도 분자·분모에 같은 배수가 붙어 가성비 비율은 동일하다.)
+ *  ⚠️ 남은 사용 기간은 반영하지 않는다 — 효율표의 모든 항목이 "계속 재구매해 쓴다" 기준이라
+ *     여기만 실제 잔여기간을 넣으면 같은 잣대로 비교할 수 없다. */
+export function getMasterLabelPlusPrice(inputs: InputValues): number {
+  return cashToMeso(MASTER_LABEL_PLUS_CASH, inputs.waterBottleRate)
+    + inputs.masterLabelCost * (MASTER_LABEL_PLUS_DAYS / MASTER_LABEL_DAYS);
 }
 
 /** 하위→상위 티어 행을 어떻게 보여줄지 결정.
@@ -437,7 +445,7 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
     item('블루베리 농장 입장권', 'BM', getBlueberryExp(charLevel), getBlueberryPrice(mesoMarketRate)),
     // 구 상품 — 정식 업데이트(8/19) 때 제거 예정이라 신규 패스와 구분되게 기간을 표기
     item('프라임 모멘텀 패스 (~8/19)', 'BM', getPrimePassExp(inputs), getPrimePassPrice(inputs.waterBottleRate)),
-    item('마스터라벨 성장 플러스', 'BM', getMasterLabelPlusExp(inputs), getMasterLabelPlusPrice(inputs.waterBottleRate)),
+    item('마스터라벨 성장 플러스', 'BM', getMasterLabelPlusExp(inputs), getMasterLabelPlusPrice(inputs)),
     item('프리미엄 모멘텀 패스', 'BM', getPremiumMomentumExp(inputs), getPremiumMomentumPrice(inputs.waterBottleRate)),
     item('프리미엄+프라임 모멘텀 패스', 'BM', getPrimeMomentumExp(inputs), getPrimeMomentumPrice(inputs.waterBottleRate)),
   ];

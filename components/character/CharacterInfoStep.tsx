@@ -42,8 +42,9 @@ function mobLevelLabel(mobs: { level: number; count: number }[]): string {
 }
 
 // 숫자 입력 (라벨 + 단위)
-function NumField({ label, value, onChange, unit = '메소', max = 9_999_999_999, min = 0, disabled, width = 'w-[130px] lg:w-[120px]', icon }: {
+function NumField({ label, value, onChange, unit = '메소', max = 9_999_999_999, min = 0, disabled, width = 'w-[130px] lg:w-[120px]', icon, tip }: {
   label: string; value?: number; onChange?: (v: number) => void; unit?: string; max?: number; min?: number; disabled?: boolean; width?: string; icon?: string;
+  tip?: React.ReactNode; // 넘기면 라벨 우측에 물음표 툴팁이 붙는다
 }) {
   const [focused, setFocused] = useState(false);
   // 값이 0(미입력)이면 빈칸으로 표시(placeholder "0"). 포커스 중엔 콤마 없이 원본, 벗어나면 콤마로 구분. 키보드 닫힘은 감지하지 않음.
@@ -52,7 +53,10 @@ function NumField({ label, value, onChange, unit = '메소', max = 9_999_999_999
   return (
     <div className="flex items-center gap-2 py-0.5">
       {icon && <img src={`/icons/${assetSlug(icon)}.png`} alt="" className={`w-5 h-5 shrink-0 object-contain ${disabled ? 'opacity-40' : ''}`} />}
-      <label className={`text-[13px] lg:text-xs whitespace-nowrap flex-1 ${disabled ? 'text-gray-400 dark:text-zinc-500' : 'text-gray-700 dark:text-zinc-300'}`}>{label}</label>
+      <div className="flex items-center gap-1 flex-1 min-w-0">
+        <label className={`text-[13px] lg:text-xs whitespace-nowrap ${disabled ? 'text-gray-400 dark:text-zinc-500' : 'text-gray-700 dark:text-zinc-300'}`}>{label}</label>
+        {tip && <TooltipIcon text={tip} />}
+      </div>
       {/* 모바일: 입력창 실제 font-size는 16px(확대 방지), scale로 시각적으로만 12px처럼 보이게 축소. 데스크톱(lg)은 원래 11px 그대로 */}
       <div className={`relative ${width} h-[24px] overflow-visible`}>
         <input
@@ -137,6 +141,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
       dailySessions: 0,
       booster30min: 0, eternal30min: 0, booster1day: 0, eternal1day: 0,
       masterLabelCount: 0,
+      masterLabelCost: 0,
       epicDungeonZone: '하이마운틴',
       monsterParkZone: MONSTER_PARK_ZONES[0].zone,
       huntingRegion: firstRegion.name,
@@ -279,6 +284,14 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
                 })}
               </div>
             </div>
+            <NumField
+              label="마라벨 비용"
+              value={d.masterLabelCost}
+              onChange={v => set('masterLabelCost', v)}
+              max={99_999_999_999}
+              icon="마스터라벨"
+              tip={<>마스터라벨에는 스펙적인 요소가 포함되어 있기에 그 가치가 개인에 따라 다릅니다.<br /><br />성장 플러스 가격만 고려<br />→ 마라벨 비용 0메소<br />마라벨 + 성장 플러스 가격 고려<br />→ 마라벨 비용 입력</>}
+            />
           </div>
 
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
