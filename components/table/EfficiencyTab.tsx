@@ -152,7 +152,7 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
     { name: '몬스터파크(' + parkZone + ') 일반',   ...effRow(getMonsterParkExp(parkZone, '일반', monsterParkBonus), parkPrice) },
     { name: '몬스터파크(' + parkZone + ') 썬데이', ...effRow(getMonsterParkExp(parkZone, '썬데이', monsterParkBonus), parkPrice) },
     { name: '몬스터파크(' + parkZone + ') 스페셜', ...effRow(getMonsterParkExp(parkZone, '스페셜', monsterParkBonus), parkPrice) },
-    { name: '마스터라벨 성장 플러스',    ...effRow(getMasterLabelPlusExp(inputs), getMasterLabelPlusPrice(inputs.waterBottleRate)) },
+    { name: '마스터라벨 성장 플러스',    ...effRow(getMasterLabelPlusExp(inputs), getMasterLabelPlusPrice(inputs)) },
   ];
 
   // 한시 판매 상품 — 상시 BM과 섞여 있으면 "지금 사둘까"와 "늘 쓰는 것"의 판단이 뒤엉켜 표를 나눈다

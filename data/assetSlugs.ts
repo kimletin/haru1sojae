@@ -82,6 +82,7 @@ export const ASSET_SLUGS: Record<string, string> = {
   "로봇 창고 7": "15",
   "로봇 창고 8": "16",
   "루나": "Luna",
+  "마스터라벨": "MasterLabel",
   "마스터라벨 성장 플러스": "MasterLabelPlus",
   "먹그늘 나비": "1",
   "먹자국 담비": "2",
