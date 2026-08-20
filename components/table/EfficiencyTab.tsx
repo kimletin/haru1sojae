@@ -152,12 +152,16 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
     { name: '몬스터파크(' + parkZone + ') 일반',   ...effRow(getMonsterParkExp(parkZone, '일반', monsterParkBonus), parkPrice) },
     { name: '몬스터파크(' + parkZone + ') 썬데이', ...effRow(getMonsterParkExp(parkZone, '썬데이', monsterParkBonus), parkPrice) },
     { name: '몬스터파크(' + parkZone + ') 스페셜', ...effRow(getMonsterParkExp(parkZone, '스페셜', monsterParkBonus), parkPrice) },
+    { name: '마스터라벨 성장 플러스',    ...effRow(getMasterLabelPlusExp(inputs), getMasterLabelPlusPrice(inputs.waterBottleRate)) },
+  ];
+
+  // 한시 판매 상품 — 상시 BM과 섞여 있으면 "지금 사둘까"와 "늘 쓰는 것"의 판단이 뒤엉켜 표를 나눈다
+  const eventBmRows: TableRow[] = [
     { name: 'VIP 사우나',            ...effRow(vipExp, getVipSaunaPrice(inputs.mesoMarketRate)) },
     { name: '블루베리 농장 입장권',  ...effRow(getBlueberryExp(inputs.charLevel), getBlueberryPrice(inputs.mesoMarketRate)) },
-    // 280 미만에서 비활성화되는 두 항목은 표 맨 아래에 붙여 둔다
+    // 280 미만에서 비활성화되는 항목들은 표 맨 아래에 붙여 둔다
     { name: '메카베리 농장 입장권',  locked: mekaberryLocked, ...effRow(getMekaberryExp(inputs.charLevel), getMekaberryPrice(inputs.mesoMarketRate)) },
     { name: '프라임 모멘텀 패스 (~8/19)', locked: mekaberryLocked, ...effRow(getPrimePassExp(inputs), getPrimePassPrice(inputs.waterBottleRate)) },
-    { name: '마스터라벨 성장 플러스',    ...effRow(getMasterLabelPlusExp(inputs), getMasterLabelPlusPrice(inputs.waterBottleRate)) },
     { name: '프리미엄 모멘텀 패스', locked: mekaberryLocked, ...effRow(getPremiumMomentumExp(inputs), getPremiumMomentumPrice(inputs.waterBottleRate)) },
     { name: '프리미엄+프라임 모멘텀 패스', locked: mekaberryLocked, ...effRow(getPrimeMomentumExp(inputs), getPrimeMomentumPrice(inputs.waterBottleRate)) },
   ];
@@ -173,6 +177,8 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
       />
 
       <EffTable title="경험치 BM" rows={bmRows} color="orange" />
+
+      <EffTable title="이벤트 BM" rows={eventBmRows} color="orange" />
     </div>
   );
 }
