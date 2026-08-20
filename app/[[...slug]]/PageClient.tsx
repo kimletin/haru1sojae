@@ -945,7 +945,7 @@ export default function Home() {
                 {/* 하단: 효율표 + 가성비 순위 좌우 (items-start로 각자 자연 높이) */}
                 <div className="flex flex-col lg:flex-row gap-4 lg:items-start">
                   <div className="w-full lg:w-[560px] lg:shrink-0">
-                    <EfficiencyTab inputs={inputs} onChange={handleChange} items={rankedItems} monsterParkBonus={charMetas[activePreset]?.monsterParkBonus ?? 0} />
+                    <EfficiencyTab inputs={inputs} onChange={handleChange} monsterParkBonus={charMetas[activePreset]?.monsterParkBonus ?? 0} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <RankingPanel items={rankedItems} />

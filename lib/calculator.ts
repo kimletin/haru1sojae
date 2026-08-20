@@ -59,8 +59,12 @@ function getMobs(inputs: InputValues): MobGroup[] {
   return [{ level: inputs.monsterLevel, count: inputs.mobCount }];
 }
 
-/** 부스터 몹 기준 경험치 */
-function getBoosterMonsterExp(inputs: InputValues): number {
+/** 현재 선택된 사냥터의 몹 1마리 경험치 (부스터 계산의 기준값).
+ *  기준 레벨은 혼합 레벨 맵이면 지정된 boosterLevel, 아니면 그 맵의 최고 레벨 몹.
+ *
+ *  ⚠️ 사냥 경험치(getHuntingExpCore)와 달리 getExpMultiplier를 곱하지 않는다 —
+ *     부스터몹은 레벨차 경험치 페널티를 받지 않기 때문. 빠뜨린 게 아니다. */
+function getGroundMobExp(inputs: InputValues): number {
   const level = inputs.boosterMonsterLevel ?? inputs.monsterLevel;
   return MONSTER_EXP[level] ?? 0;
 }
@@ -80,11 +84,11 @@ export function getHunt30MinExp(inputs: InputValues): number {
 /** 30분 사냥 기본 경험치 (배율 적용 전) */
 export function getBase30MinExp(inputs: InputValues): number {
   const huntExp = getHunt30MinExp(inputs);
-  const repExp  = getBoosterMonsterExp(inputs);
+  const groundMobExp = getGroundMobExp(inputs);
   return (
     huntExp +
-    repExp * VIP_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * inputs.booster30min +
-    repExp * ETERNAL_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * inputs.eternal30min
+    groundMobExp * VIP_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * inputs.booster30min +
+    groundMobExp * ETERNAL_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * inputs.eternal30min
   );
 }
 
@@ -94,11 +98,11 @@ export function getBaseDayExp(inputs: InputValues, days: number): number {
   if (inputs.dailySessions <= 0) return 0;
   const mobs    = getMobs(inputs);
   const huntExp = getHuntingExpCore(inputs.charLevel, mobs) * 240 * inputs.dailySessions;
-  const repExp  = getBoosterMonsterExp(inputs);
+  const groundMobExp = getGroundMobExp(inputs);
   return (
     huntExp +
-    repExp * VIP_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * inputs.booster1day +
-    repExp * ETERNAL_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * inputs.eternal1day
+    groundMobExp * VIP_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * inputs.booster1day +
+    groundMobExp * ETERNAL_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * inputs.eternal1day
   ) * days;
 }
 
@@ -257,7 +261,7 @@ const BOOSTER_EXP_BONUS = 8;
 
 /** VIP 부스터 1개가 주는 경험치 (추가 경험치 배율 적용) */
 function getVipBoosterExp(inputs: InputValues): number {
-  return getBoosterMonsterExp(inputs) * VIP_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * (1 + BOOSTER_EXP_BONUS);
+  return getGroundMobExp(inputs) * VIP_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * (1 + BOOSTER_EXP_BONUS);
 }
 
 /** 모멘텀 리워드 구성품 (크림슨 메카베리 / 상급 EXP 쿠폰 / VIP 부스터 / 경험치 4배 쿠폰) */
@@ -318,12 +322,19 @@ export function getMasterLabelRate(count: number): number {
   return MASTER_LABEL_PLUS_RATES[n];
 }
 
-/** 마스터라벨 성장 플러스 총 경험치 (마스터라벨 미착용이면 0) */
+/** 마스터라벨 성장 플러스 총 경험치 = 90일 경험치 × 목표 부위 수의 배율.
+ *  마스터라벨 자체는 경험치를 주지 않고 성장 플러스가 있어야 배율이 살아나므로, 이미 낀 라벨분도
+ *  이번 구매로 비로소 얻는 경험치다. 목표가 0이면 0. */
 export function getMasterLabelPlusExp(inputs: InputValues): number {
   return getBaseDayExp(inputs, MASTER_LABEL_PLUS_DAYS) * getMasterLabelRate(inputs.masterLabelCount);
 }
 
-/** 마스터라벨 성장 플러스 메소 가격 */
+/** 마스터라벨 성장 플러스 메소 가격 = 성장 플러스 구매 비용만.
+ *
+ *  ⚠️ 마스터라벨 본체 값은 일부러 넣지 않는다. 라벨은 경험치 전용 상품이 아니라 스펙 아이템이라,
+ *     그 값 중 얼마를 경험치 몫으로 볼지가 사람마다 다르다. 사용자가 금액으로 직접 정하게 해봐도
+ *     결국 "이미 가진 부위는 빼고" 넣는 마진성 입력이 되어, 순위표의 표준 잣대와 어긋난다.
+ *     (여러 형태로 시도했다가 접었다 — 도움말에도 '보유 전제'라고 명시해 둠) */
 export function getMasterLabelPlusPrice(waterBottleRate: number): number {
   return cashToMeso(MASTER_LABEL_PLUS_CASH, waterBottleRate);
 }
