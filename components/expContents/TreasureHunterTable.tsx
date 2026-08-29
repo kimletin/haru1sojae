@@ -44,11 +44,13 @@ export function TreasureHunterTable({ monsterLevel, treasureBonus = 0, selectedB
 
   const mult = TREASURE_MULTIPLIERS[selectedBox];
   const bonusPct = parseFloat(bonusInput) || 0;
-  const sundayMult = sunday ? 3 : 1;
+  // 썬데이는 추가 경험치 +200%. 보약과 곱이 아니라 합으로 붙는다(몬스터파크와 동일한 방식) —
+  // 곱으로 두면 보약이 썬데이 배수까지 함께 불려 과대평가된다
+  const sundayBonus = sunday ? 2 : 0;
 
   const calc = (lv: number, baseMult: number) => {
     const base = (MONSTER_EXP[lv] ?? 0) * baseMult;
-    return Math.round(base * (1 + bonusPct / 100) * sundayMult);
+    return Math.round(base * (1 + bonusPct / 100 + sundayBonus));
   };
 
   return (
