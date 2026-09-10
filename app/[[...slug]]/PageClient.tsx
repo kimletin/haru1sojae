@@ -465,12 +465,44 @@ export default function Home() {
       if (meta.world) rankParams.set('world', meta.world);
       if (meta.class) rankParams.set('class', meta.class);
 
-      const [histData, rankData, skillData, cashData] = await Promise.all([
+      // 닉네임으로 현재 ocid를 매번 다시 물어본다.
+      // 월드 이전을 하면 ocid가 바뀌는데, 옛 ocid로도 과거 날짜는 계속 조회돼서
+      // "조회 실패"만으로는 이전 여부를 알 수 없다. /id의 답을 기준으로 삼는 게 확실하다.
+      // 이름→ocid는 60초 캐시(전 방문자 공유)라 이 호출 자체의 부담은 거의 없다. 다만 만료 후
+      // 첫 요청은 옛 값을 받으므로(stale-while-revalidate), 리프 직후 재연결이 한 사이클 늦을 수 있다.
+      const [histData, rankData, skillData, cashData, idData] = await Promise.all([
         fetch(`/api/character/history?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
         fetch(`/api/character/ranking?${rankParams}`).then(r => r.json()),
         fetch(`/api/character/skill?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
         fetch(`/api/character/cashitem?ocid=${encodeURIComponent(ocid)}`).then(r => r.json()),
+        fetch(`/api/character?name=${encodeURIComponent(presetNames[presetIdx])}`).then(r => r.json()).catch(() => null),
       ]);
+
+      // 저장된 닉네임으로 조회한 ocid가 저장된 것과 다르다 = 월드 리프.
+      // 슬롯을 새 ocid로 재연결하고 이번 응답은 버린다(ocid가 바뀌면 자동 갱신 effect가 곧바로 다시 돈다).
+      if (idData?.ocid && idData.ocid !== ocid) {
+        // 히스토리 캐시를 새 키로 옮겨 그래프가 끊기지 않게 한다.
+        // savedAt은 빼고 옮긴다 — 쿨다운 판정에 쓰이는 값이라 그대로 물려주면 최대 1분 갱신이 막힌다.
+        try {
+          const oldCache = localStorage.getItem(CHAR_CACHE_KEY(ocid));
+          if (oldCache) {
+            const parsed = JSON.parse(oldCache);
+            delete parsed.savedAt;
+            localStorage.setItem(CHAR_CACHE_KEY(idData.ocid), JSON.stringify(parsed));
+          }
+          localStorage.removeItem(CHAR_CACHE_KEY(ocid));
+        } catch {}
+        // world는 랭킹 조회 파라미터라 이전 후 반드시 갱신돼야 한다
+        handleMetaUpdate(presetIdx, {
+          ocid: idData.ocid,
+          world: idData.world ?? null,
+          class: idData.class ?? null,
+          guild: idData.guild ?? null,
+          image: idData.image ?? null,
+          dateCreate: idData.dateCreate ?? meta.dateCreate,
+        });
+        return;
+      }
 
       // history 응답은 { history: HistoryPoint[], basic: {...} } — basic은 오늘 호출에서 추출(별도 basic 호출 제거)
       let histArr: HistoryPoint[] | null = Array.isArray(histData?.history) ? histData.history : null;
@@ -498,6 +530,16 @@ export default function Home() {
       const histOk  = histArr !== null && histArr.length > 0;
       const rankOk  = rankData && typeof rankData === 'object' && rankData.error === undefined;
       const imageOk = basic != null;
+
+      // 저장된 닉네임으로는 ocid를 못 찾았는데 기존 ocid는 살아 있다 = 닉네임 변경.
+      // 기존 ocid의 현재 시점 조회(history 라우트가 /character/basic을 날짜 없이 부른 결과)가
+      // 준 현재 닉네임으로 슬롯 이름을 갱신한다.
+      if (!idData?.ocid && imageOk && basic.name && basic.name !== presetNames[presetIdx]) {
+        const newNames = [...presetNames];
+        newNames[presetIdx] = basic.name;
+        setPresetNames(newNames);
+        saveNames(newNames);
+      }
       const skillOk = skillData && skillData.monsterParkBonus !== undefined;
       const cashOk  = cashData && typeof cashData.masterLabelCount === 'number';
 
