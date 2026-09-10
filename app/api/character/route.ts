@@ -61,9 +61,11 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // 이름→ocid는 거의 불변이지만 월드 이전을 하면 바뀐다. 예전엔 1일 캐시라 옛 매핑이 하루 남아
+    // 슬롯 재연결이 실패했다(전 방문자 공유 캐시라 더 오래 갈 수도 있었다). 호출량이 크지 않아 1분으로 줄였다.
     const ocidRes = await fetchWithTimeout(
       `https://open.api.nexon.com/maplestory/v1/id?character_name=${encodeURIComponent(name)}`,
-      { headers, next: { revalidate: 86400 } } // 이름→ocid는 거의 불변 → 1일 캐시
+      { headers, next: { revalidate: 60 } }
     );
 
     if (!ocidRes.ok) {
@@ -93,6 +95,8 @@ export async function GET(req: NextRequest) {
       world: char.world_name,
       guild: char.character_guild_name ?? null,
       image: char.character_image ?? null,
+      // 월드 이전으로 ocid가 바뀐 슬롯을 재연결할 때, 동명이인이 아닌지 확인하는 지문
+      dateCreate: char.character_date_create ?? null,
     });
   } catch (e) {
     if (e instanceof Error && e.name === 'AbortError') {

@@ -63,6 +63,8 @@ export async function GET(req: NextRequest) {
   // 오늘(현재) 응답 = 표시용 기본 정보 소스
   const t = raws[0];
   const basic = t ? {
+    // 닉네임 변경(ocid는 그대로) 감지용 — 슬롯에 저장된 이름과 대조한다
+    name: t.character_name ?? null,
     image: t.character_image ?? null,
     level: t.character_level ?? null,
     class: t.character_class ?? null,

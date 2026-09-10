@@ -4,8 +4,10 @@ import { LEVEL_EXP } from '@/data/levelExp';
 
 export interface HistoryPoint {
   date: string;
-  expRate: number;
-  level: number;
+  // ⚠️ null 가능. NEXON 응답에 값이 없거나, 예전 버전이 null로 저장한 캐시가 남아 있을 수 있다.
+  // number로 선언해 두면 tsc가 가드 누락을 못 잡아 렌더 중 toFixed 크래시가 난다.
+  expRate: number | null;
+  level: number | null;
   exp?: number;
 }
 

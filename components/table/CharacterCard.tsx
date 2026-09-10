@@ -125,7 +125,8 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
                   <span className="w-6 text-gray-400 dark:text-zinc-500 shrink-0">레벨</span>
                   <span className="text-gray-700 dark:text-zinc-300">
                     {level}
-                    {todayData
+                    {/* 오늘 항목이 있어도 expRate가 null일 수 있어(캐시·API 결측) 값 자체를 확인한다 */}
+                    {todayData?.expRate != null
                       ? <span className="text-gray-400 dark:text-zinc-500 ml-1">({todayData.expRate.toFixed(3)}%)</span>
                       : !hasApi && meta?.manualExpRate != null
                         ? <span className="text-gray-400 dark:text-zinc-500 ml-1">({meta.manualExpRate.toFixed(3)}%)</span>

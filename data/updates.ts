@@ -6,6 +6,15 @@ export interface UpdateEntry {
 
 export const UPDATES: UpdateEntry[] = [
   {
+    date: '2026.09.10.',
+    title: '오류 수정',
+    items: [
+      '일부 캐릭터에서 경험치 효율표 페이지가 열리지 않던 오류 수정',
+      '월드 이동 시 캐릭터 정보를 불러오지 못하던 오류 수정',
+      '닉네임 변경 시 캐릭터 목록의 이름이 옛 이름으로 남던 오류 수정',
+    ],
+  },
+  {
     date: '2026.08.20.',
     title: '기능/UI 개선',
     items: [
