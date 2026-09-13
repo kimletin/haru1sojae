@@ -1,7 +1,7 @@
 import { assetSlug } from '@/lib/assetSlug';
 
+// 단계 뱃지 색 — 도착 단계 기준. 행이 0→1 / 1→2 둘뿐이라 진한 두 색만 쓴다
 const STAGE_COLORS: Record<string, string> = {
-  '0': 'bg-purple-400 text-white',
   '1': 'bg-purple-600 text-white',
   '2': 'bg-purple-800 text-white',
 };
@@ -25,19 +25,15 @@ const ICON_MAP: Record<string, string> = {
   '혈맹의 반지': '혈맹의 반지',
   '경험치 부스트링': '경험치 부스트링',
   '정령의 펜던트': '정령의 펜던트',
-  '메카베리 농장 입장권': '메카베리 농장',
-  '블루베리 농장 입장권': '블루베리 농장',
-  '프라임 모멘텀 패스 (~8/19)': '프라임 모멘텀 패스 (~8/19)',
   '프리미엄 모멘텀 패스': '프리미엄 모멘텀 패스',
   '프리미엄+프라임 모멘텀 패스': '프라임 모멘텀 패스',
   '마스터라벨 성장 플러스': '마스터라벨 성장 플러스',
 };
 
-const EPIC_ZONES = ['하이마운틴', '앵글러컴퍼니', '악몽선경'];
+const EPIC_ZONES = ['하이마운틴', '앵글러컴퍼니', '악몽선경', '아우룸 레기스'];
 
 // 이번 패치로 추가된 상품 — 이름 뒤에 New 태그를 붙이고 효율표 행을 강조한다
 const NEW_ITEMS = new Set([
-  '마스터라벨 성장 플러스',
   '프리미엄 모멘텀 패스',
   '프리미엄+프라임 모멘텀 패스',
 ]);
@@ -53,24 +49,6 @@ function NewBadge() {
   );
 }
 
-// 8/19 정식 업데이트로 판매가 끝나는 구 상품 — 신규 상품과 구분되게 이름 뒤에 Old 태그를 붙인다
-const LEGACY_ITEMS = new Set([
-  '프라임 모멘텀 패스 (~8/19)',
-  '메카베리 농장 입장권',
-  '블루베리 농장 입장권',
-]);
-
-/** Old 태그가 붙는 항목인지 */
-export function isLegacyItem(name: string): boolean {
-  return LEGACY_ITEMS.has(name);
-}
-
-function LegacyBadge() {
-  return (
-    <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-gray-400 dark:bg-zinc-600 text-white text-[10px] font-bold ml-0.5 shrink-0">Old</span>
-  );
-}
-
 // 하위 → 상위 상품으로 갈아타는 업그레이드 행: 두 아이콘을 화살표로 함께 표시
 const UPGRADE_MAP: Record<string, { from: { icon: string; label: string }; to: { icon: string; label: string } }> = {
   '추가경험치 50%→70%': { from: { icon: '추가 경험치 50%', label: '추경 50%' }, to: { icon: '추가 경험치 70%', label: '추경 70%' } },
@@ -82,7 +60,6 @@ const UPGRADE_MAP: Record<string, { from: { icon: string; label: string }; to: {
 function iconFor(name: string): string | null {
   const base = name.replace(/\s*\((?:메소|메포)\)$/, '').trim();
   if (ICON_MAP[base]) return ICON_MAP[base];
-  if (name.startsWith('몬스터파크')) return '몬스터파크';
   if (name.startsWith('VIP 사우나')) return 'VIP사우나';
   for (const zone of EPIC_ZONES) if (name.startsWith(zone)) return zone;
   return null;
@@ -90,15 +67,13 @@ function iconFor(name: string): string | null {
 
 // 항목명(계산 키) → 표시명 치환 (입장권 → (메포샵) 등)
 const DISPLAY_NAME: Record<string, string> = {
-  '메카베리 농장 입장권': '메카베리 농장 (메포샵)',
-  '블루베리 농장 입장권': '블루베리 농장 (메포샵)',
-  // 키의 (~8/19)는 신규 패스와 이름이 겹치지 않게 하려는 것 — 화면에는 Old 뱃지로 표시한다
-  '프라임 모멘텀 패스 (~8/19)': '프라임 모멘텀 패스',
   '프리미엄+프라임 모멘텀 패스': '프리미엄+프라임 모멘텀',
+  // 계산 키(데이터 값)는 붙여 쓴 '앵글러컴퍼니' 그대로 두고 화면에서만 띄어 쓴다
+  '앵글러컴퍼니': '앵글러 컴퍼니',
 };
 
-// 표시용 라벨 변환
-function displayLabel(text: string): string {
+/** 표시용 라벨 변환. ItemName을 쓰지 않는 곳(입력 정보 카드 등)에서도 같은 표기를 쓰도록 export한다. */
+export function displayLabel(text: string): string {
   if (DISPLAY_NAME[text]) return DISPLAY_NAME[text];
   return text
     .replace('추가경험치', '추가 경험치')
@@ -109,11 +84,12 @@ function Icon({ name }: { name: string }) {
   return <img src={`/icons/${assetSlug(name)}.png`} alt="" className="w-5 h-5 shrink-0 object-contain" />;
 }
 
-function StageBadge({ stage }: { stage: string }) {
-  const cls = STAGE_COLORS[stage] ?? 'bg-purple-500 text-white';
+// 출발·도착을 뱃지 하나에 담는다 — '0단계 → 1단계'는 좁은 칸에서 너무 길어 줄바꿈을 유발했다
+function StageBadge({ from, to }: { from: string; to: string }) {
+  const cls = STAGE_COLORS[to] ?? 'bg-purple-600 text-white';
   return (
     <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ${cls}`}>
-      {stage}단계
+      {from}→{to}단계
     </span>
   );
 }
@@ -148,9 +124,7 @@ export default function ItemName({ name }: { name: string }) {
           {displayLabel(stageMatch[1])}
         </span>
         <span className="inline-flex items-center gap-0.5 ml-0.5">
-          <StageBadge stage={stageMatch[2]} />
-          <span className="mx-0.5 text-gray-400">→</span>
-          <StageBadge stage={stageMatch[3]} />
+          <StageBadge from={stageMatch[2]} to={stageMatch[3]} />
         </span>
       </>
     );
@@ -158,12 +132,14 @@ export default function ItemName({ name }: { name: string }) {
 
   const monparkMatch = name.match(/^몬스터파크\(([^)]*)\)\s*(.*)$/);
   if (monparkMatch) {
+    const zone = monparkMatch[1];
     const variant = monparkMatch[2];
     const variantCls = MONPARK_VARIANT_COLORS[variant];
+    // 선택한 지역 아이콘 + '몬파: 지역' — 어느 지역 기준 값인지 바로 보이게
     return (
       <>
-        {iconEl}
-        몬스터파크
+        <Icon name={zone} />
+        몬파: {zone}
         {variant && (
           <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ml-0.5 ${variantCls ?? 'bg-fuchsia-500 text-white'}`}>{variant === '스페셜' ? '스페셜썬데이' : variant}</span>
         )}
@@ -194,7 +170,6 @@ export default function ItemName({ name }: { name: string }) {
       {displayLabel(name)}
       {name === 'VIP 사우나' && <span className="shrink-0"> (1시간)</span>}
       {isNewItem(name) && <NewBadge />}
-      {isLegacyItem(name) && <LegacyBadge />}
     </>
   );
 }

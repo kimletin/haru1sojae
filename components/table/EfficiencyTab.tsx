@@ -1,7 +1,7 @@
 'use client';
 
 import { InputValues } from '@/types';
-import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getMekaberryExp, getMekaberryPrice, getBlueberryExp, getBlueberryPrice, getPrimePassExp, getPrimePassPrice, getPremiumMomentumExp, getPremiumMomentumPrice, getPrimeMomentumExp, getPrimeMomentumPrice, getMasterLabelPlusExp, getMasterLabelPlusPrice, getDoping30Tiers, MEKABERRY_MIN_LEVEL } from '@/lib/calculator';
+import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getPremiumMomentumExp, getPremiumMomentumPrice, getPrimeMomentumExp, getPrimeMomentumPrice, getMasterLabelPlusExp, getMasterLabelPlusPrice, getDoping30Tiers, MEKABERRY_MIN_LEVEL } from '@/lib/calculator';
 import Num from '@/components/ui/Num';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
@@ -143,7 +143,7 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
   const parkZone = inputs.monsterParkZone;
   const parkPrice = mepoToMeso(600, inputs.mesoMarketRate);
   const vipExp   = getVipSaunaExp(inputs.charLevel);
-  // 메카베리 농장 입장권과, 그걸 구성품으로 포함하는 프라임 모멘텀 패스는 280부터 사용 가능
+  // 구성품에 크림슨 메카베리가 들어 있는 모멘텀 패스는 280부터 사용 가능
   const mekaberryLocked = inputs.charLevel < MEKABERRY_MIN_LEVEL;
 
   const bmRows: TableRow[] = [
@@ -158,10 +158,7 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
   // 한시 판매 상품 — 상시 BM과 섞여 있으면 "지금 사둘까"와 "늘 쓰는 것"의 판단이 뒤엉켜 표를 나눈다
   const eventBmRows: TableRow[] = [
     { name: 'VIP 사우나',            ...effRow(vipExp, getVipSaunaPrice(inputs.mesoMarketRate)) },
-    { name: '블루베리 농장 입장권',  ...effRow(getBlueberryExp(inputs.charLevel), getBlueberryPrice(inputs.mesoMarketRate)) },
     // 280 미만에서 비활성화되는 항목들은 표 맨 아래에 붙여 둔다
-    { name: '메카베리 농장 입장권',  locked: mekaberryLocked, ...effRow(getMekaberryExp(inputs.charLevel), getMekaberryPrice(inputs.mesoMarketRate)) },
-    { name: '프라임 모멘텀 패스 (~8/19)', locked: mekaberryLocked, ...effRow(getPrimePassExp(inputs), getPrimePassPrice(inputs.waterBottleRate)) },
     { name: '프리미엄 모멘텀 패스', locked: mekaberryLocked, ...effRow(getPremiumMomentumExp(inputs), getPremiumMomentumPrice(inputs.waterBottleRate)) },
     { name: '프리미엄+프라임 모멘텀 패스', locked: mekaberryLocked, ...effRow(getPrimeMomentumExp(inputs), getPrimeMomentumPrice(inputs.waterBottleRate)) },
   ];

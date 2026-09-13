@@ -1,6 +1,7 @@
 'use client';
 
 import CardHeader from '@/components/ui/CardHeader';
+import { displayLabel } from '@/components/ui/ItemName';
 import { assetSlug } from '@/lib/assetSlug';
 
 import type { InputValues, CharMeta } from '@/types';
@@ -78,7 +79,7 @@ export default function InputSummaryCard({ inputs, meta: _meta, onEditInfo }: Pr
         <Cell label="일 평균 재획" icon="소재비">{toTimeStr(inputs.dailySessions)}</Cell>
         <Cell label="30분 부스터"><Boosters vip={inputs.booster30min} eternal={inputs.eternal30min} /></Cell>
         <Cell label="1일 부스터"><Boosters vip={inputs.booster1day} eternal={inputs.eternal1day} /></Cell>
-        <Cell label="에픽 던전" icon={inputs.epicDungeonZone}>{inputs.epicDungeonZone}</Cell>
+        <Cell label="에픽 던전" icon={inputs.epicDungeonZone}>{displayLabel(inputs.epicDungeonZone)}</Cell>
         <Cell label="몬스터파크" icon={inputs.monsterParkZone}>{inputs.monsterParkZone}</Cell>
         <Cell label="사냥터" icon={inputs.huntingRegion}>{inputs.huntingGround}</Cell>
       </div>

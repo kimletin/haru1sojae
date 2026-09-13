@@ -10,7 +10,7 @@ import RankingPanel from '@/components/table/RankingPanel';
 import InputSummaryCard from '@/components/table/InputSummaryCard';
 import EfficiencyTab from '@/components/table/EfficiencyTab';
 import ExpInfoTab from '@/components/exp/ExpInfoTab';
-import ExpContentsTab, { CONTENT_KEYS } from '@/components/expContents/ExpContentsTab';
+import ExpContentsTab from '@/components/expContents/ExpContentsTab';
 import HuntingGroundTab from '@/components/hunt/HuntingGroundTab';
 import InfoCenterTab from '@/components/info/InfoCenterTab';
 import HomeCardSection from '@/components/home/HomeCardSection';
@@ -174,7 +174,6 @@ export default function Home() {
   const [searchModalTarget, setSearchModalTarget] = useState(0);
   const [charMetas, setCharMetas] = useState<(CharMeta | null)[]>(makeDefaultMetas());
   const [todayExpRate, setTodayExpRate] = useState<number | null>(null);
-  const [initialContentKey, setInitialContentKey] = useState<string | undefined>(undefined);
   const [notFound, setNotFound] = useState(false);
   const [isPrivacy, setIsPrivacy] = useState(false);
   const [isHome, setIsHome] = useState(false);
@@ -197,14 +196,8 @@ export default function Home() {
     const tabSlug = parts[0];
 
     let tab: Tab | null = PARAM_TO_TAB[tabSlug] ?? PARAM_TO_TAB[slug] ?? null;
-    // 서브 경로 검증: /cont/<유효키>만 허용, 그 외 추가 경로는 잘못된 주소로 처리
-    if (tab && parts.length > 1) {
-      if (tabSlug === 'cont' && parts.length === 2 && CONTENT_KEYS.includes(parts[1])) {
-        setInitialContentKey(parts[1]);
-      } else {
-        tab = null;
-      }
-    }
+    // 탭 경로 뒤에 하위 경로가 붙으면 잘못된 주소로 처리
+    if (tab && parts.length > 1) tab = null;
     if (slug === '') {
       setIsHome(true); setIsPrivacy(false); setNotFound(false);
       document.title = '하루1소재';
@@ -851,8 +844,9 @@ export default function Home() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 w-full max-w-[905px]">
           {TABS.filter(t => t !== '정보 센터').map(t => (
             <button key={t} onClick={() => handleTabChange(t)}
-              className="h-16 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm hover:border-orange-400 hover:shadow transition-all cursor-pointer text-sm font-semibold text-gray-700 dark:text-zinc-200 flex flex-row items-center justify-center gap-2">
-              <TabIcon tab={t} className="shrink-0" />
+              className="h-16 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-sm hover:border-orange-400 hover:shadow transition-all cursor-pointer text-[14px] font-semibold text-gray-700 dark:text-zinc-200 flex flex-row items-center justify-center gap-2">
+              {/* 헤더 메뉴와 같은 TabIcon — 홈 버튼에서만 18px → 20px로 키운다 */}
+              <TabIcon tab={t} className="shrink-0 w-[20px] h-[20px]" />
               {t}
             </button>
           ))}
@@ -1000,10 +994,10 @@ export default function Home() {
             <div>
                 {activeTab === TABS[1] && (
                   <ExpContentsTab
-                    initialSelected={initialContentKey}
                     charLevel={inputs.charLevel}
                     monsterLevel={inputs.monsterLevel}
                     monsterParkBonus={charMetas[activePreset]?.monsterParkBonus ?? 0}
+                    monsterParkZone={inputs.monsterParkZone}
                     epicDungeonBonus={charMetas[activePreset]?.epicDungeonBonus ?? 0}
                     treasureBonus={charMetas[activePreset]?.treasureBonus ?? 0}
                     todayExpRate={todayExpRate}
