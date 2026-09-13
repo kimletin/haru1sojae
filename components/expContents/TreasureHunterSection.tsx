@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { assetSlug } from '@/lib/assetSlug';
 import { TreasureHunterTable, TREASURE_BOX_META, TREASURE_BOXES } from '@/components/expContents/TreasureHunterTable';
+import SubTabs from '@/components/expContents/SubTabs';
 import type { TreasureBox } from '@/data/treasureHunter';
 
 interface Props {
@@ -14,28 +14,18 @@ export default function TreasureHunterSection({ monsterLevel, treasureBonus = 0,
   const [treasureBox, setTreasureBox] = useState<TreasureBox>('폴로/프리토');
   return (
                 <div className="flex flex-col gap-1.5">
-                  <div className="flex gap-1.5 shrink-0">
-                    {TREASURE_BOXES.map(d => (
-                      <button
-                        key={d}
-                        onClick={() => setTreasureBox(d)}
-                        className={
-                          'flex-1 rounded-lg text-sm font-medium transition-colors cursor-pointer py-2 px-2 lg:px-3 flex items-center justify-center gap-1.5 lg:gap-2 ' +
-                          (treasureBox === d
-                            ? 'bg-orange-500 text-white border border-orange-500'
-                            : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
-                        }
-                      >
-                        <div className="w-10 h-10 lg:w-12 lg:h-12 shrink-0 flex items-center justify-center">
-                          <img src={`/icons/${assetSlug(TREASURE_BOX_META[d].icon)}.webp`} alt="" className="w-full h-full object-contain scale-125" />
-                        </div>
-                        <div className="flex flex-col items-center min-w-0">
-                          <div className="font-semibold whitespace-nowrap text-[12px] lg:text-sm">{TREASURE_BOX_META[d].label}</div>
-                          <div className={'text-xs mt-0.5 ' + (treasureBox === d ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>{TREASURE_BOX_META[d].sub}</div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
+                  <SubTabs
+                    items={TREASURE_BOXES.map(d => ({
+                      key: d,
+                      // 탭엔 부제(출현 지역)만 — 박스 종류는 아이콘으로, 정식 이름은 아래 표 제목으로 보인다
+                      label: TREASURE_BOX_META[d].sub,
+                      icon: TREASURE_BOX_META[d].icon,
+                      iconExt: 'webp' as const,
+                      iconClassName: 'scale-125',
+                    }))}
+                    current={treasureBox}
+                    onSelect={setTreasureBox}
+                  />
                   <div className="flex-1 min-h-0">
                     <TreasureHunterTable
                       monsterLevel={monsterLevel}

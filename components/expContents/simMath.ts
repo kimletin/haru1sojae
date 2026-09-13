@@ -29,13 +29,14 @@ function beyondJump(lv: number, beyond: boolean) {
   return beyond && lv <= 278 ? 2 : 1;
 }
 
-export function calcVipSaunaByTime(startLevel: number, startExpPct: number, totalSeconds: number, beyond: boolean) {
+// 잠수맵(VIP 사우나 / MVP 리조트)은 계산이 동일하고 레벨별 경험치 테이블만 다르다 → expTable로 주입
+export function calcVipSaunaByTime(startLevel: number, startExpPct: number, totalSeconds: number, beyond: boolean, expTable: Record<number, number> = VIP_SAUNA_EXP) {
   let lv = startLevel;
   let absExp = (startExpPct / 100) * (LEVEL_EXP[lv]?.required ?? 0);
   let remainingTicks = Math.floor(totalSeconds / 5);
   let totalGained = 0;
   while (remainingTicks > 0) {
-    const hourExp = VIP_SAUNA_EXP[lv];
+    const hourExp = expTable[lv];
     const lvReq = LEVEL_EXP[lv]?.required;
     if (!lvReq || !hourExp) break;
     const tickExp = hourExp / 720;
@@ -58,14 +59,14 @@ export function calcVipSaunaByTime(startLevel: number, startExpPct: number, tota
   return { finalLevel: lv, finalPct: finalReq ? (absExp / finalReq) * 100 : 0, gainedExp: Math.round(totalGained) };
 }
 
-export function calcVipSaunaByTarget(startLevel: number, startExpPct: number, targetLevel: number, beyond: boolean) {
+export function calcVipSaunaByTarget(startLevel: number, startExpPct: number, targetLevel: number, beyond: boolean, expTable: Record<number, number> = VIP_SAUNA_EXP) {
   if (targetLevel <= startLevel) return null;
   let lv = startLevel;
   let absExp = (startExpPct / 100) * (LEVEL_EXP[lv]?.required ?? 0);
   let totalTicks = 0;
   let totalGained = 0;
   while (lv < targetLevel) {
-    const hourExp = VIP_SAUNA_EXP[lv];
+    const hourExp = expTable[lv];
     const lvReq = LEVEL_EXP[lv]?.required;
     if (!lvReq || !hourExp) break;
     const tickExp = hourExp / 720;
@@ -250,13 +251,14 @@ export type RevStartResult =
   | { ok: true; startLevel: number; startPct: number; targetLevel: number }
   | { ok: false; msg: string };
 
-export function calcCouponByCount(startLevel: number, startExpPct: number, count: number, beyond: boolean) {
+// EXP 교환권(상급 / 퍼스널)은 계산이 동일하고 레벨별 경험치 테이블만 다르다 → expTable로 주입
+export function calcCouponByCount(startLevel: number, startExpPct: number, count: number, beyond: boolean, expTable: Record<number, number> = SUPER_EXP_COUPON) {
   let lv = startLevel;
   let absExp = (startExpPct / 100) * (LEVEL_EXP[lv]?.required ?? 0);
   let remaining = count;
   let totalGained = 0;
   while (remaining > 0) {
-    const couponExp = SUPER_EXP_COUPON[lv];
+    const couponExp = expTable[lv];
     const lvReq = LEVEL_EXP[lv]?.required;
     if (!couponExp || !lvReq) break;
     const expToNext = lvReq - absExp;
@@ -280,14 +282,14 @@ export function calcCouponByCount(startLevel: number, startExpPct: number, count
   return { finalLevel: lv, finalPct, gainedExp: Math.round(totalGained), gainPct };
 }
 
-export function calcCouponByTarget(startLevel: number, startExpPct: number, targetLevel: number, beyond: boolean) {
+export function calcCouponByTarget(startLevel: number, startExpPct: number, targetLevel: number, beyond: boolean, expTable: Record<number, number> = SUPER_EXP_COUPON) {
   if (targetLevel <= startLevel) return null;
   let lv = startLevel;
   let absExp = (startExpPct / 100) * (LEVEL_EXP[lv]?.required ?? 0);
   let totalCount = 0;
   let totalGained = 0;
   while (lv < targetLevel) {
-    const couponExp = SUPER_EXP_COUPON[lv];
+    const couponExp = expTable[lv];
     const lvReq = LEVEL_EXP[lv]?.required;
     if (!couponExp || !lvReq) break;
     const expToNext = lvReq - absExp;

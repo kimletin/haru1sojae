@@ -296,11 +296,13 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
 
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
             <p className={sectionLabel}>에픽 던전</p>
-            <div className="grid grid-cols-3 gap-1">
+            <div className="grid grid-cols-4 gap-1">
               {([
+                // 4열 버튼이 좁아 6자 이상은 줄바꿈된다 → 인게임 약칭으로 줄여 표기(val은 계산 키라 정식 명칭 유지)
                 { val: '하이마운틴', label: '하이마운틴', minLv: 260 },
-                { val: '앵글러컴퍼니', label: '앵글러컴퍼니', minLv: 270 },
+                { val: '앵글러컴퍼니', label: '앵글러', minLv: 270 },
                 { val: '악몽선경',   label: '악몽선경', minLv: 280 },
+                { val: '아우룸 레기스', label: '아우룸', minLv: 290 },
               ] as const).map(({ val, label, minLv }) => {
                 const accessible = d.charLevel >= minLv;
                 return (

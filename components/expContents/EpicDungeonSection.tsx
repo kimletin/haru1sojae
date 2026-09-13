@@ -1,13 +1,15 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { assetSlug } from '@/lib/assetSlug';
 import { DungeonTable } from '@/components/expContents/DungeonTable';
-import { HAIMOUNTAIN, ANGLER_COMPANY, NIGHTMARE_SANCTUARY } from '@/data/epicDungeon';
+import SubTabs from '@/components/expContents/SubTabs';
+import { HAIMOUNTAIN, ANGLER_COMPANY, NIGHTMARE_SANCTUARY, AURUM_REGIS } from '@/data/epicDungeon';
 
+// name = 존 키(데이터·아이콘·저장값과 공유) / label = 화면 표기(상단 탭·경험치표 제목)
 const DUNGEONS = [
-  { name: '하이마운틴',   minLv: 260, data: HAIMOUNTAIN },
-  { name: '앵글러컴퍼니', minLv: 270, data: ANGLER_COMPANY },
-  { name: '악몽선경',     minLv: 280, data: NIGHTMARE_SANCTUARY },
+  { name: '하이마운틴',   label: '하이마운틴',    minLv: 260, data: HAIMOUNTAIN },
+  { name: '앵글러컴퍼니', label: '앵글러 컴퍼니', minLv: 270, data: ANGLER_COMPANY },
+  { name: '악몽선경',     label: '악몽선경',      minLv: 280, data: NIGHTMARE_SANCTUARY },
+  { name: '아우룸 레기스', label: '아우룸 레기스', minLv: 290, data: AURUM_REGIS },
 ];
 
 interface Props {
@@ -28,31 +30,14 @@ export default function EpicDungeonSection({ charLevel, epicDungeonBonus, hasCha
   return (
           /* 에픽 던전 — 전체 너비 사용 */
           <div className="flex-1 flex flex-col gap-1.5">
-            <div className="flex gap-1.5 shrink-0">
-              {DUNGEONS.map(d => (
-                <button
-                  key={d.name}
-                  onClick={() => setSelectedDungeon(d.name)}
-                  className={
-                    'flex-1 h-14 lg:h-16 rounded-lg text-sm font-medium transition-colors cursor-pointer py-2 px-2 lg:px-3 flex items-center justify-center gap-1.5 lg:gap-2 ' +
-                    (selectedDungeon === d.name
-                      ? 'bg-orange-500 text-white border border-orange-500'
-                      : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 border border-gray-200 dark:border-zinc-600')
-                  }
-                >
-                  <img src={`/icons/${assetSlug(d.name)}.png`} alt="" className="w-8 h-8 lg:w-10 lg:h-10 shrink-0 object-contain" />
-                  <div className="flex flex-col items-center">
-                    <div className="text-[12px] lg:text-sm font-semibold whitespace-nowrap">{d.name}</div>
-                    <div className={'text-xs mt-0.5 ' + (selectedDungeon === d.name ? 'text-orange-100' : 'text-gray-400 dark:text-zinc-500')}>
-                      Lv.{d.minLv}~
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
+            <SubTabs
+              items={DUNGEONS.map(d => ({ key: d.name, label: d.label, icon: d.name }))}
+              current={selectedDungeon}
+              onSelect={setSelectedDungeon}
+            />
             <div className="flex-1 min-h-0">
               <DungeonTable
-                title={dungeon.name}
+                title={dungeon.label}
                 levels={epicLevels}
                 data={dungeon.data}
                 charLevel={charLevel}

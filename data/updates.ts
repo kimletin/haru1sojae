@@ -6,6 +6,18 @@ export interface UpdateEntry {
 
 export const UPDATES: UpdateEntry[] = [
   {
+    date: '2026.09.14.',
+    title: 'KMST ver.1.2.206 업데이트',
+    items: [
+      '에픽 던전 경험치 오류 정정',
+      '하이마운틴~악몽선경 295~299 상향 반영',
+      '에픽 던전 아우룸 레기스 / 몬스터파크 기어드락 추가',
+      'MVP 리조트 경험치 상향 반영',
+      '퍼스널 EXP 교환권 추가',
+      '메뉴 개편(잠수맵 · EXP 교환권 · 농장 입장권)',
+    ],
+  },
+  {
     date: '2026.09.10.',
     title: '오류 수정',
     items: [

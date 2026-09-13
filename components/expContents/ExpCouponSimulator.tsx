@@ -4,6 +4,7 @@ import CardHeader from '@/components/ui/CardHeader';
 import Num from '@/components/ui/Num';
 import SimNumInput from '@/components/expContents/SimNumInput';
 import { LEVEL_EXP } from '@/data/levelExp';
+import { SUPER_EXP_COUPON } from '@/data/superExpCoupon';
 import { calcCouponByCount, calcCouponByTarget, findStartForTarget, type RevStartResult } from '@/components/expContents/simMath';
 
 interface Props {
@@ -11,13 +12,15 @@ interface Props {
   hasCharacter: boolean;
   todayExpRate?: number | null;
   slotKey?: number;
+  /** 교환권 종류별 1장당 경험치 표 (상급 / 퍼스널) — 계산식은 같고 표만 다르다 */
+  expTable?: Record<number, number>;
 }
 
 type CouponSimResult =
   | { type: '개수'; gainedExp: number; gainPct: number; finalLevel: number; finalPct: number }
   | { type: '목표'; gainedExp: number; gainPct: number; finalLevel: number; finalPct: number; count: number };
 
-export default function ExpCouponSimulator({ charLevel, hasCharacter, todayExpRate, slotKey }: Props) {
+export default function ExpCouponSimulator({ charLevel, hasCharacter, todayExpRate, slotKey, expTable = SUPER_EXP_COUPON }: Props) {
   // 시뮬레이터 state
   const [couponSimLevel, setCouponSimLevel] = useState(hasCharacter ? String(charLevel) : "");
   const [couponSimExpPct, setCouponSimExpPct] = useState('');
@@ -53,12 +56,12 @@ export default function ExpCouponSimulator({ charLevel, hasCharacter, todayExpRa
     if (couponSimMode === '개수') {
       const count = parseInt(couponSimCount);
       if (!count || count <= 0) return;
-      const res = calcCouponByCount(lv, expPct, count, couponSimBeyond);
+      const res = calcCouponByCount(lv, expPct, count, couponSimBeyond, expTable);
       setCouponSimResult({ type: '개수', gainedExp: res.gainedExp, gainPct: res.gainPct, finalLevel: res.finalLevel, finalPct: res.finalPct });
     } else {
       const targetLv = parseInt(couponSimTarget);
       if (!targetLv || targetLv <= lv || (targetLv < 300 && !LEVEL_EXP[targetLv])) return;
-      const res = calcCouponByTarget(lv, expPct, targetLv, couponSimBeyond);
+      const res = calcCouponByTarget(lv, expPct, targetLv, couponSimBeyond, expTable);
       if (!res) return;
       setCouponSimResult({ type: '목표', gainedExp: res.gainedExp, gainPct: res.gainPct, finalLevel: res.finalLevel, finalPct: res.finalPct, count: res.count });
     }
@@ -69,7 +72,7 @@ export default function ExpCouponSimulator({ charLevel, hasCharacter, todayExpRa
     const count = parseInt(couponRevCount);
     if (!targetLv || targetLv < 261 || targetLv > 300) return;
     if (!count || count < 1 || count > 99999) return;
-    const res = findStartForTarget(targetLv, (sl, sp) => calcCouponByCount(sl, sp, count, couponRevBeyond));
+    const res = findStartForTarget(targetLv, (sl, sp) => calcCouponByCount(sl, sp, count, couponRevBeyond, expTable));
     if (!res) { setCouponRevResult({ ok: false, msg: '재화가 너무 많아요 (260레벨 이전 필요)' }); return; }
     setCouponRevResult({ ok: true, startLevel: res.startLevel, startPct: res.startPct, targetLevel: targetLv });
   };

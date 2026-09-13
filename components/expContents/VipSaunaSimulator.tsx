@@ -4,6 +4,7 @@ import CardHeader from '@/components/ui/CardHeader';
 import Num from '@/components/ui/Num';
 import SimNumInput from '@/components/expContents/SimNumInput';
 import { LEVEL_EXP } from '@/data/levelExp';
+import { VIP_SAUNA_EXP } from '@/data/vipSauna';
 import { calcVipSaunaByTime, calcVipSaunaByTarget, findStartForTarget, type RevStartResult } from '@/components/expContents/simMath';
 
 interface Props {
@@ -11,13 +12,15 @@ interface Props {
   hasCharacter: boolean;
   todayExpRate?: number | null;
   slotKey?: number;
+  /** 잠수맵 시설별 1시간 경험치 표 (VIP 사우나 / MVP 리조트) — 계산식은 같고 표만 다르다 */
+  expTable?: Record<number, number>;
 }
 
 type VipSimResult =
   | { type: '시간'; gainedExp: number; gainPct: number; finalLevel: number; finalPct: number }
   | { type: '목표'; gainedExp: number; gainPct: number; finalLevel: number; finalPct: number; hours: number; minutes: number; seconds: number };
 
-export default function VipSaunaSimulator({ charLevel, hasCharacter, todayExpRate, slotKey }: Props) {
+export default function VipSaunaSimulator({ charLevel, hasCharacter, todayExpRate, slotKey, expTable = VIP_SAUNA_EXP }: Props) {
   // 시뮬레이터 state
   const [vipSimLevel, setVipSimLevel] = useState(hasCharacter ? String(charLevel) : "");
   const [vipSimExpPct, setVipSimExpPct] = useState('');
@@ -57,13 +60,13 @@ export default function VipSaunaSimulator({ charLevel, hasCharacter, todayExpRat
       const minutes = parseInt(vipSimMinutes) || 0;
       const totalSeconds = hours * 3600 + minutes * 60;
       if (totalSeconds <= 0) return;
-      const res = calcVipSaunaByTime(lv, expPct, totalSeconds, vipSimBeyond);
+      const res = calcVipSaunaByTime(lv, expPct, totalSeconds, vipSimBeyond, expTable);
       const gainPct = (res.finalLevel - lv) * 100 + res.finalPct - expPct;
       setVipSimResult({ type: '시간', gainedExp: res.gainedExp, gainPct, finalLevel: res.finalLevel, finalPct: res.finalPct });
     } else {
       const targetLv = parseInt(vipSimTarget);
       if (!targetLv || targetLv <= lv || (targetLv < 300 && !LEVEL_EXP[targetLv])) return;
-      const res = calcVipSaunaByTarget(lv, expPct, targetLv, vipSimBeyond);
+      const res = calcVipSaunaByTarget(lv, expPct, targetLv, vipSimBeyond, expTable);
       if (!res) return;
       setVipSimResult({ type: '목표', gainedExp: res.gainedExp, gainPct: res.gainPct, finalLevel: res.finalLevel, finalPct: res.finalPct, hours: res.hours, minutes: res.minutes, seconds: res.seconds });
     }
@@ -77,7 +80,7 @@ export default function VipSaunaSimulator({ charLevel, hasCharacter, todayExpRat
     if (!targetLv || targetLv < 261 || targetLv > 300) return;
     if (totalSeconds <= 0) return;
     const res = findStartForTarget(targetLv, (sl, sp) => {
-      const r = calcVipSaunaByTime(sl, sp, totalSeconds, vipRevBeyond);
+      const r = calcVipSaunaByTime(sl, sp, totalSeconds, vipRevBeyond, expTable);
       return { finalLevel: r.finalLevel, finalPct: r.finalPct };
     });
     if (!res) { setVipRevResult({ ok: false, msg: '시간이 너무 길어요 (260레벨 이전 필요)' }); return; }

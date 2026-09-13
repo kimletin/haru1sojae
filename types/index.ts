@@ -1,4 +1,4 @@
-export type EpicDungeonZone = '하이마운틴' | '앵글러컴퍼니' | '악몽선경';
+export type EpicDungeonZone = '하이마운틴' | '앵글러컴퍼니' | '악몽선경' | '아우룸 레기스';
 export type SundayType = '일반' | '썬데이' | '스페셜';
 
 export interface MobGroup {
