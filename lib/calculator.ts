@@ -329,11 +329,11 @@ export function tierRow(
   return { name: upgradeName, exp: upperExp - lowerExp, priceMeso: upperPrice - lowerPrice, isUpgrade: true };
 }
 
-/** 30분 도핑 티어 4종(추경 70% / 경3쿠 / 경4쿠 / 고농축비)의 표시 행 계산 — 순위·효율표 공용 */
+/** 30분 도핑 티어 3종(추경 70% / 경4쿠 / 고농축비)의 표시 행 계산 — 순위·효율표 공용.
+ *  3배 쿠폰은 하위 티어인 2배 쿠폰이 판매 종료돼 비교 대상이 없으므로 티어가 아니라 단일 품목이다. */
 export function getDoping30Tiers(inputs: InputValues, base30: number) {
   return {
     exp70:   tierRow('추가경험치 50%→70%', '추가경험치 70%', base30 * 0.5, inputs.price50,             base30 * 0.7, inputs.price70),
-    coupon3: tierRow('2배 쿠폰→3배 쿠폰',   '3배 쿠폰',       base30 * 1,   inputs.price2x,             base30 * 2,   inputs.price3x),
     coupon4: tierRow('3배 쿠폰→4배 쿠폰',   '4배 쿠폰',       base30 * 2,   inputs.price3x,             base30 * 3,   inputs.price4x),
     booster: tierRow('소경축비→고농축비',   '고농축비',       base30 * 0.1, inputs.priceSmallBooster,   base30 * 0.2, inputs.priceLargeBooster),
   };
@@ -383,8 +383,7 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
     // 30분 도핑
     item('추가경험치 50%',     '30분 도핑', base30 * 0.5, inputs.price50),
     tierItem(tiers.exp70),
-    item('2배 쿠폰',            '30분 도핑', base30 * 1,   inputs.price2x),
-    tierItem(tiers.coupon3),
+    item('3배 쿠폰',            '30분 도핑', base30 * 2,   inputs.price3x),
     tierItem(tiers.coupon4),
     item('소경축비',            '30분 도핑', base30 * 0.1, inputs.priceSmallBooster),
     tierItem(tiers.booster),

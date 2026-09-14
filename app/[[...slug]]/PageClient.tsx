@@ -69,7 +69,6 @@ const DEFAULT_INPUTS: InputValues = {
   masterLabelCost: 0,
   price50: 1_000_000,
   price70: 9_000_000,
-  price2x: 60_000_000,
   price3x: 130_000_000,
   price4x: 200_000_000,
   priceSmallBooster: 700_000,
