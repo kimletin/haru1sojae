@@ -25,7 +25,6 @@ export interface InputValues {
   masterLabelCost: number;      // 성장 플러스 가격에 함께 얹을 마스터라벨 값 (메소, 선택 입력). 0이면 성장 플러스 값만 계산
   price50: number;              // 추가경험치 50% 가격
   price70: number;              // 추가경험치 70% 가격
-  price2x: number;              // 2배 쿠폰
   price3x: number;              // 3배 쿠폰
   price4x: number;              // 4배 쿠폰
   priceSmallBooster: number;    // 소경축비

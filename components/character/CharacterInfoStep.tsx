@@ -23,7 +23,7 @@ interface Props {
 // 초기화/불러오기가 건드리는 1열(시세+도핑 가격) 필드
 const PRICE_KEYS = [
   'waterBottleRate', 'mesoMarketRate',
-  'price50', 'price70', 'price2x', 'price3x', 'price4x',
+  'price50', 'price70', 'price3x', 'price4x',
   'priceSmallBooster', 'priceLargeBooster',
   'priceHunterTitle', 'priceBloodRingMeso', 'priceBoostringMeso', 'priceJungpenMeso',
 ] as const;
@@ -135,7 +135,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
     setD(prev => ({
       ...prev,
       waterBottleRate: 0, mesoMarketRate: 0,
-      price50: 0, price70: 0, price2x: 0, price3x: 0, price4x: 0,
+      price50: 0, price70: 0, price3x: 0, price4x: 0,
       priceSmallBooster: 0, priceLargeBooster: 0,
       priceHunterTitle: 0, priceBloodRingMeso: 0, priceBoostringMeso: 0, priceJungpenMeso: 0,
       dailySessions: 0,
@@ -201,7 +201,6 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
             <p className="text-[11px] text-orange-500 dark:text-orange-400 font-semibold mb-0.5">30분 도핑</p>
             <NumField label="추가 경험치 50%" value={d.price50} onChange={v => set('price50', v)} icon="추가 경험치 50%" />
             <NumField label="추가 경험치 70%" value={d.price70} onChange={v => set('price70', v)} icon="추가 경험치 70%" />
-            <NumField label="경험치 2배 쿠폰" value={d.price2x} onChange={v => set('price2x', v)} icon="경험치 2배 쿠폰" />
             <NumField label="경험치 3배 쿠폰" value={d.price3x} onChange={v => set('price3x', v)} icon="경험치 3배 쿠폰" />
             <NumField label="경험치 4배 쿠폰" value={d.price4x} onChange={v => set('price4x', v)} icon="경험치 4배 쿠폰" />
             <NumField label="소경축비" value={d.priceSmallBooster} onChange={v => set('priceSmallBooster', v)} icon="소경축비" />

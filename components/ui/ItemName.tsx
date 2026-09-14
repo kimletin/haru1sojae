@@ -16,7 +16,6 @@ const MONPARK_VARIANT_COLORS: Record<string, string> = {
 const ICON_MAP: Record<string, string> = {
   '추가경험치 50%': '추가 경험치 50%',
   '추가경험치 70%': '추가 경험치 70%',
-  '2배 쿠폰': '경험치 2배 쿠폰',
   '3배 쿠폰': '경험치 3배 쿠폰',
   '4배 쿠폰': '경험치 4배 쿠폰',
   '소경축비': '소경축비',
@@ -53,7 +52,6 @@ function NewBadge() {
 const UPGRADE_MAP: Record<string, { from: { icon: string; label: string }; to: { icon: string; label: string } }> = {
   '추가경험치 50%→70%': { from: { icon: '추가 경험치 50%', label: '추경 50%' }, to: { icon: '추가 경험치 70%', label: '추경 70%' } },
   '소경축비→고농축비': { from: { icon: '소경축비', label: '소경축비' }, to: { icon: '고농축비', label: '고농축비' } },
-  '2배 쿠폰→3배 쿠폰': { from: { icon: '경험치 2배 쿠폰', label: '2배 쿠폰' }, to: { icon: '경험치 3배 쿠폰', label: '3배 쿠폰' } },
   '3배 쿠폰→4배 쿠폰': { from: { icon: '경험치 3배 쿠폰', label: '3배 쿠폰' }, to: { icon: '경험치 4배 쿠폰', label: '4배 쿠폰' } },
 };
 

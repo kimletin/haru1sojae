@@ -33,7 +33,6 @@ export const ASSET_SLUGS: Record<string, string> = {
   "격전의 서쪽 성벽 4": "10",
   "경비병 강옥": "4",
   "경비병 마노": "5",
-  "경험치 2배 쿠폰": "ExpCoupon2x",
   "경험치 3배 쿠폰": "ExpCoupon3x",
   "경험치 4배 쿠폰": "ExpCoupon4x",
   "경험치 부스트링": "ExpBoostring",

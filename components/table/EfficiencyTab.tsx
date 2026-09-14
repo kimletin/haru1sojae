@@ -122,8 +122,7 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
   const doping30Rows: TableRow[] = [
     { name: '추가경험치 50%', ...effRow(base30 * 0.5, inputs.price50) },
     { name: tiers.exp70.name,   ...effRow(tiers.exp70.exp,   tiers.exp70.priceMeso) },
-    { name: '2배 쿠폰',                  ...effRow(base30 * 1,   inputs.price2x) },
-    { name: tiers.coupon3.name, ...effRow(tiers.coupon3.exp, tiers.coupon3.priceMeso) },
+    { name: '3배 쿠폰',                  ...effRow(base30 * 2,   inputs.price3x) },
     { name: tiers.coupon4.name, ...effRow(tiers.coupon4.exp, tiers.coupon4.priceMeso) },
     { name: '소경축비', ...effRow(base30 * 0.1, inputs.priceSmallBooster) },
     { name: tiers.booster.name, ...effRow(tiers.booster.exp, tiers.booster.priceMeso) },
