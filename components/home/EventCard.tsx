@@ -2,6 +2,7 @@
 
 import CardHeader from '@/components/ui/CardHeader';
 import { useSwipeCarousel } from '@/components/home/useSwipeCarousel';
+import { NoticeLoadError } from '@/components/home/HomeCard';
 
 const PAGE_SIZE = 8; // 4열 x 2행
 
@@ -12,7 +13,7 @@ interface EventEntry {
   thumbnail?: string;
 }
 
-export default function EventCard({ entries }: { entries: EventEntry[] }) {
+export default function EventCard({ entries, failed = false }: { entries: EventEntry[]; failed?: boolean }) {
   const pageCount = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
   const { page: cur, setPage, trackRef, containerRef, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, handleClickCapture } = useSwipeCarousel(pageCount);
 
@@ -62,12 +63,14 @@ export default function EventCard({ entries }: { entries: EventEntry[] }) {
       onClickCapture={handleClickCapture}
       className="lg:col-span-2 bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col touch-pan-y">
       <CardHeader title="이벤트" className="shrink-0" />
-      <div className="flex-1 overflow-hidden">
+      {/* 항목이 없으면 썸네일 격자가 비어 높이가 거의 0이 되므로, 안내를 띄울 땐 최소 높이를 준다 */}
+      <div className={'flex-1 overflow-hidden relative' + (failed ? ' min-h-[140px]' : '')}>
         <div ref={trackRef} className="flex h-full" style={{ transform: 'translateX(calc(-100% + 0px))' }}>
           {renderPage(cur - 1)}
           {renderPage(cur)}
           {renderPage(cur + 1)}
         </div>
+        {failed && <NoticeLoadError />}
       </div>
       <div className="shrink-0 flex items-center justify-center gap-1.5 py-2 border-t border-gray-100 dark:border-zinc-700">
         {Array.from({ length: pageCount }).map((_, p) => (
