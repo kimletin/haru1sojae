@@ -11,7 +11,18 @@ interface CardEntry {
   url?: string;
 }
 
-export default function HomeCard({ title, entries }: { title: string; entries: CardEntry[] }) {
+/** 공지를 받지 못했고 저장본도 없을 때 목록 자리에 덮어 띄우는 안내 (이벤트 카드와 공용).
+ *  목록(캐러셀 트랙)은 스와이프 훅이 참조하므로 없애지 않고 그 위를 덮는다. */
+export function NoticeLoadError() {
+  return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center bg-white dark:bg-zinc-900">
+      <p className="text-sm text-gray-500 dark:text-zinc-400">공지를 불러올 수 없습니다.</p>
+      <p className="text-xs text-gray-400 dark:text-zinc-500">(API 점검 중일 수 있습니다)</p>
+    </div>
+  );
+}
+
+export default function HomeCard({ title, entries, failed = false }: { title: string; entries: CardEntry[]; failed?: boolean }) {
   const pageCount = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
   const { page: cur, setPage, trackRef, containerRef, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, handleClickCapture } = useSwipeCarousel(pageCount);
 
@@ -61,12 +72,13 @@ export default function HomeCard({ title, entries }: { title: string; entries: C
       onClickCapture={handleClickCapture}
       className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden flex flex-col h-[260px] touch-pan-y">
       <CardHeader title={title} className="shrink-0" />
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden relative">
         <div ref={trackRef} className="flex h-full" style={{ transform: 'translateX(calc(-100% + 0px))' }}>
           {renderPage(cur - 1)}
           {renderPage(cur)}
           {renderPage(cur + 1)}
         </div>
+        {failed && <NoticeLoadError />}
       </div>
       <div className="shrink-0 flex items-center justify-center gap-1.5 py-2 border-t border-gray-100 dark:border-zinc-700">
         {Array.from({ length: pageCount }).map((_, p) => (
