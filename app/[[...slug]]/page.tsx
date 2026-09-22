@@ -6,7 +6,7 @@ import PageClient from './PageClient';
 // 라벨은 PageClient 탭 이름과 일치. 홈/그 외는 layout 기본 '하루1소재'. openGraph는 layout 유지.
 const ROUTE_TITLES: Record<string, string> = {
   table: '경험치 효율표',
-  cont: '경험치 컨텐츠',
+  cont: '이벤트/컨텐츠',
   exp: '경험치 정보',
   hunt: '사냥터 정보',
   info: '정보 센터',

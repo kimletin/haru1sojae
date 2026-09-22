@@ -6,6 +6,14 @@ export interface UpdateEntry {
 
 export const UPDATES: UpdateEntry[] = [
   {
+    date: '2026.09.22.',
+    title: '퍼스널 버닝 이벤트 추가',
+    items: [
+      '퍼스널 보스 미션 경험치 계산기 추가',
+      '퍼스널 EXP 교환권을 퍼스널 버닝 메뉴로 이동',
+    ],
+  },
+  {
     date: '2026.09.14.',
     title: 'KMST ver.1.2.206 업데이트',
     items: [

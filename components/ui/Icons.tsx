@@ -33,7 +33,7 @@ export function TabIcon({ tab, className }: { tab: string; className?: string })
           <line x1="18" y1="20" x2="18" y2="4"></line>
         </svg>
       );
-    case '경험치 컨텐츠':
+    case '이벤트/컨텐츠':
       return (
         <svg {...p}>
           <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>

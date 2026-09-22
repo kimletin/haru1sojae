@@ -14,6 +14,7 @@
 import fs from 'fs';
 import path from 'path';
 import { MONSTER_EXP } from '../data/monsterExp';
+import { EPIC_DUNGEON_ZONES } from '../data/epicDungeonZones';
 
 const UNIT = 100_000_000; // 1억 — 기준 존의 올림 단위
 const BASE_WEIGHT = 15.75;
@@ -33,13 +34,19 @@ interface Zone {
   minLevel: number;
 }
 
-// 가중치는 7.875 × (2, 3, 4, 6) — 아우룸만 5가 아니라 6이다
-const ZONES: Zone[] = [
-  { varName: 'HAIMOUNTAIN',         label: '하이마운틴',   multiplier: 1,   minLevel: 260 },
-  { varName: 'ANGLER_COMPANY',      label: '앵글러컴퍼니', multiplier: 1.5, minLevel: 270 },
-  { varName: 'NIGHTMARE_SANCTUARY', label: '악몽선경',     multiplier: 2,   minLevel: 280 },
-  { varName: 'AURUM_REGIS',         label: '아우룸 레기스', multiplier: 3,   minLevel: 290 },
-];
+// 존 이름 · 입장 레벨 · 배수는 data/epicDungeonZones.ts 한 곳에서 가져온다. 여기선 내보낼 변수 이름만 정한다
+const VAR_NAMES: Record<string, string> = {
+  하이마운틴: 'HAIMOUNTAIN',
+  앵글러컴퍼니: 'ANGLER_COMPANY',
+  악몽선경: 'NIGHTMARE_SANCTUARY',
+  '아우룸 레기스': 'AURUM_REGIS',
+};
+
+const ZONES: Zone[] = EPIC_DUNGEON_ZONES.map(z => {
+  const varName = VAR_NAMES[z.zone];
+  if (!varName) throw new Error(`VAR_NAMES에 '${z.zone}'의 변수 이름이 없습니다`);
+  return { varName, label: z.zone, multiplier: z.multiplier, minLevel: z.minLevel };
+});
 
 const MAX_LEVEL = 299;
 

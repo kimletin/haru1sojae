@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/:dir(icons|main|maps|mobs|worlds)/:file*',
+        source: '/:dir(icons|main|maps|mobs|worlds|boss)/:file*',
         headers: [
           { key: 'Cache-Control', value: 'public, max-age=604800' },
         ],

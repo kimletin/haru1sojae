@@ -126,6 +126,8 @@ export const ASSET_SLUGS: Record<string, string> = {
   "사냥터 정보": "HuntInfo",
   "상급 EXP 교환권": "ExpCoupon",
   "퍼스널 EXP 교환권": "PersonalExpCoupon",
+  "퍼스널 버닝": "PersonalBurning",
+  "퍼스널 보스": "PersonalBoss",
   "색 잃은 가을의 연구자": "6",
   "색깔이 옅은 가을 1": "6",
   "색깔이 옅은 가을 2": "7",
@@ -305,4 +307,5 @@ export const ASSET_SLUGS: Record<string, string> = {
   "MVP 리조트": "MVPResort",
   "VIP 부스터": "VipBooster",
   "VIP사우나": "VipSauna",
+  "VIP 사우나 이벤트": "VipSaunaEvent",
 };

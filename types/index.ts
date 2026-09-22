@@ -6,6 +6,14 @@ export interface MobGroup {
   count: number;
 }
 
+/** 퍼스널 보스 계산기에서 고른 보스 하나 — 난이도 · 파티원 수 (퍼스널 버닝 이벤트 종료 후 삭제) */
+export interface PersonalBossSelection {
+  difficulty: string;
+  party: number;
+}
+/** 보스 이름 → 선택 */
+export type PersonalBossSelections = Record<string, PersonalBossSelection>;
+
 export interface InputValues {
   waterBottleRate: number;      // 물통 시세
   mesoMarketRate: number;       // 메소마켓 시세
@@ -36,6 +44,7 @@ export interface InputValues {
   epicDungeonZone: EpicDungeonZone;
   monsterParkZone: string;      // 선택된 몬스터파크 지역
   boosterRate: number;          // 보약
+  personalBoss: PersonalBossSelections; // 퍼스널 보스 계산기 선택 — 캐릭터별로 기억 (이벤트 종료 후 삭제)
 }
 
 export interface CharMeta {
