@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { assetSlug } from '@/lib/assetSlug';
-import type { InputValues } from '@/types';
+import type { InputValues, EpicDungeonZone } from '@/types';
+import { EPIC_DUNGEON_ZONES } from '@/data/epicDungeonZones';
 import { HUNTING_REGIONS } from '@/data/huntingGrounds';
 import type { HuntingGround, HuntingRegion } from '@/data/huntingGrounds';
 import { MONSTER_PARK_ZONES } from '@/data/monsterPark';
@@ -19,6 +20,10 @@ interface Props {
   loadSources?: { name: string; inputs: InputValues }[]; // "불러오기"로 시세·가격 복사할 다른 캐릭터 목록
   apiMasterLabelCount?: number | null; // API가 조회한 실제 착용 개수 (해당 버튼에 점 표시)
 }
+
+// 에픽 던전 버튼 표기 — 4열 버튼이 좁아 6자 이상은 줄바꿈되므로 인게임 약칭으로 줄인다(없으면 존 이름 그대로).
+// 존 목록·입장 레벨은 data/epicDungeonZones.ts
+const EPIC_SHORT_LABELS: Partial<Record<EpicDungeonZone, string>> = { 앵글러컴퍼니: '앵글러', '아우룸 레기스': '아우룸' };
 
 // 초기화/불러오기가 건드리는 1열(시세+도핑 가격) 필드
 const PRICE_KEYS = [
@@ -296,13 +301,8 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
             <p className={sectionLabel}>에픽 던전</p>
             <div className="grid grid-cols-4 gap-1">
-              {([
-                // 4열 버튼이 좁아 6자 이상은 줄바꿈된다 → 인게임 약칭으로 줄여 표기(val은 계산 키라 정식 명칭 유지)
-                { val: '하이마운틴', label: '하이마운틴', minLv: 260 },
-                { val: '앵글러컴퍼니', label: '앵글러', minLv: 270 },
-                { val: '악몽선경',   label: '악몽선경', minLv: 280 },
-                { val: '아우룸 레기스', label: '아우룸', minLv: 290 },
-              ] as const).map(({ val, label, minLv }) => {
+              {EPIC_DUNGEON_ZONES.map(({ zone: val, minLevel: minLv }) => {
+                const label = EPIC_SHORT_LABELS[val] ?? val; // val은 계산 키라 정식 명칭 유지
                 const accessible = d.charLevel >= minLv;
                 return (
                   <button

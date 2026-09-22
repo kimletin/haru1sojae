@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { assetSlug } from '@/lib/assetSlug';
-import type { InputValues, MobGroup } from '@/types';
+import type { InputValues, MobGroup, PersonalBossSelections } from '@/types';
 import { calcAllItems } from '@/lib/calculator';
 import CharacterInfoModal from '@/components/character/CharacterInfoModal';
 import CharacterDetailModal from '@/components/character/CharacterDetailModal';
@@ -10,9 +10,10 @@ import RankingPanel from '@/components/table/RankingPanel';
 import InputSummaryCard from '@/components/table/InputSummaryCard';
 import EfficiencyTab from '@/components/table/EfficiencyTab';
 import ExpInfoTab from '@/components/exp/ExpInfoTab';
-import ExpContentsTab from '@/components/expContents/ExpContentsTab';
+import ExpContentsTab, { CONTENT_KEYS } from '@/components/expContents/ExpContentsTab';
 import HuntingGroundTab from '@/components/hunt/HuntingGroundTab';
 import InfoCenterTab from '@/components/info/InfoCenterTab';
+import AddCharacterPrompt from '@/components/ui/AddCharacterPrompt';
 import HomeCardSection from '@/components/home/HomeCardSection';
 import PrivacyTab from '@/components/privacy/PrivacyTab';
 import CharacterSearchModal, { type CharacterInfo } from '@/components/character/CharacterSearchModal';
@@ -21,6 +22,7 @@ import { SunIcon, MoonIcon, TabIcon } from '@/components/ui/Icons';
 import type { CharMeta } from '@/types';
 import { getDefaultHunting } from '@/data/huntingGrounds';
 import { getMonsterParkZone } from '@/data/monsterPark';
+import { getEpicDungeonZone } from '@/data/epicDungeonZones';
 
 // 세션 내 오늘 경험치 조회 완료된 ocid (새로고침 시 초기화)
 
@@ -80,6 +82,7 @@ const DEFAULT_INPUTS: InputValues = {
   epicDungeonZone: '하이마운틴',
   monsterParkZone: '세르니움',
   boosterRate: 0.5,
+  personalBoss: {},
 };
 
 const DEFAULT_NAMES = ['null', 'null', 'null', 'null', 'null', 'null'];
@@ -115,18 +118,19 @@ function saveNames(names: string[]) {
   try { localStorage.setItem(PRESET_NAMES_KEY, JSON.stringify(names)); } catch {}
 }
 
+// ⚠️ 탭은 순서 번호(TABS[n])가 아니라 이름으로 구분한다 — 순서를 바꾸거나 탭을 추가해도 내용이 어긋나지 않게
 const TABS = [
   '경험치 효율표',
-  '경험치 컨텐츠',
-  '경험치 정보',
+  '이벤트/컨텐츠',
   '사냥터 정보',
+  '경험치 정보',
   '정보 센터',
 ] as const;
 type Tab = typeof TABS[number];
 
 const TAB_PARAM: Record<Tab, string> = {
   '경험치 효율표':  'table',
-  '경험치 컨텐츠':  'cont',
+  '이벤트/컨텐츠':  'cont',
   '경험치 정보':    'exp',
   '사냥터 정보':    'hunt',
   '정보 센터':      'info',
@@ -159,7 +163,9 @@ function loadTodayExpRateFrom(meta: CharMeta | null | undefined): number | null 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [inputs, setInputs] = useState<InputValues>(DEFAULT_INPUTS);
-  const [activeTab, setActiveTab] = useState<Tab>(TABS[0]);
+  const [activeTab, setActiveTab] = useState<Tab>('경험치 효율표');
+  // 이벤트/컨텐츠 탭에서 선택한 메뉴(/cont/<키>). null이면 메뉴 화면(/cont)
+  const [contentKey, setContentKey] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState(false);
   const [activePreset, setActivePreset] = useState(0);
   const [presetNames, setPresetNames] = useState<string[]>([...DEFAULT_NAMES]);
@@ -194,9 +200,14 @@ export default function Home() {
     const parts = slug.split('/');
     const tabSlug = parts[0];
 
-    let tab: Tab | null = PARAM_TO_TAB[tabSlug] ?? PARAM_TO_TAB[slug] ?? null;
-    // 탭 경로 뒤에 하위 경로가 붙으면 잘못된 주소로 처리
-    if (tab && parts.length > 1) tab = null;
+    let tab: Tab | null = PARAM_TO_TAB[tabSlug] ?? null;
+    // 하위 경로는 이벤트/컨텐츠 탭의 메뉴 주소(/cont/<메뉴 키>)만 허용하고, 그 외는 잘못된 주소로 처리
+    let subKey: string | null = null;
+    if (tab && parts.length > 1) {
+      if (tab === '이벤트/컨텐츠' && parts.length === 2 && CONTENT_KEYS.includes(parts[1])) subKey = parts[1];
+      else tab = null;
+    }
+    setContentKey(subKey);
     if (slug === '') {
       setIsHome(true); setIsPrivacy(false); setNotFound(false);
       document.title = '하루1소재';
@@ -275,8 +286,16 @@ export default function Home() {
     setIsHome(false);
     setMenuOpen(false);
     setActiveTab(tab);
+    setContentKey(null); // 상단바로 들어가면 이벤트/컨텐츠는 메뉴 화면(/cont)부터
     document.title = `${tab} | 하루1소재`;
     const url = '/' + TAB_PARAM[tab];
+    if (window.location.pathname !== url) window.history.pushState({}, '', url);
+  };
+
+  // 이벤트/컨텐츠 탭 메뉴 선택 → 주소를 /cont/<키>로 바꾼다(링크 공유 · 뒤로 가기 · 새로고침이 메뉴 단위로 동작)
+  const handleContentSelect = (key: string) => {
+    setContentKey(key);
+    const url = `/cont/${key}`;
     if (window.location.pathname !== url) window.history.pushState({}, '', url);
   };
 
@@ -299,7 +318,7 @@ export default function Home() {
     window.scrollTo(0, 0);
   };
 
-  const handleChange = (key: keyof InputValues, value: number | string | boolean | MobGroup[]) => {
+  const handleChange = (key: keyof InputValues, value: number | string | boolean | MobGroup[] | PersonalBossSelections) => {
     setInputs(prev => {
       const next = { ...prev, [key]: value };
       const newPresets = [...presetsRef.current];
@@ -339,7 +358,7 @@ export default function Home() {
   const getInitialInputs = (level: number): InputValues => {
     const charLevel = Math.min(Math.max(level, 260), 300);
     const { region, ground } = getDefaultHunting(charLevel);
-    const epicZone = charLevel >= 280 ? '악몽선경' : charLevel >= 270 ? '앵글러컴퍼니' : '하이마운틴';
+    const epicZone = getEpicDungeonZone(charLevel); // 입장 가능한 가장 높은 에픽 던전 (data/epicDungeonZones.ts)
     return {
       ...DEFAULT_INPUTS,
       charLevel,
@@ -614,7 +633,7 @@ export default function Home() {
   // 자동 갱신 트리거 — 캐릭터 쓰는 탭(정보센터/홈 제외) 진입·F5·탭전환·슬롯전환·캐릭터 추가 시
   useEffect(() => {
     if (!mounted || isHome || isPrivacy || notFound) return;
-    if (activeTab === TABS[4]) return; // 정보 센터 제외
+    if (activeTab === '정보 센터') return;
     refreshCharRef.current(activePreset);
   }, [mounted, activeTab, activePreset, isHome, isPrivacy, notFound, charMetas[activePreset]?.ocid]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -951,13 +970,9 @@ export default function Home() {
             )}
           </div>
           )}
-          {activeTab === TABS[0] ? (
+          {activeTab === '경험치 효율표' ? (
             numSlots === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-4 text-center py-24">
-                <img src="/table.png" alt="" />
-                <p className="text-lg font-semibold text-gray-700 dark:text-zinc-200">캐릭터를 추가해주세요</p>
-                <button onClick={handleAddCharacter} className="px-5 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold transition-colors cursor-pointer">캐릭터 추가</button>
-              </div>
+              <AddCharacterPrompt onAdd={handleAddCharacter} />
             ) : (
             <div className="flex flex-col gap-4">
                 {/* 상단: 캐릭터카드 + 입력정보 좌우 (lg:items-stretch로 높이 맞춤) */}
@@ -991,7 +1006,7 @@ export default function Home() {
             )
           ) : (
             <div>
-                {activeTab === TABS[1] && (
+                {activeTab === '이벤트/컨텐츠' && (
                   <ExpContentsTab
                     charLevel={inputs.charLevel}
                     monsterLevel={inputs.monsterLevel}
@@ -1002,15 +1017,19 @@ export default function Home() {
                     todayExpRate={todayExpRate}
                     slotKey={activePreset}
                     hasCharacter={numSlots > 0}
+                    selected={contentKey}
+                    onSelect={handleContentSelect}
+                    personalBoss={inputs.personalBoss ?? {}}
+                    onPersonalBossChange={next => handleChange('personalBoss', next)}
                   />
                 )}
-                {activeTab === TABS[2] && (
+                {activeTab === '경험치 정보' && (
                   <ExpInfoTab charLevel={inputs.charLevel} monsterLevel={inputs.monsterLevel} huntingMobs={inputs.huntingMobs} hasCharacter={numSlots > 0} />
                 )}
-                {activeTab === TABS[3] && (
+                {activeTab === '사냥터 정보' && (
                   <HuntingGroundTab charLevel={inputs.charLevel} huntingRegion={inputs.huntingRegion} huntingGround={inputs.huntingGround} hasCharacter={numSlots > 0} onAddCharacter={handleAddCharacter} />
                 )}
-                {activeTab === TABS[4] && (
+                {activeTab === '정보 센터' && (
                   <InfoCenterTab />
                 )}
             </div>
