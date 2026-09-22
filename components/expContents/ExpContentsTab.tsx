@@ -282,12 +282,11 @@ export default function ExpContentsTab({
         )}
         {berryTip}
         {couponTip}
-        {/* 퍼스널 보스 미션 — 캐릭터 없이도 레벨·경험치를 직접 넣어 계산할 수 있다. 슬롯을 바꾸면 key로 입력값 초기화 */}
+        {/* 퍼스널 보스 미션 — 캐릭터 없이도 레벨을 직접 넣어 계산할 수 있다. 슬롯을 바꾸면 key로 입력값 초기화 */}
         {showBossCalc && (
           <PersonalBossTab
             key={slotKey}
             charLevel={charLevel}
-            todayExpRate={todayExpRate}
             hasCharacter={hasCharacter}
             selections={personalBoss}
             onChange={onPersonalBossChange}

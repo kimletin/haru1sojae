@@ -48,21 +48,18 @@ const EVENT_WEEK_COUNT =
 
 interface Props {
   charLevel: number;
-  todayExpRate?: number | null;
-  /** 추가한 캐릭터가 있으면 레벨·경험치%를 그 값으로 채운다(없으면 빈칸에서 직접 입력) */
+  /** 추가한 캐릭터가 있으면 레벨을 그 값으로 채운다(없으면 빈칸에서 직접 입력) */
   hasCharacter: boolean;
   /** 캐릭터별로 저장된 선택 (InputValues.personalBoss) */
   selections: PersonalBossSelections;
   onChange: (next: PersonalBossSelections) => void;
 }
 
-export default function PersonalBossTab({ charLevel, todayExpRate, hasCharacter, selections, onChange }: Props) {
-  // 레벨·경험치%는 추가한 캐릭터 값으로 채우되, 직접 고치면 그 값을 쓴다(캐릭터 없이도 계산 가능).
+export default function PersonalBossTab({ charLevel, hasCharacter, selections, onChange }: Props) {
+  // 레벨은 추가한 캐릭터 값으로 채우되, 직접 고치면 그 값을 쓴다(캐릭터 없이도 계산 가능).
   // 슬롯을 바꾸면 부모가 key로 새로 만들어 입력값이 초기화된다.
   const [levelOverride, setLevelOverride] = useState<string | null>(null);
-  const [pctOverride, setPctOverride] = useState<string | null>(null);
   const levelStr = levelOverride ?? (hasCharacter ? String(charLevel) : '');
-  const pctStr = pctOverride ?? (hasCharacter && todayExpRate != null ? todayExpRate.toFixed(3) : '');
 
   // 저장된 선택 중 지금 데이터로 유효한 것만 반영(인원은 난이도 최대치 안으로)
   const rows = PERSONAL_BOSSES.map(boss => {
@@ -78,15 +75,15 @@ export default function PersonalBossTab({ charLevel, todayExpRate, hasCharacter,
   const weeklyExp = rows.reduce((sum, r) => sum + r.exp, 0);
 
   const startLevel = parseInt(levelStr);
-  // 경험치%를 비워 두면(조회 전·수동 추가 캐릭터·직접 입력 안 함) 0%로 계산한다
-  const startPct = parseFloat(pctStr) || 0;
   const canCalc = !!LEVEL_EXP[startLevel] && startLevel < 300 && weeklyExp > 0;
 
-  // total만큼 얻었을 때 오르는 경험치% — 레벨업하면 넘어간 레벨마다 100%씩 더한다
+  // total만큼 얻었을 때 오르는 경험치% — 레벨업하면 넘어간 레벨마다 100%씩 더한다.
+  // 현재 경험치%는 받지 않고 0%에서 시작한다: 이벤트 기간에 다른 콘텐츠로도 경험치가 오르므로
+  // 도달 레벨은 맞출 수 없고, 보스 미션만의 몫(증가분)만 보여준다
   const gainOf = (total: number): number | null => {
     if (!canCalc) return null;
-    const r = calcLevelUp(startLevel, startPct, total);
-    return r ? (r.finalLevel - startLevel) * 100 + r.finalPct - startPct : null;
+    const r = calcLevelUp(startLevel, 0, total);
+    return r ? (r.finalLevel - startLevel) * 100 + r.finalPct : null;
   };
   const eventExp = weeklyExp * EVENT_WEEK_COUNT; // 이벤트 기간 내내 매주 같은 보스를 잡을 때
   const weeklyGain = gainOf(weeklyExp);
@@ -234,17 +231,13 @@ export default function PersonalBossTab({ charLevel, todayExpRate, hasCharacter,
       <div className={'lg:w-[200px] lg:shrink-0 lg:sticky lg:top-20 ' + CARD}>
         <CardHeader title="시뮬레이터" className="shrink-0" />
         <div className="p-4 grid grid-cols-2 lg:grid-cols-1 gap-x-4 gap-y-3 text-sm text-gray-700 dark:text-zinc-300">
-          {/* 현재 레벨 · 경험치 — 다른 시뮬레이터와 같은 입력줄(왼쪽 이름, 오른쪽 입력칸).
+          {/* 현재 레벨 — 다른 시뮬레이터와 같은 입력줄(왼쪽 이름, 오른쪽 입력칸).
               추가한 캐릭터면 그 값으로 채워지고 직접 고칠 수 있다. 모바일도 한 줄 전체를 쓴다 */}
           <div className="col-span-2 lg:col-span-1 flex items-center justify-between gap-3">
             <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 레벨</span>
             <SimNumInput value={levelStr} onChange={setLevelOverride} unit="레벨" pad="7" max={299} />
           </div>
-          <div className="col-span-2 lg:col-span-1 flex items-center justify-between gap-3">
-            <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 경험치</span>
-            <SimNumInput value={pctStr} onChange={setPctOverride} decimal unit="%" pad="4" placeholder="0.000" max={99.999} />
-          </div>
-          {/* 입력(현재 레벨·경험치) ↔ 결과(주간·예상 총 경험치) 구분선 */}
+          {/* 입력(현재 레벨) ↔ 결과(주간·예상 총 경험치) 구분선 */}
           <div className="col-span-2 lg:col-span-1 border-t border-gray-100 dark:border-zinc-700" />
           {/* 주간 경험치 + 한 주 동안 오르는 경험치%(레벨업하면 넘어간 레벨만큼 100%씩 더함) */}
           <div className={STAT}>
