@@ -7,6 +7,17 @@ import { SUPER_EXP_COUPON } from '@/data/superExpCoupon';
 
 // ─── Simulator helpers ────────────────────────────────────────────────────────
 
+/** 최대 레벨 — 여기 도달하면 더 채울 경험치통이 없다 */
+const MAX_LEVEL = 300;
+
+/** 도달 레벨의 경험치% — 목표 계산은 마지막 한 개(또는 5초 한 틱)를 쪼갤 수 없어 목표를 살짝 넘기는데,
+ *  최대 레벨에서는 넘친 몫을 담을 곳이 없으므로 0%로 고정한다 */
+function finalPctOf(lv: number, absExp: number) {
+  if (lv >= MAX_LEVEL) return 0;
+  const req = LEVEL_EXP[lv]?.required;
+  return req ? (absExp / req) * 100 : 0;
+}
+
 
 export function calcLevelUp(startLevel: number, startExpPct: number, gainedExp: number, beyond = false) {
   if (!LEVEL_EXP[startLevel]) return null;
@@ -21,8 +32,7 @@ export function calcLevelUp(startLevel: number, startExpPct: number, gainedExp: 
     if (remaining >= needed) { remaining -= needed; lv += beyondJump(lv, beyond); absExp = 0; }
     else { absExp += remaining; remaining = 0; }
   }
-  const finalReq = LEVEL_EXP[lv]?.required;
-  return { finalLevel: lv, finalPct: finalReq ? (absExp / finalReq) * 100 : 0 };
+  return { finalLevel: lv, finalPct: finalPctOf(lv, absExp) };
 }
 
 function beyondJump(lv: number, beyond: boolean) {
@@ -55,8 +65,7 @@ export function calcVipSaunaByTime(startLevel: number, startExpPct: number, tota
       remainingTicks = 0;
     }
   }
-  const finalReq = LEVEL_EXP[lv]?.required;
-  return { finalLevel: lv, finalPct: finalReq ? (absExp / finalReq) * 100 : 0, gainedExp: Math.round(totalGained) };
+  return { finalLevel: lv, finalPct: finalPctOf(lv, absExp), gainedExp: Math.round(totalGained) };
 }
 
 export function calcVipSaunaByTarget(startLevel: number, startExpPct: number, targetLevel: number, beyond: boolean, expTable: Record<number, number> = VIP_SAUNA_EXP) {
@@ -78,8 +87,7 @@ export function calcVipSaunaByTarget(startLevel: number, startExpPct: number, ta
     absExp = actualExp - expToNext;
     lv += beyondJump(lv, beyond);
   }
-  const finalReq = LEVEL_EXP[lv]?.required ?? 1;
-  const finalPct = (absExp / finalReq) * 100;
+  const finalPct = finalPctOf(lv, absExp);
   const totalSeconds = totalTicks * 5;
   const gainPct = (lv - startLevel) * 100 + finalPct - startExpPct;
   return { hours: Math.floor(totalSeconds / 3600), minutes: Math.floor((totalSeconds % 3600) / 60), seconds: totalSeconds % 60, gainedExp: Math.round(totalGained), gainPct, finalLevel: lv, finalPct };
@@ -114,8 +122,7 @@ export function calcMekaberryByCount(startLevel: number, startExpPct: number, co
     }
   }
   totalGained += absExp;
-  const finalReq = LEVEL_EXP[lv]?.required ?? 1;
-  const finalPct = (absExp / finalReq) * 100;
+  const finalPct = finalPctOf(lv, absExp);
   const gainPct = levelsGained * 100 + finalPct - startExpPct;
   return { finalLevel: lv, finalPct, gainedExp: Math.round(totalGained), gainPct };
 }
@@ -144,8 +151,7 @@ export function calcMekaberryByTarget(startLevel: number, startExpPct: number, t
     levelsGained++;
   }
   totalGained += absExp;
-  const finalReq = LEVEL_EXP[lv]?.required ?? 1;
-  const finalPct = (absExp / finalReq) * 100;
+  const finalPct = finalPctOf(lv, absExp);
   const gainPct = levelsGained * 100 + finalPct - startExpPct;
   return { count: totalCount, gainedExp: Math.round(totalGained), gainPct, finalLevel: lv, finalPct };
 }
@@ -176,8 +182,7 @@ export function calcBlueberryByCount(startLevel: number, startExpPct: number, co
     }
   }
   totalGained += absExp;
-  const finalReq = LEVEL_EXP[lv]?.required ?? 1;
-  const finalPct = (absExp / finalReq) * 100;
+  const finalPct = finalPctOf(lv, absExp);
   const gainPct = (lv - startLevel) * 100 + finalPct - startExpPct;
   return { finalLevel: lv, finalPct, gainedExp: Math.round(totalGained), gainPct };
 }
@@ -204,8 +209,7 @@ export function calcBlueberryByTarget(startLevel: number, startExpPct: number, t
     lv = nextLv;
   }
   totalGained += absExp;
-  const finalReq = LEVEL_EXP[lv]?.required ?? 1;
-  const finalPct = (absExp / finalReq) * 100;
+  const finalPct = finalPctOf(lv, absExp);
   const gainPct = (lv - startLevel) * 100 + finalPct - startExpPct;
   return { count: totalCount, gainedExp: Math.round(totalGained), gainPct, finalLevel: lv, finalPct };
 }
@@ -276,8 +280,7 @@ export function calcCouponByCount(startLevel: number, startExpPct: number, count
       remaining = 0;
     }
   }
-  const finalReq = LEVEL_EXP[lv]?.required ?? 1;
-  const finalPct = (absExp / finalReq) * 100;
+  const finalPct = finalPctOf(lv, absExp);
   const gainPct = (lv - startLevel) * 100 + finalPct - startExpPct;
   return { finalLevel: lv, finalPct, gainedExp: Math.round(totalGained), gainPct };
 }
@@ -300,8 +303,7 @@ export function calcCouponByTarget(startLevel: number, startExpPct: number, targ
     absExp = actualExp - expToNext;
     lv += beyondJump(lv, beyond);
   }
-  const finalReq = LEVEL_EXP[lv]?.required ?? 1;
-  const finalPct = (absExp / finalReq) * 100;
+  const finalPct = finalPctOf(lv, absExp);
   const gainPct = (lv - startLevel) * 100 + finalPct - startExpPct;
   return { count: totalCount, gainedExp: Math.round(totalGained), gainPct, finalLevel: lv, finalPct };
 }
