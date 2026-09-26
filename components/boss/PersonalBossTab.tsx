@@ -1,6 +1,6 @@
 'use client';
 
-// 퍼스널 보스 계산기 — 퍼스널 버닝 이벤트(2026-09-24 ~ 11-18) 한정. 종료 후 data/personalBoss.ts 머리말의 목록대로 함께 지운다.
+// 퍼스널 보스 계산기 — 퍼스널 버닝 이벤트(2026-09-17 ~ 11-18) 한정. 종료 후 data/personalBoss.ts 머리말의 목록대로 함께 지운다.
 
 import { useState } from 'react';
 import CardHeader from '@/components/ui/CardHeader';
@@ -42,7 +42,7 @@ const DIFF_COLOR: Record<BossDifficulty, string> = {
 };
 
 /** 이벤트 기간의 주간 보스 초기화 횟수 — 시작일(목요일)부터 7일 간격으로 마지막 날까지 세면
- *  9/24 · 10/1 · … · 11/12 = 8주 */
+ *  9/17 · 9/24 · … · 11/12 = 9주 */
 const EVENT_WEEK_COUNT =
   Math.floor((Date.parse(PERSONAL_BOSS_EVENT_END) - Date.parse(PERSONAL_BOSS_EVENT_START)) / (7 * 86_400_000)) + 1;
 
@@ -251,7 +251,7 @@ export default function PersonalBossTab({ charLevel, hasCharacter, selections, o
               <span>-</span>
             )}
           </div>
-          {/* 이벤트 기간(9/24 ~ 11/18) 동안 매주 같은 보스를 잡을 때의 합계 */}
+          {/* 이벤트 기간(9/17 ~ 11/18) 동안 매주 같은 보스를 잡을 때의 합계 */}
           <div className={STAT}>
             <span className={STAT_LABEL}>예상 총 경험치({EVENT_WEEK_COUNT}주)</span>
             {weeklyExp > 0 ? (

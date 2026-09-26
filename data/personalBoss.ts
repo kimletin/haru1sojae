@@ -1,4 +1,4 @@
-// 퍼스널 버닝 이벤트 — 보스 처치 경험치 (기간: 2026-09-24 ~ 2026-11-18)
+// 퍼스널 버닝 이벤트 — 보스 처치 경험치 (기간: 2026-09-17 ~ 2026-11-18)
 //
 // ⚠️ 이벤트 한정 데이터. 종료 후 이벤트/컨텐츠 탭의 '퍼스널 보스' 메뉴와 함께 지운다:
 //    이 파일, public/boss/, components/boss/PersonalBossTab.tsx,
@@ -28,8 +28,8 @@ export interface PersonalBoss {
 /** 캐릭터당 한 주에 처치 경험치를 받을 수 있는 보스 수 */
 export const PERSONAL_BOSS_MAX_SELECT = 12;
 
-/** 이벤트 기간 (KST). 시작일은 주간 보스 초기화일(목요일) — 9/24 ~ 11/18 = 8주 */
-export const PERSONAL_BOSS_EVENT_START = '2026-09-24';
+/** 이벤트 기간 (KST). 시작일은 주간 보스 초기화일(목요일) — 9/17 ~ 11/18 = 9주 */
+export const PERSONAL_BOSS_EVENT_START = '2026-09-17';
 export const PERSONAL_BOSS_EVENT_END = '2026-11-18';
 
 /** exp 단위(만) → 경험치 */
