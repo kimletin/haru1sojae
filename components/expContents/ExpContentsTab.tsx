@@ -36,7 +36,7 @@ const toMonthDay = (ymd: string) => { const [, m, d] = ymd.split('-'); return `$
 const PERSONAL_BURNING_PERIOD = `${toMonthDay(PERSONAL_BOSS_EVENT_START)}-${toMonthDay(PERSONAL_BOSS_EVENT_END)}`;
 
 const MENU_ITEMS = [
-  // 퍼스널 버닝 이벤트 한정(2026-09-24 ~ 11-18) — 종료 후 삭제 (data/personalBoss.ts 머리말 참고)
+  // 퍼스널 버닝 이벤트 한정(2026-09-17 ~ 11-18) — 종료 후 삭제 (data/personalBoss.ts 머리말 참고)
   { key: 'personalburning', label: '퍼스널 버닝', icon: '퍼스널 버닝' },
   { key: 'epicdungeon', label: '에픽 던전', icon: '앵글러컴퍼니' },
   { key: 'monsterpark', label: '몬스터파크', icon: '몬스터파크' },
