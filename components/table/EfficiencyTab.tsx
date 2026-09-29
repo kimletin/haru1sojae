@@ -25,8 +25,36 @@ interface TableRow {
   locked?: boolean;
 }
 
-function EffTable({ title, rows, color = 'green', headerExtra }: {
+// 표 제목 우측의 '?' — 계산 기준 툴팁. 제목과 같은 줄에 인라인으로 두고 한글 제목의 시각 중심에 맞춰 1px 올린다
+function HelpMark({ children }: { children: React.ReactNode }) {
+  return (
+    <TooltipWrapper tipClassName="text-left max-w-[260px]" tip={children}>
+      <span className="relative -top-px inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-500 dark:border-zinc-400 text-gray-600 dark:text-zinc-300 text-[10px] font-bold leading-none cursor-help">?</span>
+    </TooltipWrapper>
+  );
+}
+
+// 툴팁 문구 (정보 센터 도움말에서 옮겨 온 계산 기준)
+const TIP_TITLE = 'text-orange-200 font-semibold mb-0.5';
+const BM_TIP = (
+  <>
+    <div className={TIP_TITLE}>에픽 던전 세라자르 주화</div>
+    <div className="text-gray-200 mb-1.5">보너스 보상의 <span className="text-orange-300">세라자르 주화 4개</span>가 반영되어, 주화 가치만큼 비용에서 차감해 계산합니다.</div>
+    <div className={TIP_TITLE}>마스터라벨 성장 플러스</div>
+    <div className="text-gray-200">입력한 마라벨 비용은 마스터라벨 <span className="text-orange-300">190일</span>·성장 플러스 <span className="text-orange-300">90일</span>의 기간 차이를 반영해 <span className="text-orange-300">90/190(약 47%)</span>만 가격에 합산됩니다.</div>
+  </>
+);
+const EVENT_BM_TIP = (
+  <>
+    <div className={TIP_TITLE}>패스 내 아이템 계산 기준</div>
+    <div className="text-gray-200">패스에 포함된 <span className="text-orange-300">경험치 쿠폰</span>은 부스터류를 쓰지 않은 순수 사냥 경험치 기준으로, <span className="text-orange-300">부스터류</span>는 추가 경험치 획득량 <span className="text-orange-300">800%</span>를 가정해 계산합니다.</div>
+  </>
+);
+
+function EffTable({ title, rows, color = 'green', headerExtra, parkBonuses }: {
   title: string; rows: TableRow[]; color?: 'green' | 'blue' | 'orange'; headerExtra?: React.ReactNode;
+  /** 몬파 행 끝에 붙이는 보약 아이콘 목록 */
+  parkBonuses?: ParkBonus[] | null;
 }) {
   const header: Record<string, string> = {
     green:  'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800',
@@ -40,9 +68,13 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
   };
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-xl border border-gray-100 dark:border-zinc-700 shadow-sm overflow-hidden">
-      <div className={'px-4 py-2.5 border-b relative ' + header[color]}>
-        <h3 className={'text-sm font-semibold text-center ' + titleColor[color]}>{title}</h3>
-        {headerExtra && <div className="absolute right-3 top-1/2 -translate-y-1/2">{headerExtra}</div>}
+      {/* headerExtra('?' 툴팁)는 제목 바로 오른쪽에 인라인으로 — absolute + translate로 띄우면
+          그 요소가 fixed 자손(툴팁)의 기준이 되어 툴팁이 엉뚱한 곳에 그려진다 */}
+      <div className={'px-4 py-2.5 border-b ' + header[color]}>
+        <h3 className={'text-sm font-semibold text-center flex items-center justify-center gap-1 ' + titleColor[color]}>
+          {title}
+          {headerExtra}
+        </h3>
       </div>
       <table className="table-fixed w-full text-[12px] lg:text-sm border-collapse">
         <colgroup>
@@ -71,7 +103,7 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
             <tr key={i} style={{ height: 36 }} className={'border-b transition-colors ' + rowCls + (locked ? ' opacity-40' : '')}>
               <td className="px-2 py-1.5 text-center text-gray-700 dark:text-zinc-300">
                 <span className="inline-flex items-center justify-center gap-0.5 flex-wrap">
-                  <ItemName name={row.name} />
+                  <ItemName name={row.name} parkBonuses={parkBonuses} />
                   {row.isEvent && <span className="text-xs font-medium bg-amber-400 text-white px-1.5 py-0.5 rounded-full">E</span>}
                 </span>
               </td>
@@ -96,15 +128,17 @@ function EffTable({ title, rows, color = 'green', headerExtra }: {
 }
 
 import type { MobGroup } from '@/types';
-import ItemName, { isNewItem } from '@/components/ui/ItemName';
+import ItemName, { isNewItem, type ParkBonus } from '@/components/ui/ItemName';
 
 interface Props {
   inputs: InputValues;
   onChange: (key: keyof InputValues, value: number | string | boolean | MobGroup[]) => void;
   monsterParkBonus?: number;
+  /** 몬파 행 끝 보약 아이콘용 (CharMeta.monsterParkBonuses) */
+  parkBonuses?: ParkBonus[] | null;
 }
 
-export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
+export default function EfficiencyTab({ inputs, monsterParkBonus = 0, parkBonuses }: Props) {
   const vipEff = getVipEfficiency(inputs);
   const base30 = getBase30MinExp(inputs);
   const base30d = getBase30DayExp(inputs);
@@ -164,17 +198,14 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0 }: Props) {
 
   return (
     <div className="space-y-4 w-full lg:w-[560px]">
+      {/* 각 표 제목 우측 '?' — 계산 기준 설명. 정보 센터 도움말에 있던 항목들을 여기로 옮겼다 */}
       <EffTable title="경험치 도핑 (30분)" rows={doping30Rows} color="green" />
 
-      <EffTable
-        title="경험치 도핑 (30일)"
-        rows={doping30dRows}
-        color="blue"
-      />
+      <EffTable title="경험치 도핑 (30일)" rows={doping30dRows} color="blue" />
 
-      <EffTable title="경험치 BM" rows={bmRows} color="orange" />
+      <EffTable title="경험치 BM" rows={bmRows} color="orange" parkBonuses={parkBonuses} headerExtra={<HelpMark>{BM_TIP}</HelpMark>} />
 
-      <EffTable title="이벤트 BM" rows={eventBmRows} color="orange" />
+      <EffTable title="이벤트 BM" rows={eventBmRows} color="orange" headerExtra={<HelpMark>{EVENT_BM_TIP}</HelpMark>} />
     </div>
   );
 }

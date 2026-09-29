@@ -1,4 +1,5 @@
 import { assetSlug } from '@/lib/assetSlug';
+import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
 // 단계 뱃지 색 — 도착 단계 기준. 행이 0→1 / 1→2 둘뿐이라 진한 두 색만 쓴다
 const STAGE_COLORS: Record<string, string> = {
@@ -93,7 +94,10 @@ function StageBadge({ from, to }: { from: string; to: string }) {
   );
 }
 
-export default function ItemName({ name }: { name: string }) {
+/** 몬스터파크 경험치에 합산된 보약 목록(CharMeta.monsterParkBonuses) — 몬파 행 끝에 아이콘 + 툴팁으로 보여준다 */
+export type ParkBonus = { name: string; pct: number; icon: string | null };
+
+export default function ItemName({ name, parkBonuses }: { name: string; parkBonuses?: ParkBonus[] | null }) {
   const up = UPGRADE_MAP[name];
   if (up) {
     return (
@@ -135,13 +139,30 @@ export default function ItemName({ name }: { name: string }) {
     const variant = monparkMatch[2];
     const variantCls = MONPARK_VARIANT_COLORS[variant];
     // 선택한 지역 아이콘 + '몬파: 지역' — 어느 지역 기준 값인지 바로 보이게
+    // 합산된 보약은 맨 뒤에 아이콘으로 — 툴팁 내용은 캐릭터 정보 카드의 보약 행과 같다
     return (
       <>
         <Icon name={zone} />
         몬파: {zone}
         {variant && (
-          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ml-0.5 ${variantCls ?? 'bg-fuchsia-500 text-white'}`}>{variant === '스페셜' ? '스페셜썬데이' : variant}</span>
+          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ml-0.5 ${variantCls ?? 'bg-fuchsia-500 text-white'}`}>{variant}</span>
         )}
+        {parkBonuses?.map(b => (
+          <TooltipWrapper
+            key={b.name}
+            className="ml-0.5 shrink-0"
+            // 효율표 항목 칸이 가운데 정렬이라 툴팁도 따라가므로, 캐릭터 정보 카드와 같이 좌측 정렬로 고정한다
+            tipClassName="text-left"
+            tip={<>
+              <div className="text-orange-200 font-semibold mb-0.5">{b.name}</div>
+              <div className="text-gray-200">몬스터파크 추가 경험치 <span className="text-orange-300">+{b.pct}%</span></div>
+            </>}
+          >
+            {b.icon
+              ? <img src={b.icon} alt={b.name} className="w-5 h-5 rounded block" />
+              : <span className="w-5 h-5 flex items-center justify-center text-[10px] font-bold bg-orange-100 dark:bg-orange-900/40 text-orange-500 rounded">E</span>}
+          </TooltipWrapper>
+        ))}
       </>
     );
   }
