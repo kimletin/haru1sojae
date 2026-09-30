@@ -1040,16 +1040,30 @@ export default function Home() {
       </div>
       <footer className="bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-600 shrink-0">
         <div className="w-full max-w-[905px] mx-auto px-4 py-6 flex flex-col items-center gap-2.5 text-center">
-          <div className="flex items-center gap-2 text-xs">
-            <a href="mailto:contact@haru1sojae.kr" className="text-gray-600 dark:text-zinc-300 hover:text-orange-500 transition-colors">문의하기</a>
-            <span className="text-gray-300 dark:text-zinc-600">|</span>
-            <a href="/privacy" onClick={(e) => { e.preventDefault(); goPrivacy(); }} className="text-gray-600 dark:text-zinc-300 hover:text-orange-500 transition-colors">개인정보처리방침</a>
-          </div>
+          {/* 문의 창구는 카카오톡 오픈채팅 — 아이콘만 두고 올리면 카카오 노란색.
+              이메일(contact@haru1sojae.kr)은 개인정보처리방침에만 둔다 */}
+          <a
+            href="https://open.kakao.com/me/letin_k"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="오픈채팅 문의"
+            title="오픈채팅 문의"
+            className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-gray-100 dark:bg-zinc-800 text-gray-400 dark:text-zinc-500 hover:bg-[#FEE500] hover:text-[#3C1E1E] transition-colors"
+          >
+            {/* 말풍선 아이콘 */}
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className="block">
+              <path d="M12 3C6.9 3 2.8 6.2 2.8 10.2c0 2.5 1.7 4.7 4.2 6L6.2 20c-.1.3.2.5.5.4l4.1-2.4c.4 0 .8.1 1.2.1 5.1 0 9.2-3.2 9.2-7.2S17.1 3 12 3Z" />
+            </svg>
+          </a>
           <div className="flex flex-col leading-relaxed">
             <p className="text-[11px] text-gray-400 dark:text-zinc-500">Data based on NEXON OPEN API</p>
             <p className="text-[11px] text-gray-400 dark:text-zinc-500">This site is not an official site of NEXON and does not provide any warranty.</p>
           </div>
-          <p className="text-xs text-gray-400 dark:text-zinc-500">© 2026 하루1소재 by 레틴. All rights reserved.</p>
+          <div className="flex items-center gap-2 text-xs">
+            <p className="text-gray-400 dark:text-zinc-500">© 2026 하루1소재 by 레틴. All rights reserved.</p>
+            <span className="text-gray-300 dark:text-zinc-600">|</span>
+            <a href="/privacy" onClick={(e) => { e.preventDefault(); goPrivacy(); }} className="text-gray-400 dark:text-zinc-500">개인정보처리방침</a>
+          </div>
         </div>
       </footer>
       </div>
