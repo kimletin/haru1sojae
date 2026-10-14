@@ -256,8 +256,10 @@ export default function CharacterCard({ name, level, meta, isEmpty, history, ran
                         <div className="w-full" />
                       )}
                     </div>
-                    <span className="text-[9px] text-gray-400 dark:text-zinc-500 truncate w-full text-center">
-                      {formatDate(slot.date)}
+                    {/* 칸이 최대 30px이라 'M/D'는 '10/15'처럼 두 자리/두 자리면 넘친다 → 일자만 표시.
+                        단 맨 앞과 달이 바뀌는 1일에는 월을 붙인다(9/29 30 10/1 2 …) */}
+                    <span className="text-[9px] text-gray-400 dark:text-zinc-500 w-full text-center whitespace-nowrap">
+                      {i === 0 || slot.date.endsWith('-01') ? formatDate(slot.date) : Number(slot.date.slice(8))}
                     </span>
                   </div>
                   </TooltipWrapper>
