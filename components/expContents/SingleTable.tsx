@@ -5,7 +5,7 @@ import { pctNoSign, type ExpTableProps } from '@/components/expContents/shared';
 import { useRowsViewport } from '@/components/expContents/useRowsViewport';
 
 // ─── SingleTable (단일 컬럼, 최대 20행까지 표시하고 나머지는 내부 스크롤) ──────
-export function SingleTable({ title, headerColor, titleColor, rows, levelLabel, valueLabel = '경험치' }: ExpTableProps) {
+export function SingleTable({ title, headerColor, titleColor, rows, levelLabel, valueLabel = '경험치', showPct = true, footer }: ExpTableProps) {
   const scrollRef = useRowsViewport(rows.length);
   const activeRef = useRef<HTMLTableRowElement>(null);
 
@@ -50,7 +50,7 @@ export function SingleTable({ title, headerColor, titleColor, rows, levelLabel, 
                   </td>
                   <td className={meBg + 'px-3 py-1.5 text-center ' + txt}>
                     <Num n={row.value} />
-                    <span className={'text-xs ml-1 ' + sub}>(+{pctNoSign(row.value, row.level)})</span>
+                    {showPct && <span className={'text-xs ml-1 ' + sub}>(+{pctNoSign(row.value, row.level)})</span>}
                   </td>
                 </tr>
               );
@@ -58,6 +58,11 @@ export function SingleTable({ title, headerColor, titleColor, rows, levelLabel, 
           </tbody>
         </table>
       </div>
+      {footer && (
+        <div className="px-4 py-2 flex items-center justify-end border-t border-gray-100 dark:border-zinc-700 shrink-0">
+          {footer}
+        </div>
+      )}
     </div>
   );
 }

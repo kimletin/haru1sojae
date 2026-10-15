@@ -26,6 +26,8 @@ import ExpCouponSimulator from '@/components/expContents/ExpCouponSimulator';
 import MekaberrySimulator from '@/components/expContents/MekaberrySimulator';
 import BlueberrySimulator from '@/components/expContents/BlueberrySimulator';
 import MonsterParkSimulator from '@/components/expContents/MonsterParkSimulator';
+import MagnifierSimulator from '@/components/expContents/MagnifierSimulator';
+import { MONSTER_EXP } from '@/data/monsterExp';
 
 const LEVELS = Array.from({ length: 40 }, (_, i) => i + 260);
 
@@ -35,9 +37,14 @@ const LEVELS = Array.from({ length: 40 }, (_, i) => i + 260);
 const toMonthDay = (ymd: string) => { const [, m, d] = ymd.split('-'); return `${Number(m)}/${Number(d)}`; };
 const PERSONAL_BURNING_PERIOD = `${toMonthDay(PERSONAL_BOSS_EVENT_START)}-${toMonthDay(PERSONAL_BOSS_EVENT_END)}`;
 
+// label에 줄바꿈(\n)을 넣으면 버튼에서 그대로 두 줄로 나온다(whitespace-pre-line)
+// event: true면 노란 테두리 + 좌상단 EVENT 휘장
 const MENU_ITEMS = [
   // 퍼스널 버닝 이벤트 한정(2026-09-17 ~ 11-18) — 종료 후 삭제 (data/personalBoss.ts 머리말 참고)
-  { key: 'personalburning', label: '퍼스널 버닝', icon: '퍼스널 버닝' },
+  { key: 'personalburning', label: '퍼스널 버닝', icon: '퍼스널 버닝', event: true, period: PERSONAL_BURNING_PERIOD },
+  // 돋보기 이벤트 한정(2026-10-22 점검 후 ~ 11-18 23:59) — 종료 후 삭제
+  // (메뉴 · MAGNIFIERS · MagnifierSimulator · 효율표 2행 · 가격 입력칸 priceMagnifier/priceYetiMagnifier)
+  { key: 'magnifier', label: '탐정예티의\n수상한 돋보기', icon: '탐정예티의 수상한 돋보기', event: true, period: '10/22-11/18' },
   { key: 'epicdungeon', label: '에픽 던전', icon: '앵글러컴퍼니' },
   { key: 'monsterpark', label: '몬스터파크', icon: '몬스터파크' },
   { key: 'treasurehunter', label: '트레져 헌터', icon: '트레져 헌터' },
@@ -60,6 +67,8 @@ interface Props {
   todayExpRate?: number | null;
   slotKey?: number;
   hasCharacter?: boolean;
+  /** 추가 경험치 획득량(%) — 수상한 돋보기 표·시뮬레이터의 기본값 */
+  expBonus?: number;
   /** 선택된 메뉴 키(/cont/<키>). 없거나 모르는 키면 첫 메뉴 */
   selected?: string | null;
   onSelect: (key: string) => void;
@@ -92,6 +101,13 @@ const COUPON_TABS: Pick<SubChoice, 'name' | 'label' | 'icon'>[] = [
   { name: '상급 EXP 교환권', label: '상급 EXP 교환권', icon: '상급 EXP 교환권' },
 ];
 
+// 돋보기 상단 탭 — 부스터몹 1마리가 일반 몹 몇 마리분인지(mobRate)와 추가 경험치 적용 여부만 다르다.
+// 수상한 돋보기는 VIP 부스터와 같은 사양(10배 + 추가 경험치), 예티 쪽은 800배 고정.
+const MAGNIFIERS: (Pick<SubChoice, 'name' | 'label' | 'icon'> & { mobRate: number; usesBonus: boolean })[] = [
+  { name: '탐정예티의 수상한 돋보기', label: '탐정예티의 수상한 돋보기', icon: '탐정예티의 수상한 돋보기', mobRate: 800, usesBonus: false },
+  { name: '수상한 돋보기',          label: '수상한 돋보기',          icon: '수상한 돋보기',          mobRate: 10,  usesBonus: true },
+];
+
 const BURNING_TABS: Pick<SubChoice, 'name' | 'label' | 'icon'>[] = [
   { name: '퍼스널 보스',       label: '퍼스널 보스 미션',  icon: '퍼스널 보스' },
   { name: '퍼스널 EXP 교환권', label: '퍼스널 EXP 교환권', icon: '퍼스널 EXP 교환권' },
@@ -106,7 +122,7 @@ const FARMS: (SubChoice & { minLevel: number; sim: 'blue' | 'meka' })[] = [
 ];
 
 export default function ExpContentsTab({
-  charLevel, monsterLevel, monsterParkBonus, monsterParkZone, epicDungeonBonus = 0, treasureBonus = 0, todayExpRate, slotKey, hasCharacter = true,
+  charLevel, monsterLevel, monsterParkBonus, monsterParkZone, epicDungeonBonus = 0, treasureBonus = 0, todayExpRate, slotKey, hasCharacter = true, expBonus = 0,
   selected: selectedKey, onSelect, personalBoss, onPersonalBossChange,
 }: Props) {
   // 레벨로 유추하지 않고 사용자가 고른 지역을 그대로 쓴다(효율표와 같은 기준)
@@ -135,6 +151,20 @@ export default function ExpContentsTab({
   const [farmType, setFarmType] = useState(FARMS[0].name);
   const farm = FARMS.find(f => f.name === farmType) ?? FARMS[0];
 
+  // 돋보기 선택 (수상한 / 탐정예티의 수상한)
+  const [magnifierType, setMagnifierType] = useState(MAGNIFIERS[0].name);
+  const magnifier = MAGNIFIERS.find(m => m.name === magnifierType) ?? MAGNIFIERS[0];
+  const isMagnifier = selected === 'magnifier';
+  // 수상한 돋보기만 추가 경험치 획득량을 받는다(표 하단 입력칸에서 고칠 수 있다)
+  const [magnifierBonusInput, setMagnifierBonusInput] = useState(expBonus > 0 ? String(expBonus) : '');
+  useEffect(() => {
+    setMagnifierBonusInput(expBonus > 0 ? String(expBonus) : '');
+  }, [expBonus, slotKey]);
+  const magnifierBonus = magnifier.usesBonus ? (parseFloat(magnifierBonusInput) || 0) : null;
+  /** 돋보기 1개 경험치 = 몹 경험치 × 배수 × 190마리 × (1 + 추가 경험치) */
+  const magnifierExpOf = (mobLv: number) =>
+    Math.round((MONSTER_EXP[mobLv] ?? 0) * magnifier.mobRate * 190 * (1 + (magnifierBonus ?? 0) / 100));
+
 
   // 몬스터파크 보약 체크박스
   const [parkBonusInput, setParkBonusInput] = useState(monsterParkBonus > 0 ? String(monsterParkBonus) : '');
@@ -158,10 +188,11 @@ export default function ExpContentsTab({
     : selected === 'divemap'   ? { items: DIVE_FACILITIES, current: diveFacility, set: setDiveFacility }
     : selected === 'expcoupon'  ? { items: COUPON_TABS,     current: COUPON_TABS[0].name, set: () => {} }
     : selected === 'farm'       ? { items: FARMS,           current: farmType,     set: setFarmType }
+    : isMagnifier               ? { items: MAGNIFIERS,      current: magnifierType, set: setMagnifierType }
     : null;
 
   const isEpic = selected === 'epicdungeon';
-  const newLayout = ['farm', 'divemap'].includes(selected) || coupon != null;
+  const newLayout = ['farm', 'divemap', 'magnifier'].includes(selected) || coupon != null;
   // 메카베리 계열(일반/크림슨)은 시뮬레이터 계산식을 공유한다
   const isMekaberryLike = selected === 'farm' && farm.sim === 'meka';
 
@@ -169,6 +200,21 @@ export default function ExpContentsTab({
   const splitProps: ExpTableProps | null =
     selected === 'divemap' ? { title: dive.name, valueLabel: '1시간 당 경험치', headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100', levelLabel: '레벨', rows: LEVELS.map(lv => ({ level: lv, value: dive.data[lv] ?? 0, isMe: hasCharacter && lv === charLevel, ...commonRowProps })) }
     : coupon ? { title: coupon.name, valueLabel: '1000개 당 경험치', headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100', levelLabel: '레벨', rows: LEVELS.map(lv => ({ level: lv, value: (coupon.data[lv] ?? 0) * 1000, isMe: hasCharacter && lv === charLevel, ...commonRowProps })) }
+    // 돋보기는 행이 '몬스터 레벨'이다(캐릭터 레벨이 아니라 잡는 몹 기준) — 트레져 헌터와 같은 이유로
+    // 캐릭터를 추가하지 않으면 %를 숨긴다
+    : isMagnifier ? {
+        title: magnifier.name, valueLabel: '1개 당 경험치',
+        headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100',
+        levelLabel: '몬스터 레벨', showPct: hasCharacter,
+        rows: LEVELS.map(lv => ({ level: lv, value: magnifierExpOf(lv), isMe: hasCharacter && lv === monsterLevel, ...commonRowProps })),
+        // 수상한 돋보기만 추가 경험치 획득량을 받는다 — 에픽 던전 표의 보약 칸과 같은 자리
+        footer: magnifier.usesBonus ? (
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-gray-500 dark:text-zinc-400">추가 경험치 획득량</span>
+            <SimNumInput value={magnifierBonusInput} onChange={setMagnifierBonusInput} unit="%" pad="4" width="w-16" height="h-[22px]" max={9999} />
+          </div>
+        ) : null,
+      }
     : selected === 'farm' ? { title: farm.name, headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100', levelLabel: '레벨', rows: LEVELS.filter(lv => lv >= farm.minLevel).map(lv => ({ level: lv, value: farm.data[lv] ?? 0, isMe: hasCharacter && lv === charLevel, ...commonRowProps })) }
     : null;
 
@@ -217,6 +263,16 @@ export default function ExpContentsTab({
     </div>
   ) : null;
 
+  // 탐정예티의 수상한 돋보기 팁 콜아웃 (경험치표 위에 표시) — 이벤트 종료 후 삭제
+  const magnifierTip = isMagnifier && !magnifier.usesBonus ? (
+    <div className={tipCalloutClass}>
+      <div className="flex items-center gap-1 mb-1 font-bold text-orange-600 dark:text-orange-400">{tipIcon}탐정예티의 수상한 돋보기 팁</div>
+      <ul className="space-y-0.5 text-gray-600 dark:text-zinc-300">
+        <li>하루 최대 <span className="font-semibold">3개</span>까지 사용할 수 있으므로 이벤트 기간 <span className="font-semibold">28일</span> 동안 최대 <span className="font-semibold">84개</span>를 사용할 수 있습니다.</li>
+      </ul>
+    </div>
+  ) : null;
+
   // 좌측 메뉴 버튼
   const renderMenuButton = (item: typeof MENU_ITEMS[number], active: boolean) => (
     <button
@@ -228,24 +284,25 @@ export default function ExpContentsTab({
           ? 'bg-orange-500 text-white '
           : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 ') +
         // 이벤트 메뉴(퍼스널 보스)는 노란 테두리로 표시
-        (item.key === 'personalburning'
+        (item.event
           ? 'border-yellow-400'
           : active ? 'border-orange-500' : 'border-gray-200 dark:border-zinc-600')
       }
     >
       {/* 이벤트 메뉴 휘장 — 버튼 좌상단 모서리에 걸쳐 붙인다 */}
-      {item.key === 'personalburning' && (
+      {item.event && (
         <span className="absolute -top-1.5 -left-1.5 px-1.5 py-px rounded-md bg-orange-600 text-white text-[10px] font-bold leading-tight shadow-sm ring-2 ring-white dark:ring-zinc-900 pointer-events-none">
           EVENT
         </span>
       )}
       <img src={`/icons/${assetSlug(item.icon)}.png`} alt="" className="w-8 h-8 shrink-0 object-contain" />
-      <span>
+      {/* label에 \n이 있으면 그대로 줄을 나눈다 */}
+      <span className="whitespace-pre-line leading-tight">
         {item.label}
         {/* 이벤트 기간 — 라벨 아래 작은 글씨 */}
-        {item.key === 'personalburning' && (
+        {item.period && (
           <span className={'block text-[10px] font-normal leading-tight ' + (active ? 'text-white/80' : 'text-gray-400 dark:text-zinc-400')}>
-            {PERSONAL_BURNING_PERIOD}
+            {item.period}
           </span>
         )}
       </span>
@@ -282,6 +339,7 @@ export default function ExpContentsTab({
         )}
         {berryTip}
         {couponTip}
+        {magnifierTip}
         {/* 퍼스널 보스 미션 — 캐릭터 없이도 레벨을 직접 넣어 계산할 수 있다. 슬롯을 바꾸면 key로 입력값 초기화 */}
         {showBossCalc && (
           <PersonalBossTab
@@ -378,7 +436,10 @@ export default function ExpContentsTab({
 
             {/* 시뮬레이터 카드 */}
             {selected !== 'treasurehunter' && <div className={newLayout ? 'flex-1 flex flex-col gap-4' : 'flex-1 lg:self-start flex flex-col gap-4'}>
-              {selected === 'divemap' ? (
+              {isMagnifier ? (
+                // key = 선택한 돋보기 → 탭을 바꾸면 입력값·결과가 초기화된다
+                <MagnifierSimulator key={magnifier.name} charLevel={charLevel} monsterLevel={monsterLevel} hasCharacter={hasCharacter} todayExpRate={todayExpRate} slotKey={slotKey} mobRate={magnifier.mobRate} expBonus={magnifier.usesBonus ? expBonus : null} />
+              ) : selected === 'divemap' ? (
                 // key = 선택한 상단 탭 → 탭을 바꾸면 시뮬레이터·목표 레벨 역산 입력값이 초기화된다
                 // (같은 컴포넌트를 쓰는 메카베리↔크림슨에서 이전 표로 계산한 결과가 남는 것도 막는다)
                 <VipSaunaSimulator key={dive.name} charLevel={charLevel} hasCharacter={hasCharacter} todayExpRate={todayExpRate} slotKey={slotKey} expTable={dive.data} />

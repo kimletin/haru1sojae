@@ -1019,6 +1019,7 @@ export default function Home() {
                     todayExpRate={todayExpRate}
                     slotKey={activePreset}
                     hasCharacter={numSlots > 0}
+                    expBonus={inputs.expBonus}
                     selected={contentKey}
                     onSelect={handleContentSelect}
                     personalBoss={inputs.personalBoss ?? {}}
