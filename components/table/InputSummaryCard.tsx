@@ -34,17 +34,13 @@ function Cell({ label, icon, children }: { label: string; icon?: string; childre
   );
 }
 
-// 부스터 개수 — VIP 부스터 / 영겁의 황금태엽을 가로로, 각각 아이콘(위) · 개수(아래)
-function Boosters({ vip, eternal }: { vip: number; eternal: number }) {
+// 부스터 개수 — 아이콘(위) · 개수(아래)
+function Boosters({ vip }: { vip: number }) {
   return (
-    <div className="flex items-start justify-center gap-3">
+    <div className="flex items-start justify-center">
       <span className="flex flex-col items-center gap-0.5">
         <img src={`/icons/${assetSlug('VIP 부스터')}.png`} alt="VIP 부스터" className="w-6 h-6 object-contain shrink-0" />
         {vip}개
-      </span>
-      <span className="flex flex-col items-center gap-0.5">
-        <img src={`/icons/${assetSlug('영겁의 황금태엽')}.png`} alt="영겁의 황금태엽" className="w-6 h-6 object-contain shrink-0" />
-        {eternal}개
       </span>
     </div>
   );
@@ -77,8 +73,8 @@ export default function InputSummaryCard({ inputs, meta: _meta, onEditInfo }: Pr
       {/* 3열 2행 정사각 박스 그리드 */}
       <div className="grid grid-cols-3 gap-2 px-4 py-3">
         <Cell label="일 평균 재획" icon="소재비">{toTimeStr(inputs.dailySessions)}</Cell>
-        <Cell label="30분 부스터"><Boosters vip={inputs.booster30min} eternal={inputs.eternal30min} /></Cell>
-        <Cell label="1일 부스터"><Boosters vip={inputs.booster1day} eternal={inputs.eternal1day} /></Cell>
+        <Cell label="30분 부스터"><Boosters vip={inputs.booster30min} /></Cell>
+        <Cell label="1일 부스터"><Boosters vip={inputs.booster1day} /></Cell>
         <Cell label="에픽 던전" icon={inputs.epicDungeonZone}>{displayLabel(inputs.epicDungeonZone)}</Cell>
         <Cell label="몬스터파크" icon={inputs.monsterParkZone}>{inputs.monsterParkZone}</Cell>
         <Cell label="사냥터" icon={inputs.huntingRegion}>{inputs.huntingGround}</Cell>

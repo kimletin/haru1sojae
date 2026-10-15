@@ -47,7 +47,7 @@ const BM_TIP = (
 const EVENT_BM_TIP = (
   <>
     <div className={TIP_TITLE}>패스 내 아이템 계산 기준</div>
-    <div className="text-gray-200">패스에 포함된 <span className="text-orange-300">경험치 쿠폰</span>은 부스터류를 쓰지 않은 순수 사냥 경험치 기준으로, <span className="text-orange-300">부스터류</span>는 추가 경험치 획득량 <span className="text-orange-300">800%</span>를 가정해 계산합니다.</div>
+    <div className="text-gray-200">패스에 포함된 <span className="text-orange-300">경험치 쿠폰</span>은 부스터류를 쓰지 않은 순수 사냥 경험치 기준으로, <span className="text-orange-300">부스터류</span>는 입력한 <span className="text-orange-300">추가 경험치 획득량</span>을 적용해 계산합니다.</div>
   </>
 );
 

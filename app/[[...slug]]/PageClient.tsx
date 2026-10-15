@@ -53,8 +53,8 @@ function loadMetas(): (CharMeta | null)[] {
 }
 
 const DEFAULT_INPUTS: InputValues = {
-  waterBottleRate: 1550,
-  mesoMarketRate: 2200,
+  waterBottleRate: 1500,
+  mesoMarketRate: 2300,
   charLevel: 260,
   monsterLevel: 260,
   dailySessions: 10,
@@ -64,9 +64,8 @@ const DEFAULT_INPUTS: InputValues = {
   huntingMobs: [{ level: 260, count: 34 }],
   boosterMonsterLevel: 260,
   booster30min: 3,
-  eternal30min: 0,
   booster1day: 6,
-  eternal1day: 0,
+  expBonus: 800,
   masterLabelCount: 0,
   masterLabelCost: 0,
   price50: 1_000_000,

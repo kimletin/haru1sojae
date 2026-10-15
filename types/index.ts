@@ -26,9 +26,8 @@ export interface InputValues {
   huntingMobs: MobGroup[];      // 사냥터 몹 구성 (혼합 레벨 대응)
   boosterMonsterLevel: number;  // 부스터 몹 경험치 기준 레벨
   booster30min: number;         // 황금태엽/VIP/헥사 부스터 (30분 내)
-  eternal30min: number;         // 영겁의 황금태엽 (30분 내)
   booster1day: number;          // 황금태엽/VIP/헥사 부스터 (1일 평균)
-  eternal1day: number;          // 영겁의 황금태엽 (1일 평균)
+  expBonus: number;             // 추가 경험치 획득량 (%) — 부스터류 아이템 효율 계산에 쓴다
   masterLabelCount: number;     // 마스터라벨 부위 수 (0~5, 성장 플러스 배율 결정). 추가 시 실착값으로 채우고 이후엔 사용자가 직접 관리
   masterLabelCost: number;      // 성장 플러스 가격에 함께 얹을 마스터라벨 값 (메소, 선택 입력). 0이면 성장 플러스 값만 계산
   price50: number;              // 추가경험치 50% 가격
