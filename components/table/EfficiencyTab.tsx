@@ -1,7 +1,7 @@
 'use client';
 
 import { InputValues } from '@/types';
-import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getPremiumMomentumExp, getPremiumMomentumPrice, getPrimeMomentumExp, getPrimeMomentumPrice, getMasterLabelPlusExp, getMasterLabelPlusPrice, getDoping30Tiers, MEKABERRY_MIN_LEVEL } from '@/lib/calculator';
+import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getPremiumMomentumExp, getPremiumMomentumPrice, getPrimeMomentumExp, getPrimeMomentumPrice, getMasterLabelPlusExp, getMasterLabelPlusPrice, getDoping30Tiers, MEKABERRY_MIN_LEVEL, getMagnifierExp, getYetiMagnifierExp } from '@/lib/calculator';
 import Num from '@/components/ui/Num';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
@@ -194,6 +194,8 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0, parkBonuse
     // 280 미만에서 비활성화되는 항목들은 표 맨 아래에 붙여 둔다
     { name: '프리미엄 모멘텀 패스', locked: mekaberryLocked, ...effRow(getPremiumMomentumExp(inputs), getPremiumMomentumPrice(inputs.waterBottleRate)) },
     { name: '프리미엄+프라임 모멘텀 패스', locked: mekaberryLocked, ...effRow(getPrimeMomentumExp(inputs), getPrimeMomentumPrice(inputs.waterBottleRate)) },
+    { name: '수상한 돋보기', ...effRow(getMagnifierExp(inputs), inputs.priceMagnifier) },
+    { name: '예티의 수상한 돋보기', ...effRow(getYetiMagnifierExp(inputs), inputs.priceYetiMagnifier) },
   ];
 
   return (

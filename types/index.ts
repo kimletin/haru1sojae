@@ -41,6 +41,8 @@ export interface InputValues {
   priceBloodRingMeso: number;   // 혈맹의 반지 (메소)
   priceBoostringMeso: number;   // 부스트링 (메소)
   priceJungpenMeso: number;     // 정펜 (메소)
+  priceMagnifier: number;       // 수상한 돋보기 (메소) — 이벤트 한정
+  priceYetiMagnifier: number;   // 탐정 예티의 수상한 돋보기 (메소) — 이벤트 한정
   epicDungeonZone: EpicDungeonZone;
   monsterParkZone: string;      // 선택된 몬스터파크 지역
   boosterRate: number;          // 보약

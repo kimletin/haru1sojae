@@ -31,6 +31,7 @@ const PRICE_KEYS = [
   'price50', 'price70', 'price3x', 'price4x',
   'priceSmallBooster', 'priceLargeBooster',
   'priceHunterTitle', 'priceBloodRingMeso', 'priceBoostringMeso', 'priceJungpenMeso',
+  'priceMagnifier', 'priceYetiMagnifier',
 ] as const;
 
 function toTimeStr(sessions: number): string {
@@ -143,6 +144,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
       price50: 0, price70: 0, price3x: 0, price4x: 0,
       priceSmallBooster: 0, priceLargeBooster: 0,
       priceHunterTitle: 0, priceBloodRingMeso: 0, priceBoostringMeso: 0, priceJungpenMeso: 0,
+      priceMagnifier: 0, priceYetiMagnifier: 0,
       dailySessions: 0,
       booster30min: 0, eternal30min: 0, booster1day: 0, eternal1day: 0,
       masterLabelCount: 0,
@@ -217,6 +219,12 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
             <NumField label="혈맹의 반지" value={d.priceBloodRingMeso} onChange={v => set('priceBloodRingMeso', v)} icon="혈맹의 반지" />
             <NumField label="경험치 부스트링" value={d.priceBoostringMeso} onChange={v => set('priceBoostringMeso', v)} icon="경험치 부스트링" />
             <NumField label="정령의 펜던트" value={d.priceJungpenMeso} onChange={v => set('priceJungpenMeso', v)} icon="정령의 펜던트" />
+          </div>
+          {/* 이벤트 한정 — 판매 종료 시 입력칸·가격 키·효율표 행을 함께 지운다 */}
+          <div className="border-t border-gray-100 dark:border-zinc-700 mt-1.5 pt-1.5">
+            <p className="text-[11px] text-orange-500 dark:text-orange-400 font-semibold mb-0.5">이벤트 BM</p>
+            <NumField label="수상한 돋보기" value={d.priceMagnifier} onChange={v => set('priceMagnifier', v)} icon="수상한 돋보기" />
+            <NumField label="예티의 수상한 돋보기" value={d.priceYetiMagnifier} onChange={v => set('priceYetiMagnifier', v)} icon="예티의 수상한 돋보기" />
           </div>
         </div>
 
