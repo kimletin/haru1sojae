@@ -127,6 +127,8 @@ export const ASSET_SLUGS: Record<string, string> = {
   "상급 EXP 교환권": "ExpCoupon",
   "수상한 돋보기": "SuspiciousMagnifier",
   "탐정예티의 수상한 돋보기": "YetiSuspiciousMagnifier",
+  // cont 탭 좌측 메뉴 전용 이벤트 아이콘 (효율표·상단 탭은 위의 기본 아이콘을 쓴다)
+  "탐정예티의 수상한 돋보기 이벤트": "YetiSuspiciousMagnifierEvent",
   "퍼스널 EXP 교환권": "PersonalExpCoupon",
   "퍼스널 버닝": "PersonalBurning",
   "퍼스널 보스": "PersonalBoss",
