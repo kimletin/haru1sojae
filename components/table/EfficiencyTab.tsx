@@ -195,7 +195,7 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0, parkBonuse
     { name: '프리미엄 모멘텀 패스', locked: mekaberryLocked, ...effRow(getPremiumMomentumExp(inputs), getPremiumMomentumPrice(inputs.waterBottleRate)) },
     { name: '프리미엄+프라임 모멘텀 패스', locked: mekaberryLocked, ...effRow(getPrimeMomentumExp(inputs), getPrimeMomentumPrice(inputs.waterBottleRate)) },
     { name: '수상한 돋보기', ...effRow(getMagnifierExp(inputs), inputs.priceMagnifier) },
-    { name: '예티의 수상한 돋보기', ...effRow(getYetiMagnifierExp(inputs), inputs.priceYetiMagnifier) },
+    { name: '탐정예티의 수상한 돋보기', ...effRow(getYetiMagnifierExp(inputs), inputs.priceYetiMagnifier) },
   ];
 
   return (

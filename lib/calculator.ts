@@ -223,7 +223,7 @@ function getVipBoosterExp(inputs: InputValues): number {
   return getGroundMobExp(inputs) * VIP_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * getExpBonusMult(inputs);
 }
 
-/** 예티의 수상한 돋보기 — 부스터몹 1마리가 일반 몹 800마리분.
+/** 탐정예티의 수상한 돋보기 — 부스터몹 1마리가 일반 몹 800마리분.
  *  ⚠️ VIP 부스터와 달리 추가 경험치 획득량을 받지 않는 고정값이라 배율을 곱하지 않는다. */
 const YETI_MAGNIFIER_MOB_RATE = 800;
 
@@ -232,7 +232,7 @@ export function getMagnifierExp(inputs: InputValues): number {
   return getVipBoosterExp(inputs);
 }
 
-/** 예티의 수상한 돋보기 1개가 주는 경험치 (190마리 × 800배, 추가 경험치 없음) */
+/** 탐정예티의 수상한 돋보기 1개가 주는 경험치 (190마리 × 800배, 추가 경험치 없음) */
 export function getYetiMagnifierExp(inputs: InputValues): number {
   return getGroundMobExp(inputs) * YETI_MAGNIFIER_MOB_RATE * BOOSTER_SPAWN_COUNT;
 }
@@ -417,7 +417,7 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
     item('프리미엄 모멘텀 패스', 'BM', getPremiumMomentumExp(inputs), getPremiumMomentumPrice(inputs.waterBottleRate)),
     item('프리미엄+프라임 모멘텀 패스', 'BM', getPrimeMomentumExp(inputs), getPrimeMomentumPrice(inputs.waterBottleRate)),
     item('수상한 돋보기', 'BM', getMagnifierExp(inputs), inputs.priceMagnifier),
-    item('예티의 수상한 돋보기', 'BM', getYetiMagnifierExp(inputs), inputs.priceYetiMagnifier),
+    item('탐정예티의 수상한 돋보기', 'BM', getYetiMagnifierExp(inputs), inputs.priceYetiMagnifier),
   ];
 
   return items.sort((a, b) => b.ratio - a.ratio);

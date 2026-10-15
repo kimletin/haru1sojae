@@ -224,7 +224,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-1.5 pt-1.5">
             <p className="text-[11px] text-orange-500 dark:text-orange-400 font-semibold mb-0.5">이벤트 BM</p>
             <NumField label="수상한 돋보기" value={d.priceMagnifier} onChange={v => set('priceMagnifier', v)} icon="수상한 돋보기" />
-            <NumField label="예티의 수상한 돋보기" value={d.priceYetiMagnifier} onChange={v => set('priceYetiMagnifier', v)} icon="예티의 수상한 돋보기" />
+            <NumField label="탐정예티의 수상한 돋보기" value={d.priceYetiMagnifier} onChange={v => set('priceYetiMagnifier', v)} icon="탐정예티의 수상한 돋보기" />
           </div>
         </div>
 
