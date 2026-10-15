@@ -44,7 +44,7 @@ const MENU_ITEMS = [
   { key: 'personalburning', label: '퍼스널 버닝', icon: '퍼스널 버닝', event: true, period: PERSONAL_BURNING_PERIOD },
   // 돋보기 이벤트 한정(2026-10-22 점검 후 ~ 11-18 23:59) — 종료 후 삭제
   // (메뉴 · MAGNIFIERS · MagnifierSimulator · 효율표 2행 · 가격 입력칸 priceMagnifier/priceYetiMagnifier)
-  { key: 'magnifier', label: '탐정예티의\n수상한 돋보기', icon: '탐정예티의 수상한 돋보기', event: true, period: '10/22-11/18' },
+  { key: 'magnifier', label: '탐정예티의\n수상한 돋보기', icon: '탐정예티의 수상한 돋보기 이벤트', event: true, period: '10/22-11/18' },
   { key: 'epicdungeon', label: '에픽 던전', icon: '앵글러컴퍼니' },
   { key: 'monsterpark', label: '몬스터파크', icon: '몬스터파크' },
   { key: 'treasurehunter', label: '트레져 헌터', icon: '트레져 헌터' },
