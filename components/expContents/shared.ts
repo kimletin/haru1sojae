@@ -15,6 +15,10 @@ export interface ExpTableProps {
   rows: { level: number; value: number; isMe: boolean; badgeColor: string; textColor: string; rowBg: string }[];
   levelLabel: string;
   valueLabel?: string;
+  /** 경험치 옆 (+x.xxx%) 표시 여부. 행이 몬스터 레벨인 표는 캐릭터가 없으면 숨긴다 */
+  showPct?: boolean;
+  /** 카드 맨 아래에 붙는 줄 (에픽 던전 표의 보약 입력칸과 같은 자리) */
+  footer?: React.ReactNode;
 }
 
 export interface BonusEntry { name: string; pct: number; }
