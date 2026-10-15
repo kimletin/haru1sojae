@@ -97,10 +97,12 @@ export const PERSONAL_BOSSES: PersonalBoss[] = [
   { name: '림보', icon: 'Limbo', difficulties: [
     { difficulty: 'NORMAL',  exp: 76_865_980,  maxParty: 3 },
     { difficulty: 'HARD',    exp: 191_923_460, maxParty: 3 },
+    { difficulty: 'EXTREME', exp: 645_780_340, maxParty: 3 },
   ] },
   { name: '발드릭스', icon: 'Baldrix', difficulties: [
     { difficulty: 'NORMAL',  exp: 97_724_320,  maxParty: 3 },
     { difficulty: 'HARD',    exp: 237_782_370, maxParty: 3 },
+    { difficulty: 'EXTREME', exp: 797_242_950, maxParty: 3 },
   ] },
   { name: '유피테르', icon: 'Jupiter', difficulties: [
     { difficulty: 'NORMAL',  exp: 115_492_080, maxParty: 3 },

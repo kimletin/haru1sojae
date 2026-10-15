@@ -125,6 +125,8 @@ export const ASSET_SLUGS: Record<string, string> = {
   "빛이 약한 여름 5": "5",
   "사냥터 정보": "HuntInfo",
   "상급 EXP 교환권": "ExpCoupon",
+  "수상한 돋보기": "SuspiciousMagnifier",
+  "탐정예티의 수상한 돋보기": "YetiSuspiciousMagnifier",
   "퍼스널 EXP 교환권": "PersonalExpCoupon",
   "퍼스널 버닝": "PersonalBurning",
   "퍼스널 보스": "PersonalBoss",

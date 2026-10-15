@@ -71,10 +71,9 @@ function getGroundMobExp(inputs: InputValues): number {
 
 /** 부스터 1개가 스폰하는 부스터몹 마릿수 — 100초 동안 10마리씩 19번 젠 */
 const BOOSTER_SPAWN_COUNT = 190;
-/** 부스터몹 1마리 = 일반 몹 몇 마리분 경험치인지 (VIP/HEXA, 영겁의 황금태엽) */
+/** 부스터몹 1마리 = 일반 몹 몇 마리분 경험치인지 (VIP/HEXA) */
 const VIP_BOOSTER_MOB_RATE = 10;
-const ETERNAL_BOOSTER_MOB_RATE = 200;
-// → VIP 1개 = 190 × 10 = 1,900마리분, 영겁 1개 = 190 × 200 = 38,000마리분
+// → VIP 1개 = 190 × 10 = 1,900마리분
 
 /** 30분 순수 사냥 경험치 (부스터 제외, 배율 적용 전) */
 export function getHunt30MinExp(inputs: InputValues): number {
@@ -87,8 +86,7 @@ export function getBase30MinExp(inputs: InputValues): number {
   const groundMobExp = getGroundMobExp(inputs);
   return (
     huntExp +
-    groundMobExp * VIP_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * inputs.booster30min +
-    groundMobExp * ETERNAL_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * inputs.eternal30min
+    groundMobExp * VIP_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * inputs.booster30min
   );
 }
 
@@ -101,8 +99,7 @@ export function getBaseDayExp(inputs: InputValues, days: number): number {
   const groundMobExp = getGroundMobExp(inputs);
   return (
     huntExp +
-    groundMobExp * VIP_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * inputs.booster1day +
-    groundMobExp * ETERNAL_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * inputs.eternal1day
+    groundMobExp * VIP_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * inputs.booster1day
   ) * days;
 }
 
@@ -214,16 +211,30 @@ function getPassCoupon4xExp(inputs: InputValues, count: number): number {
   return getHunt30MinExp(inputs) * 3 * count;
 }
 
-/** 모멘텀 리워드에 들어 있는 VIP 부스터의 추가 경험치 배율(800%).
- *  부스터가 주는 경험치는 사용 시점의 추가 경험치 획득량을 그대로 받는데, 이 값은 캐릭터·도핑
- *  구성마다 달라 정확히 알 수 없다. 실사용 구간(700~1200%)에서 낮은 쪽에 분포가 몰려 있어
- *  보수적으로 800%를 고정 적용한다. (이 구간에서 상품 총 경험치 오차는 최대 -1.7%)
+/** 부스터가 주는 경험치는 사용 시점의 추가 경험치 획득량을 그대로 받는다 — 캐릭터·도핑 구성마다
+ *  다른 값이라 예전엔 800% 고정이었으나, 지금은 사용자가 입력한 값(inputs.expBonus)을 쓴다.
  *  ⚠️ base30/base30d의 부스터 항과는 역할이 다르다 — 그쪽은 도핑이 곱해질 '기본 경험치'라 배율을 안 붙인다. */
-const BOOSTER_EXP_BONUS = 8;
+function getExpBonusMult(inputs: InputValues): number {
+  return 1 + (inputs.expBonus ?? 0) / 100;
+}
 
-/** VIP 부스터 1개가 주는 경험치 (추가 경험치 배율 적용) */
+/** VIP 부스터 1개가 주는 경험치 (추가 경험치 획득량 적용) */
 function getVipBoosterExp(inputs: InputValues): number {
-  return getGroundMobExp(inputs) * VIP_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * (1 + BOOSTER_EXP_BONUS);
+  return getGroundMobExp(inputs) * VIP_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * getExpBonusMult(inputs);
+}
+
+/** 탐정예티의 수상한 돋보기 — 부스터몹 1마리가 일반 몹 800마리분.
+ *  ⚠️ VIP 부스터와 달리 추가 경험치 획득량을 받지 않는 고정값이라 배율을 곱하지 않는다. */
+const YETI_MAGNIFIER_MOB_RATE = 800;
+
+/** 수상한 돋보기 1개가 주는 경험치 — VIP 부스터와 같은 사양(10배 + 추가 경험치 적용) */
+export function getMagnifierExp(inputs: InputValues): number {
+  return getVipBoosterExp(inputs);
+}
+
+/** 탐정예티의 수상한 돋보기 1개가 주는 경험치 (190마리 × 800배, 추가 경험치 없음) */
+export function getYetiMagnifierExp(inputs: InputValues): number {
+  return getGroundMobExp(inputs) * YETI_MAGNIFIER_MOB_RATE * BOOSTER_SPAWN_COUNT;
 }
 
 /** 모멘텀 리워드 구성품 (크림슨 메카베리 / 상급 EXP 쿠폰 / VIP 부스터 / 경험치 4배 쿠폰) */
@@ -405,6 +416,8 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
     item('마스터라벨 성장 플러스', 'BM', getMasterLabelPlusExp(inputs), getMasterLabelPlusPrice(inputs)),
     item('프리미엄 모멘텀 패스', 'BM', getPremiumMomentumExp(inputs), getPremiumMomentumPrice(inputs.waterBottleRate)),
     item('프리미엄+프라임 모멘텀 패스', 'BM', getPrimeMomentumExp(inputs), getPrimeMomentumPrice(inputs.waterBottleRate)),
+    item('수상한 돋보기', 'BM', getMagnifierExp(inputs), inputs.priceMagnifier),
+    item('탐정예티의 수상한 돋보기', 'BM', getYetiMagnifierExp(inputs), inputs.priceYetiMagnifier),
   ];
 
   return items.sort((a, b) => b.ratio - a.ratio);

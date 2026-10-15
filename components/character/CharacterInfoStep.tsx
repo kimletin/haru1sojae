@@ -31,6 +31,7 @@ const PRICE_KEYS = [
   'price50', 'price70', 'price3x', 'price4x',
   'priceSmallBooster', 'priceLargeBooster',
   'priceHunterTitle', 'priceBloodRingMeso', 'priceBoostringMeso', 'priceJungpenMeso',
+  'priceMagnifier', 'priceYetiMagnifier',
 ] as const;
 
 function toTimeStr(sessions: number): string {
@@ -143,8 +144,9 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
       price50: 0, price70: 0, price3x: 0, price4x: 0,
       priceSmallBooster: 0, priceLargeBooster: 0,
       priceHunterTitle: 0, priceBloodRingMeso: 0, priceBoostringMeso: 0, priceJungpenMeso: 0,
+      priceMagnifier: 0, priceYetiMagnifier: 0,
       dailySessions: 0,
-      booster30min: 0, eternal30min: 0, booster1day: 0, eternal1day: 0,
+      booster30min: 0, booster1day: 0, expBonus: 0,
       masterLabelCount: 0,
       masterLabelCost: 0,
       epicDungeonZone: '하이마운틴',
@@ -218,6 +220,12 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
             <NumField label="경험치 부스트링" value={d.priceBoostringMeso} onChange={v => set('priceBoostringMeso', v)} icon="경험치 부스트링" />
             <NumField label="정령의 펜던트" value={d.priceJungpenMeso} onChange={v => set('priceJungpenMeso', v)} icon="정령의 펜던트" />
           </div>
+          {/* 이벤트 한정 — 판매 종료 시 입력칸·가격 키·효율표 행을 함께 지운다 */}
+          <div className="border-t border-gray-100 dark:border-zinc-700 mt-1.5 pt-1.5">
+            <p className="text-[11px] text-orange-500 dark:text-orange-400 font-semibold mb-0.5">이벤트 BM</p>
+            <NumField label="수상한 돋보기" value={d.priceMagnifier} onChange={v => set('priceMagnifier', v)} icon="수상한 돋보기" />
+            <NumField label="탐정예티의 수상한 돋보기" value={d.priceYetiMagnifier} onChange={v => set('priceYetiMagnifier', v)} icon="탐정예티의 수상한 돋보기" />
+          </div>
         </div>
 
         {/* 2열: 사냥(일 평균 재획) + 부스터 + 에픽 던전 + 몬스터파크 */}
@@ -239,19 +247,28 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
             </div>
           </div>
 
+          {/* 부스터류 아이템(부스터·돋보기)이 받는 추가 경험치 획득량 — 예전엔 800% 고정이었다 */}
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
+            <div className="flex items-center gap-1 mb-1">
+              <span className="text-xs text-orange-500 dark:text-orange-400 font-bold">부스터 사용 시 추가 경험치 획득량</span>
+              <TooltipIcon text="부스터류 아이템 사용 시점의 추가 경험치 획득량을 그대로 입력해주세요(룬, 버닝 포함)." />
+            </div>
+            {/* 제목이 길어 입력칸 라벨은 짧게 */}
+            <NumField label="추가 경험치 획득량" value={d.expBonus} onChange={v => set('expBonus', v)} unit="%" max={9999} icon="추가 경험치 50%" width="w-[90px] lg:w-[80px]" />
+          </div>
+
+          {/* 바로 위 '부스터 사용 시 추가 경험치 획득량'과 이어지는 내용이라 구분선 없이 간격만 둔다 */}
+          <div className="mt-2">
             <div className="flex items-center gap-1 mb-1">
               <span className="text-xs text-orange-500 dark:text-orange-400 font-bold">30분 내 사용 부스터</span>
               <TooltipIcon text={<>부스터를 많이 사용할수록 30분 도핑<br />아이템들의 효율이 상승합니다</>} />
             </div>
             <StepperField label="VIP/HEXA 부스터" icon="VIP 부스터" value={d.booster30min} onChange={v => set('booster30min', v)} />
-            <StepperField label="영겁의 황금태엽" icon="영겁의 황금태엽" value={d.eternal30min} onChange={v => set('eternal30min', v)} />
             <div className="flex items-center gap-1 mt-2 mb-1">
               <span className="text-xs text-orange-500 dark:text-orange-400 font-bold">1일 평균 사용 부스터</span>
               <TooltipIcon text={<>부스터를 많이 사용할수록 30일 도핑<br />아이템들의 효율이 상승합니다</>} />
             </div>
             <StepperField label="VIP/HEXA 부스터" icon="VIP 부스터" value={d.booster1day} onChange={v => set('booster1day', v)} />
-            <StepperField label="영겁의 황금태엽" icon="영겁의 황금태엽" value={d.eternal1day} onChange={v => set('eternal1day', v)} />
           </div>
 
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
