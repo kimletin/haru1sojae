@@ -250,14 +250,15 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
           {/* 부스터류 아이템(부스터·돋보기)이 받는 추가 경험치 획득량 — 예전엔 800% 고정이었다 */}
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
             <div className="flex items-center gap-1 mb-1">
-              <span className="text-xs text-orange-500 dark:text-orange-400 font-bold">추가 경험치 획득량</span>
+              <span className="text-xs text-orange-500 dark:text-orange-400 font-bold">부스터 사용 시 추가 경험치 획득량</span>
               <TooltipIcon text="부스터류 아이템 사용 시점의 추가 경험치 획득량을 그대로 입력해주세요(룬, 버닝 포함)." />
             </div>
-            {/* 라벨이 길어 입력칸을 좁게 잡는다 */}
+            {/* 제목이 길어 입력칸 라벨은 짧게 */}
             <NumField label="추가 경험치 획득량" value={d.expBonus} onChange={v => set('expBonus', v)} unit="%" max={9999} icon="추가 경험치 50%" width="w-[90px] lg:w-[80px]" />
           </div>
 
-          <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
+          {/* 바로 위 '부스터 사용 시 추가 경험치 획득량'과 이어지는 내용이라 구분선 없이 간격만 둔다 */}
+          <div className="mt-2">
             <div className="flex items-center gap-1 mb-1">
               <span className="text-xs text-orange-500 dark:text-orange-400 font-bold">30분 내 사용 부스터</span>
               <TooltipIcon text={<>부스터를 많이 사용할수록 30분 도핑<br />아이템들의 효율이 상승합니다</>} />

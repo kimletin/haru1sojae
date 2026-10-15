@@ -34,15 +34,10 @@ function Cell({ label, icon, children }: { label: string; icon?: string; childre
   );
 }
 
-// 부스터 개수 — 아이콘(위) · 개수(아래)
-function Boosters({ vip }: { vip: number }) {
+// 부스터 개수 — 기간은 제목('30분/1일 부스터')에 있으므로 값은 같은 순서로 개수만 적는다
+function Boosters({ min30, day1 }: { min30: number; day1: number }) {
   return (
-    <div className="flex items-start justify-center">
-      <span className="flex flex-col items-center gap-0.5">
-        <img src={`/icons/${assetSlug('VIP 부스터')}.png`} alt="VIP 부스터" className="w-6 h-6 object-contain shrink-0" />
-        {vip}개
-      </span>
-    </div>
+    <span className="whitespace-nowrap">{min30}개 / {day1}개</span>
   );
 }
 
@@ -73,8 +68,8 @@ export default function InputSummaryCard({ inputs, meta: _meta, onEditInfo }: Pr
       {/* 3열 2행 정사각 박스 그리드 */}
       <div className="grid grid-cols-3 gap-2 px-4 py-3">
         <Cell label="일 평균 재획" icon="소재비">{toTimeStr(inputs.dailySessions)}</Cell>
-        <Cell label="30분 부스터"><Boosters vip={inputs.booster30min} /></Cell>
-        <Cell label="1일 부스터"><Boosters vip={inputs.booster1day} /></Cell>
+        <Cell label="30분/1일 부스터" icon="VIP 부스터"><Boosters min30={inputs.booster30min} day1={inputs.booster1day} /></Cell>
+        <Cell label="마스터라벨" icon="마스터라벨">{inputs.masterLabelCount}부위</Cell>
         <Cell label="에픽 던전" icon={inputs.epicDungeonZone}>{displayLabel(inputs.epicDungeonZone)}</Cell>
         <Cell label="몬스터파크" icon={inputs.monsterParkZone}>{inputs.monsterParkZone}</Cell>
         <Cell label="사냥터" icon={inputs.huntingRegion}>{inputs.huntingGround}</Cell>
