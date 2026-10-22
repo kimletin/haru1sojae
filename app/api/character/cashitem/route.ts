@@ -25,7 +25,7 @@ function optionAlive(dateOptionExpire: string | null): boolean {
   return !Number.isNaN(t) && t > Date.now();
 }
 
-/** 착용 중(cash_item_equipment_base)인 마스터라벨 개수.
+/** 마스터라벨 개수.
  *  아이템명은 코디마다 달라서(예: "심연의 계율") cash_item_label로 판정한다.
  *  마스터라벨 플러스는 "능력치 유효 기간이 만료되지 않은" 것만 인정하므로 만료분은 제외. */
 function countMasterLabel(items: CashItem[]): number {
@@ -51,8 +51,12 @@ export async function GET(req: NextRequest) {
     }
 
     const data = await res.json();
-    const base: CashItem[] = data.cash_item_equipment_base ?? [];
-    return NextResponse.json({ masterLabelCount: countMasterLabel(base) });
+    // 월드 공유 마스터라벨 슬롯이 켜져 있으면(flag '1') 캐릭터 착용분 대신 월드 슬롯을 센다.
+    // 월드 슬롯은 같은 월드의 모든 캐릭터가 공유하므로 캐릭터별 착용분은 효력이 없다.
+    // flag가 null인 경우(갱신 전 캐릭터)도 '0'으로 보고 기존처럼 착용분을 센다.
+    const worldShare = String(data.world_share_master_label_activate_flag ?? '0') === '1';
+    const items: CashItem[] = (worldShare ? data.world_share_master_label_base : data.cash_item_equipment_base) ?? [];
+    return NextResponse.json({ masterLabelCount: countMasterLabel(items) });
   } catch (e) {
     if (e instanceof Error && e.name === 'AbortError') {
       return NextResponse.json({ error: 'API 응답 시간이 초과됐습니다' }, { status: 504 });
