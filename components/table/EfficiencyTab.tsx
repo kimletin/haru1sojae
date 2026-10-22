@@ -182,9 +182,9 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0, parkBonuse
   const bmRows: TableRow[] = [
     { name: epicName + ' 0→1단계', ...effRow(getEpicDungeonStage01Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage01Price(inputs.epicDungeonZone, inputs.mesoMarketRate)) },
     { name: epicName + ' 1→2단계', ...effRow(getEpicDungeonStage12Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage12Price(inputs.epicDungeonZone, inputs.mesoMarketRate)) },
-    { name: '몬스터파크(' + parkZone + ') 일반',   ...effRow(getMonsterParkExp(parkZone, '일반', monsterParkBonus), parkPrice) },
+    { name: '몬스터파크(' + parkZone + ') 평일·토',   ...effRow(getMonsterParkExp(parkZone, '평일·토', monsterParkBonus), parkPrice) },
+    { name: '몬스터파크(' + parkZone + ') 일요일', ...effRow(getMonsterParkExp(parkZone, '일요일', monsterParkBonus), parkPrice) },
     { name: '몬스터파크(' + parkZone + ') 썬데이', ...effRow(getMonsterParkExp(parkZone, '썬데이', monsterParkBonus), parkPrice) },
-    { name: '몬스터파크(' + parkZone + ') 스페셜', ...effRow(getMonsterParkExp(parkZone, '스페셜', monsterParkBonus), parkPrice) },
     { name: '마스터라벨 성장 플러스',    ...effRow(getMasterLabelPlusExp(inputs), getMasterLabelPlusPrice(inputs)) },
   ];
 

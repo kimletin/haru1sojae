@@ -9,7 +9,7 @@ import { MONSTER_PARK_EXP, getMonsterParkZone } from '@/data/monsterPark';
 import { calcLevelUp } from '@/components/expContents/simMath';
 import type { SundayType } from '@/types';
 
-const SUNDAY_MULT: Record<SundayType, number> = { '일반': 1, '썬데이': 1.5, '스페셜': 4 };
+const SUNDAY_MULT: Record<SundayType, number> = { '평일·토': 1, '일요일': 1.5, '썬데이': 4 };
 
 interface Props {
   charLevel: number;
@@ -25,7 +25,7 @@ export default function MonsterParkSimulator({ charLevel, hasCharacter, todayExp
   const [simPotionBuff, setSimPotionBuff] = useState('');
   const [simBeyond, setSimBeyond] = useState(false);
   const [simRounds, setSimRounds] = useState(7);
-  const [simSunday, setSimSunday] = useState<SundayType>('일반');
+  const [simSunday, setSimSunday] = useState<SundayType>('평일·토');
   const [simResult, setSimResult] = useState<{ gainedExp: number; gainPct: number; finalLevel: number; finalPct: number } | null>(null);
 
   // 오늘 경험치 자동 입력
@@ -106,12 +106,12 @@ export default function MonsterParkSimulator({ charLevel, hasCharacter, todayExp
             </button>
           </div>
           <div className="flex items-center justify-between gap-3">
-            <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">썬데이</span>
+            <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">요일</span>
             <div className="flex gap-1">
               {([
-                { val: '일반',   tip: '+0%' },
-                { val: '썬데이', tip: '+50%' },
-                { val: '스페셜', tip: '+300%' },
+                { val: '평일·토', tip: '+0%' },
+                { val: '일요일',  tip: '+50%' },
+                { val: '썬데이',  tip: '+300%' },
               ] as const).map(({ val, tip }) => (
                 <TooltipWrapper key={val} tip={tip}>
                   <button
@@ -123,7 +123,7 @@ export default function MonsterParkSimulator({ charLevel, hasCharacter, todayExp
                         : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400 dark:hover:border-orange-400')
                     }
                   >
-                    {val === '스페셜' ? '스페셜썬데이' : val}
+                    {val}
                   </button>
                 </TooltipWrapper>
               ))}

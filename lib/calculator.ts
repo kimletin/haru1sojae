@@ -132,7 +132,7 @@ export function getMonsterParkExp(
   monsterParkBonus: number = 0  // API에서 받은 % 값
 ): number {
   const base = MONSTER_PARK_EXP[zone] ?? 0;
-  const sundayBonus = sunday === '썬데이' ? 0.5 : sunday === '스페셜' ? 3.0 : 0;
+  const sundayBonus = sunday === '일요일' ? 0.5 : sunday === '썬데이' ? 3.0 : 0;
   return base * (1 + sundayBonus + monsterParkBonus / 100);
 }
 
@@ -409,9 +409,9 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
     // BM
     item(`${epicName} 0→1단계`, 'BM', stage01Exp, stage01Price),
     item(`${epicName} 1→2단계`, 'BM', stage12Exp, stage12Price),
-    item(`몬스터파크(${parkZone}) 일반`, 'BM', getMonsterParkExp(parkZone, '일반', monsterParkBonus), parkPrice),
+    item(`몬스터파크(${parkZone}) 평일·토`, 'BM', getMonsterParkExp(parkZone, '평일·토', monsterParkBonus), parkPrice),
+    item(`몬스터파크(${parkZone}) 일요일`, 'BM', getMonsterParkExp(parkZone, '일요일', monsterParkBonus), parkPrice),
     item(`몬스터파크(${parkZone}) 썬데이`, 'BM', getMonsterParkExp(parkZone, '썬데이', monsterParkBonus), parkPrice),
-    item(`몬스터파크(${parkZone}) 스페셜`, 'BM', getMonsterParkExp(parkZone, '스페셜', monsterParkBonus), parkPrice),
     item('VIP 사우나',          'BM', vipExp, vipPrice),
     item('마스터라벨 성장 플러스', 'BM', getMasterLabelPlusExp(inputs), getMasterLabelPlusPrice(inputs)),
     item('프리미엄 모멘텀 패스', 'BM', getPremiumMomentumExp(inputs), getPremiumMomentumPrice(inputs.waterBottleRate)),
