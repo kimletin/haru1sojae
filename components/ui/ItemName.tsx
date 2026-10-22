@@ -7,10 +7,11 @@ const STAGE_COLORS: Record<string, string> = {
   '2': 'bg-purple-800 text-white',
 };
 
+// 몬파 추가 경험치: 평일·토 +0% / 일요일 +50% / 썬데이메이플 +300%
 const MONPARK_VARIANT_COLORS: Record<string, string> = {
-  '일반':   'bg-fuchsia-400 text-white',
-  '썬데이': 'bg-fuchsia-600 text-white',
-  '스페셜': 'bg-fuchsia-800 text-white',
+  '평일·토': 'bg-fuchsia-400 text-white',
+  '일요일':  'bg-fuchsia-600 text-white',
+  '썬데이':  'bg-fuchsia-800 text-white',
 };
 
 // 항목명(원본) → 아이콘 파일명(확장자 제외)
@@ -74,6 +75,8 @@ const DISPLAY_NAME: Record<string, string> = {
   '프리미엄+프라임 모멘텀 패스': '프리미엄+프라임 모멘텀',
   // 계산 키(데이터 값)는 붙여 쓴 '앵글러컴퍼니' 그대로 두고 화면에서만 띄어 쓴다
   '앵글러컴퍼니': '앵글러 컴퍼니',
+  // 효율표·가성비 순위 항목 열이 좁아 줄여 쓴다(정식 이름은 cont 탭 상단 탭에 그대로)
+  '탐정예티의 수상한 돋보기': '탐정예티 돋보기',
 };
 
 /** 표시용 라벨 변환. ItemName을 쓰지 않는 곳(입력 정보 카드 등)에서도 같은 표기를 쓰도록 export한다. */

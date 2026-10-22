@@ -77,7 +77,7 @@ interface Props {
   onPersonalBossChange: (next: PersonalBossSelections) => void;
 }
 
-const SUNDAY_MULT: Record<SundayType, number> = { '일반': 1, '썬데이': 1.5, '스페셜': 4 };
+const SUNDAY_MULT: Record<SundayType, number> = { '평일·토': 1, '일요일': 1.5, '썬데이': 4 };
 
 /** 메뉴 하나가 여러 종류를 품을 때 상단 선택 버튼이 쓰는 모양.
  *  name = 표 제목(정식 명칭) / label = 버튼 표기(좁은 칸에서 줄바꿈되지 않게 축약 가능) */
@@ -170,7 +170,7 @@ export default function ExpContentsTab({
   const [parkBonusInput, setParkBonusInput] = useState(monsterParkBonus > 0 ? String(monsterParkBonus) : '');
 
   // 몬스터파크 썬데이메이플
-  const [sundayType, setSundayType] = useState<SundayType>('일반');
+  const [sundayType, setSundayType] = useState<SundayType>('평일·토');
 
   useEffect(() => {
     setParkBonusInput(monsterParkBonus > 0 ? String(monsterParkBonus) : '');
@@ -404,18 +404,18 @@ export default function ExpContentsTab({
                   </div>
                   <div className="px-4 py-2 flex items-center justify-between border-t border-gray-100 dark:border-zinc-700 shrink-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500 dark:text-zinc-400">썬데이</span>
+                      <span className="text-xs text-gray-500 dark:text-zinc-400">요일</span>
                       {([
-                        { val: '일반',   tip: '+0%' },
-                        { val: '썬데이', tip: '+50%' },
-                        { val: '스페셜', tip: '+300%' },
+                        { val: '평일·토', tip: '+0%' },
+                        { val: '일요일',  tip: '+50%' },
+                        { val: '썬데이',  tip: '+300%' },
                       ] as const).map(({ val, tip }) => (
                         <TooltipWrapper key={val} tip={tip}>
                           <button
                             onClick={() => setSundayType(val)}
                             className={`text-xs px-2 py-0.5 rounded border cursor-pointer transition-colors ${sundayType === val ? 'bg-orange-500 border-orange-500 text-white' : 'border-gray-300 dark:border-zinc-600 text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-700'}`}
                           >
-                            {val === '스페셜' ? '스페셜썬데이' : val}
+                            {val}
                           </button>
                         </TooltipWrapper>
                       ))}
