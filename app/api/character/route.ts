@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     try {
       const charRes = await fetchWithTimeout(
         `https://open.api.nexon.com/maplestory/v1/character/basic?ocid=${encodeURIComponent(ocidParam)}`,
-        { headers, next: { revalidate: 120 } }
+        { headers, next: { revalidate: 60 } }
       );
       if (!charRes.ok) {
         const { message, clientStatus } = nexonErrorMessage(charRes.status);
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
 
     const charRes = await fetchWithTimeout(
       `https://open.api.nexon.com/maplestory/v1/character/basic?ocid=${encodeURIComponent(ocid)}`,
-      { headers, next: { revalidate: 120 } }
+      { headers, next: { revalidate: 60 } }
     );
 
     if (!charRes.ok) {
