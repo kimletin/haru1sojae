@@ -307,7 +307,9 @@ export const ASSET_SLUGS: Record<string, string> = {
   "흑태양 법사": "10",
   "흑태양 보병": "11",
   "흑태양 폭탄병": "12",
-  "main banner": "MainBanner",
+  // 배너를 바꿀 때는 파일명 뒤 날짜를 새로 붙인다 — 같은 이름으로 교체하면
+  // 정적 이미지 캐시(1주) 때문에 재방문자에게 최대 1주간 옛 이미지가 보인다
+  "main banner": "MainBanner20261025",
   "MVP 리조트": "MVPResort",
   "VIP 부스터": "VipBooster",
   "VIP사우나": "VipSauna",
