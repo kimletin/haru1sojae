@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from 'react';
 import { assetSlug } from '@/lib/assetSlug';
 import type { InputValues, EpicDungeonZone } from '@/types';
 import { DEFAULT_INPUTS, RESET_KEEP_KEYS } from '@/data/defaults';
-import { EPIC_DUNGEON_ZONES } from '@/data/epicDungeonZones';
-import { HUNTING_REGIONS } from '@/data/huntingGrounds';
+import { EPIC_DUNGEON_ZONES, getEpicDungeonZone } from '@/data/epicDungeonZones';
+import { HUNTING_REGIONS, getDefaultHunting } from '@/data/huntingGrounds';
 import type { HuntingGround, HuntingRegion } from '@/data/huntingGrounds';
-import { MONSTER_PARK_ZONES } from '@/data/monsterPark';
+import { MONSTER_PARK_ZONES, getMonsterParkZone } from '@/data/monsterPark';
 import { MASTER_LABEL_MAX } from '@/lib/calculator';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
@@ -142,6 +142,19 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
     setD(prev => {
       const next = { ...prev, ...DEFAULT_INPUTS };
       for (const k of RESET_KEEP_KEYS) (next as Record<string, unknown>)[k] = prev[k];
+      // 에픽 던전·몬파는 최하위 지역이 아니라 캐릭터 레벨에 맞는 지역으로,
+      // 마스터라벨은 0이 아니라 API가 조회한 실착 개수로 되돌린다(조회값이 없을 때만 기본값)
+      next.epicDungeonZone = getEpicDungeonZone(next.charLevel);
+      next.monsterParkZone = getMonsterParkZone(next.charLevel);
+      if (apiMasterLabelCount != null) next.masterLabelCount = apiMasterLabelCount;
+      // 사냥터도 레벨에 맞는 곳으로 (캐릭터 추가 때와 같은 함수)
+      const { region, ground } = getDefaultHunting(next.charLevel);
+      next.huntingRegion = region;
+      next.huntingGround = ground.name;
+      next.huntingMobs = ground.mobs;
+      next.monsterLevel = ground.mobs[0].level;
+      next.mobCount = ground.mobs.reduce((s, m) => s + m.count, 0);
+      next.boosterMonsterLevel = ground.boosterLevel ?? ground.mobs[ground.mobs.length - 1].level;
       return next;
     });
   };
