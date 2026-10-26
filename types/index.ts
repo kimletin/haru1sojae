@@ -39,7 +39,8 @@ export interface InputValues {
   priceHunterTitle: number;     // 사냥 칭호 (30일)
   priceBloodRingMeso: number;   // 혈맹의 반지 (메소)
   priceBoostringMeso: number;   // 부스트링 (메소)
-  priceJungpenMeso: number;     // 정펜 (메소)
+  priceJungpenMeso: number;     // 정펜 (메소) — 입력한 기간(jungpenDays) 기준 가격
+  jungpenDays: 30 | 90;         // 정펜 기간 선택. 90일이면 가격을 1/3로 환산해 30일 기준으로 맞춘다
   priceMagnifier: number;       // 수상한 돋보기 (메소) — 이벤트 한정
   priceYetiMagnifier: number;   // 탐정 예티의 수상한 돋보기 (메소) — 이벤트 한정
   epicDungeonZone: EpicDungeonZone;

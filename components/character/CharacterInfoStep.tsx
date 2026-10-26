@@ -30,7 +30,7 @@ const PRICE_KEYS = [
   'waterBottleRate', 'mesoMarketRate',
   'price50', 'price70', 'price3x', 'price4x',
   'priceSmallBooster', 'priceLargeBooster',
-  'priceHunterTitle', 'priceBloodRingMeso', 'priceBoostringMeso', 'priceJungpenMeso',
+  'priceHunterTitle', 'priceBloodRingMeso', 'priceBoostringMeso', 'priceJungpenMeso', 'jungpenDays',
   'priceMagnifier', 'priceYetiMagnifier',
 ] as const;
 
@@ -143,7 +143,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
       waterBottleRate: 0, mesoMarketRate: 0,
       price50: 0, price70: 0, price3x: 0, price4x: 0,
       priceSmallBooster: 0, priceLargeBooster: 0,
-      priceHunterTitle: 0, priceBloodRingMeso: 0, priceBoostringMeso: 0, priceJungpenMeso: 0,
+      priceHunterTitle: 0, priceBloodRingMeso: 0, priceBoostringMeso: 0, priceJungpenMeso: 0, jungpenDays: 30,
       priceMagnifier: 0, priceYetiMagnifier: 0,
       dailySessions: 0,
       booster30min: 0, booster1day: 0, expBonus: 0,
@@ -162,11 +162,9 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
 
   // 불러오기: 선택한 캐릭터의 1열(시세+도핑 가격) 값만 복사
   const handleLoad = (src: InputValues) => {
-    setD(prev => {
-      const next = { ...prev };
-      for (const k of PRICE_KEYS) next[k] = src[k];
-      return next;
-    });
+    // 키가 유니온이라 for 루프로 대입하면 개별 타입이 좁혀지지 않는다(jungpenDays는 30|90) → 한 번에 합친다
+    const picked = Object.fromEntries(PRICE_KEYS.map(k => [k, src[k]])) as Partial<InputValues>;
+    setD(prev => ({ ...prev, ...picked }));
     setShowLoad(false);
   };
 
@@ -218,7 +216,24 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
             <NumField label="부티크 사냥 칭호" value={d.priceHunterTitle} onChange={v => set('priceHunterTitle', v)} icon="부티크 사냥 칭호" />
             <NumField label="혈맹의 반지" value={d.priceBloodRingMeso} onChange={v => set('priceBloodRingMeso', v)} icon="혈맹의 반지" />
             <NumField label="경험치 부스트링" value={d.priceBoostringMeso} onChange={v => set('priceBoostringMeso', v)} icon="경험치 부스트링" />
+            {/* 30일권·90일권이 따로 팔려, 고른 기간의 실제 가격을 넣으면 계산에서 30일 기준으로 환산한다 */}
             <NumField label="정령의 펜던트" value={d.priceJungpenMeso} onChange={v => set('priceJungpenMeso', v)} icon="정령의 펜던트" />
+            <div className="flex items-center justify-end py-0.5 pl-7">
+              <div className="flex gap-1">
+                {([30, 90] as const).map(days => (
+                  <button
+                    key={days}
+                    onClick={() => set('jungpenDays', days)}
+                    className={'px-2 h-[24px] text-[12px] lg:text-[11px] font-medium rounded border-2 transition-colors cursor-pointer ' +
+                      ((d.jungpenDays ?? 30) === days
+                        ? 'bg-orange-500 border-orange-500 text-white'
+                        : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400')}
+                  >
+                    {days}일 정펜
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
           {/* 이벤트 한정 — 판매 종료 시 입력칸·가격 키·효율표 행을 함께 지운다 */}
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-1.5 pt-1.5">
