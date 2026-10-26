@@ -20,6 +20,7 @@ import CharacterSearchModal, { type CharacterInfo } from '@/components/character
 import CharacterCard, { type HistoryPoint, type Ranking } from '@/components/table/CharacterCard';
 import { SunIcon, MoonIcon, TabIcon } from '@/components/ui/Icons';
 import type { CharMeta } from '@/types';
+import { DEFAULT_INPUTS } from '@/data/defaults';
 import { getDefaultHunting } from '@/data/huntingGrounds';
 import { getMonsterParkZone } from '@/data/monsterPark';
 import { getEpicDungeonZone } from '@/data/epicDungeonZones';
@@ -51,42 +52,6 @@ function loadMetas(): (CharMeta | null)[] {
   } catch {}
   return makeDefaultMetas();
 }
-
-const DEFAULT_INPUTS: InputValues = {
-  waterBottleRate: 1450,
-  mesoMarketRate: 2100,
-  charLevel: 260,
-  monsterLevel: 260,
-  dailySessions: 10,
-  mobCount: 34,
-  huntingRegion: '세르니움',
-  huntingGround: '해변 암석 지대 1',
-  huntingMobs: [{ level: 260, count: 34 }],
-  boosterMonsterLevel: 260,
-  booster30min: 3,
-  booster1day: 6,
-  expBonus: 800,
-  masterLabelCount: 0,
-  masterLabelCost: 0,
-  price50: 100_000,
-  price70: 2_500_000,
-  price3x: 80_000_000,
-  price4x: 250_000_000,
-  priceSmallBooster: 1_000_000,
-  priceLargeBooster: 5_500_000,
-  priceHunterTitle: 2_000_000_000,
-  priceBloodRingMeso: 350_000_000,
-  priceBoostringMeso: 850_000_000,
-  priceJungpenMeso: 1_000_000_000,
-  jungpenDays: 90,
-  // 아직 본섭 미출시 — 시세가 잡히기 전까지 쓰는 임시 기본가
-  priceMagnifier: 3_000_000,
-  priceYetiMagnifier: 100_000_000,
-  epicDungeonZone: '하이마운틴',
-  monsterParkZone: '세르니움',
-  boosterRate: 0.5,
-  personalBoss: {},
-};
 
 const DEFAULT_NAMES = ['null', 'null', 'null', 'null', 'null', 'null'];
 

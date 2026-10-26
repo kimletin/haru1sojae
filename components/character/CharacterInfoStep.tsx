@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { assetSlug } from '@/lib/assetSlug';
 import type { InputValues, EpicDungeonZone } from '@/types';
+import { DEFAULT_INPUTS, RESET_KEEP_KEYS } from '@/data/defaults';
 import { EPIC_DUNGEON_ZONES } from '@/data/epicDungeonZones';
 import { HUNTING_REGIONS } from '@/data/huntingGrounds';
 import type { HuntingGround, HuntingRegion } from '@/data/huntingGrounds';
@@ -134,30 +135,15 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
     }));
   };
 
-  // 초기화: 모든 입력란 0(빈칸), 사냥시간·부스터 0, 던전/파크/사냥터 첫 항목으로
+  // 초기화: 기본값(DEFAULT_INPUTS)으로 되돌린다. 0으로 비우면 시세가 0이 되어 효율표가 통째로
+  // '-'가 되고 사용자가 열 칸 넘게 다시 채워야 했다. 기본 시세·가격은 계속 갱신하므로 최신값으로 복귀한다.
+  // 캐릭터 본인의 값(레벨 · 퍼스널 보스 선택)은 그대로 둔다.
   const handleReset = () => {
-    const firstRegion = HUNTING_REGIONS[0];
-    const firstGround = firstRegion.grounds[0];
-    setD(prev => ({
-      ...prev,
-      waterBottleRate: 0, mesoMarketRate: 0,
-      price50: 0, price70: 0, price3x: 0, price4x: 0,
-      priceSmallBooster: 0, priceLargeBooster: 0,
-      priceHunterTitle: 0, priceBloodRingMeso: 0, priceBoostringMeso: 0, priceJungpenMeso: 0, jungpenDays: 30,
-      priceMagnifier: 0, priceYetiMagnifier: 0,
-      dailySessions: 0,
-      booster30min: 0, booster1day: 0, expBonus: 0,
-      masterLabelCount: 0,
-      masterLabelCost: 0,
-      epicDungeonZone: '하이마운틴',
-      monsterParkZone: MONSTER_PARK_ZONES[0].zone,
-      huntingRegion: firstRegion.name,
-      huntingGround: firstGround.name,
-      huntingMobs: firstGround.mobs,
-      monsterLevel: firstGround.mobs[0].level,
-      mobCount: firstGround.mobs.reduce((s, m) => s + m.count, 0),
-      boosterMonsterLevel: firstGround.boosterLevel ?? firstGround.mobs[firstGround.mobs.length - 1].level,
-    }));
+    setD(prev => {
+      const next = { ...prev, ...DEFAULT_INPUTS };
+      for (const k of RESET_KEEP_KEYS) (next as Record<string, unknown>)[k] = prev[k];
+      return next;
+    });
   };
 
   // 불러오기: 선택한 캐릭터의 1열(시세+도핑 가격) 값만 복사
