@@ -1,7 +1,7 @@
 'use client';
 
 import { InputValues } from '@/types';
-import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getPremiumMomentumExp, getPremiumMomentumPrice, getPrimeMomentumExp, getPrimeMomentumPrice, getMasterLabelPlusExp, getMasterLabelPlusPrice, getDoping30Tiers, MEKABERRY_MIN_LEVEL, getMagnifierExp, getYetiMagnifierExp } from '@/lib/calculator';
+import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getPremiumMomentumExp, getPremiumMomentumPrice, getPrimeMomentumExp, getPrimeMomentumPrice, getMasterLabelPlusExp, getMasterLabelPlusPrice, getDoping30Tiers, MEKABERRY_MIN_LEVEL, getMagnifierExp, getYetiMagnifierExp, getJungpenPrice } from '@/lib/calculator';
 import Num from '@/components/ui/Num';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
@@ -168,7 +168,7 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0, parkBonuse
     { name: '혈맹의 반지(메포)', ...effRow(base30d * 0.1,  mepoToMeso(5900,  inputs.mesoMarketRate)) },
     { name: '경험치 부스트링(메소)', ...effRow(base30d * 0.15, inputs.priceBoostringMeso) },
     { name: '경험치 부스트링(메포)', ...effRow(base30d * 0.15, mepoToMeso(29900, inputs.mesoMarketRate)) },
-    { name: '정령의 펜던트(메소)',          ...effRow(base30d * 0.3,  inputs.priceJungpenMeso) },
+    { name: '정령의 펜던트(메소)',          ...effRow(base30d * 0.3,  getJungpenPrice(inputs)) },
     { name: '정령의 펜던트(메포)',          ...effRow(base30d * 0.3,  mepoToMeso(49900, inputs.mesoMarketRate)) },
   ];
 

@@ -177,6 +177,13 @@ export function getEpicDungeonStage12Price(zone: EpicDungeonZone, mesoMarketRate
 }
 
 /** 메카베리 농장 / 모멘텀 리워드 사용 가능 최소 레벨 */
+/** 정령의 펜던트 가격을 30일 기준으로 환산.
+ *  90일권은 그대로 쓰면 30일 도핑 표에서 3배 비싸게 잡히므로 1/3로 나눈다.
+ *  (마라벨 비용의 90/190 안분과 같은 맥락 — 기간이 다른 상품을 같은 잣대에 올린다) */
+export function getJungpenPrice(inputs: InputValues): number {
+  return inputs.priceJungpenMeso / ((inputs.jungpenDays ?? 30) / 30);
+}
+
 export const MEKABERRY_MIN_LEVEL = 280;
 
 /** 메카베리 농장 경험치 */
@@ -402,7 +409,7 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
     item('부티크 사냥 칭호',           '30일 도핑', base30d * 1,    inputs.priceHunterTitle),
     item('혈맹의 반지(메소)',    '30일 도핑', base30d * 0.1,  inputs.priceBloodRingMeso),
     item('경험치 부스트링(메소)',       '30일 도핑', base30d * 0.15, inputs.priceBoostringMeso),
-    item('정령의 펜던트(메소)',           '30일 도핑', base30d * 0.3,  inputs.priceJungpenMeso),
+    item('정령의 펜던트(메소)',           '30일 도핑', base30d * 0.3,  getJungpenPrice(inputs)),
     item('혈맹의 반지(메포)',    '30일 도핑', base30d * 0.1,  bloodRingMetaPrice),
     item('경험치 부스트링(메포)',       '30일 도핑', base30d * 0.15, boostringMetaPrice),
     item('정령의 펜던트(메포)',           '30일 도핑', base30d * 0.3,  jungpenMetaPrice),

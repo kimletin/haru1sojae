@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { assetSlug } from '@/lib/assetSlug';
 import type { InputValues, EpicDungeonZone } from '@/types';
-import { EPIC_DUNGEON_ZONES } from '@/data/epicDungeonZones';
-import { HUNTING_REGIONS } from '@/data/huntingGrounds';
+import { DEFAULT_INPUTS, RESET_KEEP_KEYS } from '@/data/defaults';
+import { EPIC_DUNGEON_ZONES, getEpicDungeonZone } from '@/data/epicDungeonZones';
+import { HUNTING_REGIONS, getDefaultHunting } from '@/data/huntingGrounds';
 import type { HuntingGround, HuntingRegion } from '@/data/huntingGrounds';
-import { MONSTER_PARK_ZONES } from '@/data/monsterPark';
+import { MONSTER_PARK_ZONES, getMonsterParkZone } from '@/data/monsterPark';
 import { MASTER_LABEL_MAX } from '@/lib/calculator';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
@@ -30,7 +31,7 @@ const PRICE_KEYS = [
   'waterBottleRate', 'mesoMarketRate',
   'price50', 'price70', 'price3x', 'price4x',
   'priceSmallBooster', 'priceLargeBooster',
-  'priceHunterTitle', 'priceBloodRingMeso', 'priceBoostringMeso', 'priceJungpenMeso',
+  'priceHunterTitle', 'priceBloodRingMeso', 'priceBoostringMeso', 'priceJungpenMeso', 'jungpenDays',
   'priceMagnifier', 'priceYetiMagnifier',
 ] as const;
 
@@ -134,39 +135,35 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
     }));
   };
 
-  // 초기화: 모든 입력란 0(빈칸), 사냥시간·부스터 0, 던전/파크/사냥터 첫 항목으로
+  // 초기화: 기본값(DEFAULT_INPUTS)으로 되돌린다. 0으로 비우면 시세가 0이 되어 효율표가 통째로
+  // '-'가 되고 사용자가 열 칸 넘게 다시 채워야 했다. 기본 시세·가격은 계속 갱신하므로 최신값으로 복귀한다.
+  // 캐릭터 본인의 값(레벨 · 퍼스널 보스 선택)은 그대로 둔다.
   const handleReset = () => {
-    const firstRegion = HUNTING_REGIONS[0];
-    const firstGround = firstRegion.grounds[0];
-    setD(prev => ({
-      ...prev,
-      waterBottleRate: 0, mesoMarketRate: 0,
-      price50: 0, price70: 0, price3x: 0, price4x: 0,
-      priceSmallBooster: 0, priceLargeBooster: 0,
-      priceHunterTitle: 0, priceBloodRingMeso: 0, priceBoostringMeso: 0, priceJungpenMeso: 0,
-      priceMagnifier: 0, priceYetiMagnifier: 0,
-      dailySessions: 0,
-      booster30min: 0, booster1day: 0, expBonus: 0,
-      masterLabelCount: 0,
-      masterLabelCost: 0,
-      epicDungeonZone: '하이마운틴',
-      monsterParkZone: MONSTER_PARK_ZONES[0].zone,
-      huntingRegion: firstRegion.name,
-      huntingGround: firstGround.name,
-      huntingMobs: firstGround.mobs,
-      monsterLevel: firstGround.mobs[0].level,
-      mobCount: firstGround.mobs.reduce((s, m) => s + m.count, 0),
-      boosterMonsterLevel: firstGround.boosterLevel ?? firstGround.mobs[firstGround.mobs.length - 1].level,
-    }));
+    setD(prev => {
+      const next = { ...prev, ...DEFAULT_INPUTS };
+      for (const k of RESET_KEEP_KEYS) (next as Record<string, unknown>)[k] = prev[k];
+      // 에픽 던전·몬파는 최하위 지역이 아니라 캐릭터 레벨에 맞는 지역으로,
+      // 마스터라벨은 0이 아니라 API가 조회한 실착 개수로 되돌린다(조회값이 없을 때만 기본값)
+      next.epicDungeonZone = getEpicDungeonZone(next.charLevel);
+      next.monsterParkZone = getMonsterParkZone(next.charLevel);
+      if (apiMasterLabelCount != null) next.masterLabelCount = apiMasterLabelCount;
+      // 사냥터도 레벨에 맞는 곳으로 (캐릭터 추가 때와 같은 함수)
+      const { region, ground } = getDefaultHunting(next.charLevel);
+      next.huntingRegion = region;
+      next.huntingGround = ground.name;
+      next.huntingMobs = ground.mobs;
+      next.monsterLevel = ground.mobs[0].level;
+      next.mobCount = ground.mobs.reduce((s, m) => s + m.count, 0);
+      next.boosterMonsterLevel = ground.boosterLevel ?? ground.mobs[ground.mobs.length - 1].level;
+      return next;
+    });
   };
 
   // 불러오기: 선택한 캐릭터의 1열(시세+도핑 가격) 값만 복사
   const handleLoad = (src: InputValues) => {
-    setD(prev => {
-      const next = { ...prev };
-      for (const k of PRICE_KEYS) next[k] = src[k];
-      return next;
-    });
+    // 키가 유니온이라 for 루프로 대입하면 개별 타입이 좁혀지지 않는다(jungpenDays는 30|90) → 한 번에 합친다
+    const picked = Object.fromEntries(PRICE_KEYS.map(k => [k, src[k]])) as Partial<InputValues>;
+    setD(prev => ({ ...prev, ...picked }));
     setShowLoad(false);
   };
 
@@ -218,7 +215,24 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
             <NumField label="부티크 사냥 칭호" value={d.priceHunterTitle} onChange={v => set('priceHunterTitle', v)} icon="부티크 사냥 칭호" />
             <NumField label="혈맹의 반지" value={d.priceBloodRingMeso} onChange={v => set('priceBloodRingMeso', v)} icon="혈맹의 반지" />
             <NumField label="경험치 부스트링" value={d.priceBoostringMeso} onChange={v => set('priceBoostringMeso', v)} icon="경험치 부스트링" />
+            {/* 30일권·90일권이 따로 팔려, 고른 기간의 실제 가격을 넣으면 계산에서 30일 기준으로 환산한다 */}
             <NumField label="정령의 펜던트" value={d.priceJungpenMeso} onChange={v => set('priceJungpenMeso', v)} icon="정령의 펜던트" />
+            <div className="flex items-center justify-end py-0.5 pl-7">
+              <div className="flex gap-1">
+                {([30, 90] as const).map(days => (
+                  <button
+                    key={days}
+                    onClick={() => set('jungpenDays', days)}
+                    className={'px-2 h-[24px] text-[12px] lg:text-[11px] font-medium rounded border-2 transition-colors cursor-pointer ' +
+                      ((d.jungpenDays ?? 30) === days
+                        ? 'bg-orange-500 border-orange-500 text-white'
+                        : 'bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-600 text-gray-600 dark:text-zinc-400 hover:border-orange-400')}
+                  >
+                    {days}일 정펜
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
           {/* 이벤트 한정 — 판매 종료 시 입력칸·가격 키·효율표 행을 함께 지운다 */}
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-1.5 pt-1.5">
