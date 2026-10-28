@@ -15,7 +15,7 @@ export const DEFAULT_INPUTS: InputValues = {
   boosterMonsterLevel: 260,
   booster30min: 3,
   booster1day: 6,
-  expBonus: 800,
+  expBonus: 500,
   masterLabelCount: 0,
   masterLabelCost: 0,
   price50: 100_000,
