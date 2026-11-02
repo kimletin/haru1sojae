@@ -64,6 +64,8 @@ const UPGRADE_MAP: Record<string, { from: { icon: string; label: string }; to: {
 function iconFor(name: string): string | null {
   const base = name.replace(/\s*\((?:메소|메포)\)$/, '').trim();
   if (ICON_MAP[base]) return ICON_MAP[base];
+  // 정펜(메소)은 이름에 기간이 붙어(정령의 펜던트(90일)) 정확히 일치하지 않는다
+  if (base.startsWith('정령의 펜던트')) return ICON_MAP['정령의 펜던트'];
   // 효율표·가성비 순위(이벤트 BM)는 이벤트용 아이콘, cont 탭 잠수맵은 원래 'VIP사우나' 아이콘을 쓴다
   if (name.startsWith('VIP 사우나')) return 'VIP 사우나 이벤트';
   for (const zone of EPIC_ZONES) if (name.startsWith(zone)) return zone;

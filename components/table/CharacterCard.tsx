@@ -26,6 +26,8 @@ interface Props {
   ranking: Ranking | null;
   loading: boolean;
   onOpenDetail?: () => void;
+  /** 빈 상태에서만 쓰인다 — 캐릭터 추가 버튼. 주면 버튼이 뜬다 */
+  onAdd?: () => void;
 }
 
 // 헤더 우측 "상세" 버튼 아이콘 (돋보기, 헤더 아이콘 톤에 맞춤)
@@ -54,27 +56,33 @@ function mergeBonuses(meta: CharMeta | null): MergedBonus[] {
   return Array.from(map.values());
 }
 
-export default function CharacterCard({ name, level, meta, isEmpty, history, ranking, loading, onOpenDetail }: Props) {
+export default function CharacterCard({ name, level, meta, isEmpty, history, ranking, loading, onOpenDetail, onAdd }: Props) {
   const hasApi = !!meta?.ocid;
   const todayData = history.find(p => p.date === kstDate(0)) ?? null;
   const slots = computeSlots(history);
   const bonuses = mergeBonuses(meta);
 
   if (isEmpty) {
+    // lg:h-full — 정상 카드와 같이 입력 정보 카드와 높이를 맞춘다(부모가 lg:items-stretch).
+    // 빠뜨리면 이 카드만 내용 높이로 잡혀 둘의 높이가 어긋난다.
     return (
-      <div className="character-card bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden">
-        <CardHeader title="캐릭터 정보" />
-        <div className="flex flex-col lg:flex-row lg:items-stretch lg:h-[185px]">
-          <div className="flex flex-col px-4 flex-1 min-w-0 pt-1 pb-5 items-center justify-center gap-3">
-            <div className="w-28 h-28 rounded-xl shrink-0 overflow-hidden bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-2xl text-gray-300 dark:text-zinc-600">?</div>
-            <p className="text-sm text-gray-400 dark:text-zinc-500">캐릭터를 추가해주세요</p>
-          </div>
-          <div className="h-px lg:h-auto w-auto lg:w-px bg-gray-100 dark:bg-zinc-700 mx-4 lg:mx-0 lg:my-4" />
-          <div className="w-full lg:w-[44%] lg:shrink-0 px-5 py-2 min-w-0 flex flex-col">
-            <p className="text-xs text-gray-700 dark:text-zinc-500 mb-2 mt-3">경험치 히스토리 (7일)</p>
-            <div className="flex-1 flex items-center justify-center text-xs text-gray-300 dark:text-zinc-600 text-center leading-relaxed">
-              캐릭터를 추가해주세요
-            </div>
+      <div className="character-card bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden lg:h-full flex flex-col">
+        <CardHeader title="캐릭터 정보" className="shrink-0" />
+        {/* 빈 상태에서는 경험치 히스토리 칸을 두지 않고 카드 전체를 안내에 쓴다
+            (보여줄 히스토리가 없는데 칸만 비워두면 공간만 먹는다) */}
+        <div className="flex px-4 py-4 flex-1 lg:min-h-[185px] items-center justify-center gap-5">
+          <div className="w-28 h-28 rounded-xl shrink-0 overflow-hidden bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-2xl text-gray-300 dark:text-zinc-600">?</div>
+          <div className="flex flex-col items-center gap-3 min-w-0">
+            <p className="text-sm text-gray-400 dark:text-zinc-500 text-center break-keep leading-relaxed">
+              아래 표는 <span className="font-semibold text-orange-400 dark:text-orange-300">예시 캐릭터</span> 기준이에요.<br />
+              캐릭터를 추가하여 <span className="font-semibold text-orange-400 dark:text-orange-300">정확한 효율</span>을 확인하세요.
+            </p>
+            {onAdd && (
+              <button
+                onClick={onAdd}
+                className="px-4 py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold transition-colors cursor-pointer whitespace-nowrap"
+              >캐릭터 추가 +</button>
+            )}
           </div>
         </div>
       </div>

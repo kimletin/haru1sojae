@@ -1,7 +1,7 @@
 'use client';
 
 import { InputValues } from '@/types';
-import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getPremiumMomentumExp, getPremiumMomentumPrice, getPrimeMomentumExp, getPrimeMomentumPrice, getMasterLabelPlusExp, getMasterLabelPlusPrice, getDoping30Tiers, MEKABERRY_MIN_LEVEL, getMagnifierExp, getYetiMagnifierExp, getJungpenPrice } from '@/lib/calculator';
+import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getPremiumMomentumExp, getPremiumMomentumPrice, getPrimeMomentumExp, getPrimeMomentumPrice, getMasterLabelPlusExp, getMasterLabelPlusPrice, getDoping30Tiers, MEKABERRY_MIN_LEVEL, getMagnifierExp, getYetiMagnifierExp, getJungpenPrice, getJungpenMesoName, JUNGPEN_MEPO_NAME } from '@/lib/calculator';
 import Num from '@/components/ui/Num';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
@@ -39,15 +39,15 @@ const TIP_TITLE = 'text-orange-200 font-semibold mb-0.5';
 const BM_TIP = (
   <>
     <div className={TIP_TITLE}>에픽 던전 세라자르 주화</div>
-    <div className="text-gray-200 mb-1.5">보너스 보상의 <span className="text-orange-300">세라자르 주화 4개</span>가 반영되어, 주화 가치만큼 비용에서 차감해 계산합니다.</div>
+    <div className="text-gray-200 mb-1.5">보너스 보상의 <span className="text-orange-300">세라자르 주화 4개</span>가 반영되어, 주화 가치만큼 비용에서 차감해 계산해요.</div>
     <div className={TIP_TITLE}>마스터라벨 성장 플러스</div>
-    <div className="text-gray-200">입력한 마라벨 비용은 마스터라벨 <span className="text-orange-300">190일</span>·성장 플러스 <span className="text-orange-300">90일</span>의 기간 차이를 반영해 <span className="text-orange-300">90/190(약 47%)</span>만 가격에 합산됩니다.</div>
+    <div className="text-gray-200">입력한 마라벨 비용은 마스터라벨 <span className="text-orange-300">190일</span>·성장 플러스 <span className="text-orange-300">90일</span>의 기간 차이를 반영해 <span className="text-orange-300">90/190(약 47%)</span>만 가격에 합산돼요.</div>
   </>
 );
 const EVENT_BM_TIP = (
   <>
     <div className={TIP_TITLE}>패스 내 아이템 계산 기준</div>
-    <div className="text-gray-200">패스에 포함된 <span className="text-orange-300">경험치 쿠폰</span>은 부스터류를 쓰지 않은 순수 사냥 경험치 기준으로, <span className="text-orange-300">부스터류</span>는 입력한 <span className="text-orange-300">추가 경험치 획득량</span>을 적용해 계산합니다.</div>
+    <div className="text-gray-200">패스에 포함된 <span className="text-orange-300">경험치 쿠폰</span>은 부스터류를 쓰지 않은 순수 사냥 경험치 기준으로, <span className="text-orange-300">부스터류</span>는 입력한 <span className="text-orange-300">추가 경험치 획득량</span>을 적용해 계산해요.</div>
   </>
 );
 
@@ -168,8 +168,8 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0, parkBonuse
     { name: '혈맹의 반지(메포)', ...effRow(base30d * 0.1,  mepoToMeso(5900,  inputs.mesoMarketRate)) },
     { name: '경험치 부스트링(메소)', ...effRow(base30d * 0.15, inputs.priceBoostringMeso) },
     { name: '경험치 부스트링(메포)', ...effRow(base30d * 0.15, mepoToMeso(29900, inputs.mesoMarketRate)) },
-    { name: '정령의 펜던트(메소)',          ...effRow(base30d * 0.3,  getJungpenPrice(inputs)) },
-    { name: '정령의 펜던트(메포)',          ...effRow(base30d * 0.3,  mepoToMeso(49900, inputs.mesoMarketRate)) },
+    { name: getJungpenMesoName(inputs),     ...effRow(base30d * 0.3,  getJungpenPrice(inputs)) },
+    { name: JUNGPEN_MEPO_NAME,              ...effRow(base30d * 0.3,  mepoToMeso(49900, inputs.mesoMarketRate)) },
   ];
 
   const epicName = inputs.epicDungeonZone;

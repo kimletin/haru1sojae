@@ -6,6 +6,16 @@ export interface UpdateEntry {
 
 export const UPDATES: UpdateEntry[] = [
   {
+    date: '2026.11.02.',
+    title: '기능/UI 개선',
+    items: [
+      '캐릭터를 추가하지 않아도 예시 캐릭터 기준 효율표 노출',
+      '정보 수정에서 정령의 펜던트(메소) 기간 선택 가능하도록 개선',
+      '모바일에서 캐릭터 슬롯 순서 변경 가능하도록 개선',
+      '캐릭터 슬롯이 많거나 닉네임이 길 때 슬롯 단위로 줄바꿈되도록 개선',
+    ],
+  },
+  {
     date: '2026.10.15.',
     title: 'KMST ver.1.2.207 업데이트',
     items: [
