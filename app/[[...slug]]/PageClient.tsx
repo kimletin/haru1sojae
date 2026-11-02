@@ -15,6 +15,7 @@ import HuntingGroundTab from '@/components/hunt/HuntingGroundTab';
 import InfoCenterTab from '@/components/info/InfoCenterTab';
 import AddCharacterPrompt from '@/components/ui/AddCharacterPrompt';
 import HomeCardSection from '@/components/home/HomeCardSection';
+import NoticeBanner from '@/components/home/NoticeBanner';
 import PrivacyTab from '@/components/privacy/PrivacyTab';
 import CharacterSearchModal, { type CharacterInfo } from '@/components/character/CharacterSearchModal';
 import CharacterCard, { type HistoryPoint, type Ranking } from '@/components/table/CharacterCard';
@@ -809,6 +810,7 @@ export default function Home() {
         </div>
       ) : isHome ? (
       <div className="flex flex-col items-center justify-center gap-4 px-4 py-6 text-center">
+        <NoticeBanner onNavigate={href => { if (href === '/privacy') goPrivacy(); }} />
         <div className="relative w-full max-w-[905px] aspect-[905/300] rounded-2xl overflow-hidden shadow-sm">
           <img
             src={`/main/${assetSlug('main banner')}.webp`}
