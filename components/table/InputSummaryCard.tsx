@@ -9,7 +9,8 @@ import type { InputValues, CharMeta } from '@/types';
 interface Props {
   inputs: InputValues;
   meta: CharMeta | null;
-  onEditInfo: () => void;
+  /** 없으면 수정 버튼을 그리지 않는다 — 예시 화면처럼 고칠 대상이 없을 때 */
+  onEditInfo?: () => void;
 }
 
 function toTimeStr(sessions: number): string {
@@ -57,6 +58,7 @@ export default function InputSummaryCard({ inputs, meta: _meta, onEditInfo }: Pr
     // 데스크톱에서 캐릭터 카드와 높이를 맞추기 위해 h-full (부모가 items-stretch)
     <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-100 dark:border-zinc-700 overflow-hidden lg:h-full flex flex-col">
       <CardHeader title="입력 정보" className="relative">
+        {onEditInfo && (
         <button
           onClick={onEditInfo}
           aria-label="정보 수정"
@@ -64,6 +66,7 @@ export default function InputSummaryCard({ inputs, meta: _meta, onEditInfo }: Pr
         >
           <EditIcon />
         </button>
+        )}
       </CardHeader>
       {/* 3열 2행 정사각 박스 그리드 */}
       <div className="grid grid-cols-3 gap-2 px-4 py-3">

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Noto_Sans_KR } from 'next/font/google';
 import AdSenseScript from '@/components/ui/AdSenseScript';
+import { HOME_TITLE, DEFAULT_DESCRIPTION, SITE_NAME } from '@/data/routeMeta';
 import './globals.css';
 
 const notoSansKR = Noto_Sans_KR({
@@ -19,23 +20,22 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://haru1sojae.kr';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  // 서버 <title>은 꼬리표 없이(구글 검색결과용). 방문자 탭의 document.title은
-  // PageClient에서 '… | 하루1소재' 꼬리표를 따로 설정한다(클라 한정).
-  title: '하루1소재',
-  description: '메이플스토리 경험치 효율 시뮬레이터',
+  // 제목·설명의 단일 출처는 data/routeMeta.ts — 서버 <title>과 방문자 탭 제목이 같은 값을 쓴다
+  title: HOME_TITLE,
+  description: DEFAULT_DESCRIPTION,
   icons: { icon: '/icon.png' },
   openGraph: {
-    title: '하루1소재',
-    description: '메이플스토리 경험치 효율 시뮬레이터',
-    siteName: '하루1소재',
+    title: HOME_TITLE,
+    description: DEFAULT_DESCRIPTION,
+    siteName: SITE_NAME,
     url: SITE_URL,
     locale: 'ko_KR',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: '하루1소재',
-    description: '메이플스토리 경험치 효율 시뮬레이터',
+    title: HOME_TITLE,
+    description: DEFAULT_DESCRIPTION,
   },
 };
 

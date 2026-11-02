@@ -13,16 +13,16 @@ import ExpInfoTab from '@/components/exp/ExpInfoTab';
 import ExpContentsTab, { CONTENT_KEYS } from '@/components/expContents/ExpContentsTab';
 import HuntingGroundTab from '@/components/hunt/HuntingGroundTab';
 import InfoCenterTab from '@/components/info/InfoCenterTab';
-import AddCharacterPrompt from '@/components/ui/AddCharacterPrompt';
 import HomeCardSection from '@/components/home/HomeCardSection';
 import NoticeBanner from '@/components/home/NoticeBanner';
+import { routeTitle, NOT_FOUND_TITLE } from '@/data/routeMeta';
 import PrivacyTab from '@/components/privacy/PrivacyTab';
 import CharacterSearchModal, { type CharacterInfo } from '@/components/character/CharacterSearchModal';
 import CharacterCard, { type HistoryPoint, type Ranking } from '@/components/table/CharacterCard';
 import { SunIcon, MoonIcon, TabIcon } from '@/components/ui/Icons';
 import type { CharMeta } from '@/types';
 import { DEFAULT_INPUTS } from '@/data/defaults';
-import { getDefaultHunting } from '@/data/huntingGrounds';
+import { getDefaultHunting, HUNTING_REGIONS } from '@/data/huntingGrounds';
 import { getMonsterParkZone } from '@/data/monsterPark';
 import { getEpicDungeonZone } from '@/data/epicDungeonZones';
 
@@ -108,6 +108,56 @@ const PARAM_TO_TAB: Record<string, Tab> = Object.fromEntries(
   Object.entries(TAB_PARAM).map(([k, v]) => [v, k as Tab])
 );
 
+/** 레벨에 맞는 초기 입력값. 사냥터·에픽 던전·몬스터파크가 그 레벨에서 갈 수 있는 곳으로 정해진다. */
+function getInitialInputs(level: number): InputValues {
+  const charLevel = Math.min(Math.max(level, 260), 300);
+  const { region, ground } = getDefaultHunting(charLevel);
+  const epicZone = getEpicDungeonZone(charLevel); // 입장 가능한 가장 높은 에픽 던전 (data/epicDungeonZones.ts)
+  return {
+    ...DEFAULT_INPUTS,
+    charLevel,
+    huntingRegion: region,
+    huntingGround: ground.name,
+    huntingMobs: ground.mobs,
+    monsterLevel: ground.mobs[0].level,
+    mobCount: ground.mobs.reduce((s, m) => s + m.count, 0),
+    boosterMonsterLevel: ground.boosterLevel ?? ground.mobs[ground.mobs.length - 1].level,
+    epicDungeonZone: epicZone,
+    monsterParkZone: getMonsterParkZone(charLevel),
+  };
+}
+
+/** 캐릭터를 추가하지 않은 방문자에게 보여줄 예시 값. 빈 화면 대신 실제로 계산된 표를 보여준다.
+ *  크롤러도 localStorage가 없어 **늘 이 화면**을 보므로 효율표 내용이 그대로 색인된다.
+ *  실제 캐릭터 추가와 같은 함수를 쓰므로 에픽·몬파·사냥터가 레벨에 맞게 따라온다 —
+ *  레벨만 바꾸면 나머지는 알아서 맞는다. 캐릭터 카드는 비워 둬서 내 데이터가 아님이 드러나게 한다. */
+const DEMO_LEVEL = 285;
+/** 예시 사냥터는 데이터에서 찾아 쓴다 — 마릿수·몹 레벨이 바뀌어도 따라온다.
+ *  이름이 바뀌어 못 찾으면 레벨 기본 사냥터가 그대로 쓰인다. */
+const DEMO_GROUND = HUNTING_REGIONS
+  .find(r => r.name === '카르시온')?.grounds
+  .find(g => g.name === '잔잔한 해안가 2');
+const DEMO_INPUTS: InputValues = {
+  ...getInitialInputs(DEMO_LEVEL),
+  dailySessions: 4,     // 일 평균 재획 2시간 (30분 단위로 센다)
+  masterLabelCount: 5,  // 마스터라벨 5부위
+  ...(DEMO_GROUND ? {
+    huntingRegion: '카르시온',
+    huntingGround: DEMO_GROUND.name,
+    huntingMobs: DEMO_GROUND.mobs,
+    monsterLevel: DEMO_GROUND.mobs[0].level,
+    mobCount: DEMO_GROUND.mobs.reduce((s, m) => s + m.count, 0),
+    boosterMonsterLevel: DEMO_GROUND.boosterLevel ?? DEMO_GROUND.mobs[DEMO_GROUND.mobs.length - 1].level,
+  } : {}),
+};
+const DEMO_RANKED = calcAllItems(DEMO_INPUTS, 0);
+
+// 탭 제목은 서버 <title>과 같은 값을 쓴다 — 나누면 구글이 이쪽 값을 읽어 키워드가 지워진다
+// (사유는 data/routeMeta.ts 머리말 참고). 홈은 slug 없이, 모르는 주소는 404 제목.
+function setTitle(slug?: string | null) {
+  document.title = routeTitle(slug) ?? NOT_FOUND_TITLE;
+}
+
 function kstToday(): string {
   const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
   return kst.toISOString().slice(0, 10);
@@ -141,6 +191,8 @@ export default function Home() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dropGap, setDropGap] = useState<number | null>(null); // 삽입 위치(0~numSlots)
+  // 슬롯 칩의 실제 위치를 재서 삽입 지점을 정한다(포인터 좌표 → 칩 사이 간격)
+  const slotRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [numSlots, setNumSlots] = useState(DEFAULT_NUM_SLOTS);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -176,19 +228,25 @@ export default function Home() {
       if (tab === '이벤트/컨텐츠' && parts.length === 2 && CONTENT_KEYS.includes(parts[1])) subKey = parts[1];
       else tab = null;
     }
+    // /cont로 들어오면 첫 메뉴로 보낸다 — 고르라는 안내만 띄우지 않고 바로 쓸 수 있게.
+    // replace라 뒤로 가기 기록에 /cont가 남지 않는다(돌아왔다가 다시 튕기는 일이 없다).
+    if (tab === '이벤트/컨텐츠' && !subKey) {
+      subKey = CONTENT_KEYS[0];
+      window.history.replaceState({}, '', '/' + TAB_PARAM[tab] + '/' + subKey);
+    }
     setContentKey(subKey);
     if (slug === '') {
       setIsHome(true); setIsPrivacy(false); setNotFound(false);
-      document.title = '하루1소재';
+      setTitle(null);
     } else if (slug === 'privacy') {
       setIsPrivacy(true); setIsHome(false); setNotFound(false);
-      document.title = '개인정보처리방침 | 하루1소재';
+      setTitle('privacy');
     } else if (tab) {
       setActiveTab(tab); setIsHome(false); setIsPrivacy(false); setNotFound(false);
-      document.title = `${tab} | 하루1소재`;
+      setTitle(TAB_PARAM[tab]);
     } else {
       setNotFound(true); setIsHome(false); setIsPrivacy(false);
-      document.title = '페이지를 찾을 수 없습니다 | 하루1소재';
+      document.title = NOT_FOUND_TITLE;
     }
   }, []);
 
@@ -239,7 +297,7 @@ export default function Home() {
 
   useEffect(() => {
     if (isHome || isPrivacy || notFound) return;
-    document.title = `${activeTab} | 하루1소재`;
+    setTitle(TAB_PARAM[activeTab]);
   }, [activeTab, isHome, isPrivacy, notFound]);
 
   useEffect(() => {
@@ -255,9 +313,11 @@ export default function Home() {
     setIsHome(false);
     setMenuOpen(false);
     setActiveTab(tab);
-    setContentKey(null); // 상단바로 들어가면 이벤트/컨텐츠는 메뉴 화면(/cont)부터
-    document.title = `${tab} | 하루1소재`;
-    const url = '/' + TAB_PARAM[tab];
+    // 상단바로 들어가도 이벤트/컨텐츠는 첫 메뉴부터 (주소도 /cont/<첫 키>로 맞춘다)
+    const subKey = tab === '이벤트/컨텐츠' ? CONTENT_KEYS[0] : null;
+    setContentKey(subKey);
+    setTitle(TAB_PARAM[tab]);
+    const url = '/' + TAB_PARAM[tab] + (subKey ? '/' + subKey : '');
     if (window.location.pathname !== url) window.history.pushState({}, '', url);
   };
 
@@ -273,7 +333,7 @@ export default function Home() {
     setIsPrivacy(false);
     setIsHome(true);
     setMenuOpen(false);
-    document.title = '하루1소재';
+    setTitle(null);
     if (window.location.pathname !== '/') window.history.pushState({}, '', '/');
     window.scrollTo(0, 0);
   };
@@ -282,9 +342,22 @@ export default function Home() {
     setNotFound(false);
     setIsHome(false);
     setIsPrivacy(true);
-    document.title = '개인정보처리방침 | 하루1소재';
+    setTitle('privacy');
     if (window.location.pathname !== '/privacy') window.history.pushState({}, '', '/privacy');
     window.scrollTo(0, 0);
+  };
+
+  /** 포인터 위치가 가리키는 삽입 지점(0~numSlots).
+   *  칩이 여러 줄로 접히므로 **줄(y)을 먼저 보고** 같은 줄에서만 좌우(x)를 비교한다.
+   *  x만 보면 아랫줄 칩이 윗줄 칩보다 앞선 것으로 잡힌다. */
+  const gapFromPoint = (x: number, y: number): number => {
+    for (let i = 0; i < numSlots; i++) {
+      const r = slotRefs.current[i]?.getBoundingClientRect();
+      if (!r) continue;
+      if (y < r.top) return i;                              // 포인터가 이 칩보다 윗줄 → 앞에 삽입
+      if (y <= r.bottom && x < r.left + r.width / 2) return i; // 같은 줄이면 가운데를 경계로
+    }
+    return numSlots;
   };
 
   const handleChange = (key: keyof InputValues, value: number | string | boolean | MobGroup[] | PersonalBossSelections) => {
@@ -322,24 +395,6 @@ export default function Home() {
     newNames[idx] = name;
     setPresetNames(newNames);
     saveNames(newNames);
-  };
-
-  const getInitialInputs = (level: number): InputValues => {
-    const charLevel = Math.min(Math.max(level, 260), 300);
-    const { region, ground } = getDefaultHunting(charLevel);
-    const epicZone = getEpicDungeonZone(charLevel); // 입장 가능한 가장 높은 에픽 던전 (data/epicDungeonZones.ts)
-    return {
-      ...DEFAULT_INPUTS,
-      charLevel,
-      huntingRegion: region,
-      huntingGround: ground.name,
-      huntingMobs: ground.mobs,
-      monsterLevel: ground.mobs[0].level,
-      mobCount: ground.mobs.reduce((s, m) => s + m.count, 0),
-      boosterMonsterLevel: ground.boosterLevel ?? ground.mobs[ground.mobs.length - 1].level,
-      epicDungeonZone: epicZone,
-      monsterParkZone: getMonsterParkZone(charLevel),
-    };
   };
 
   const handleCharacterConfirm = (info: CharacterInfo, inputs: InputValues) => {
@@ -850,29 +905,17 @@ export default function Home() {
       ) : (
       <div className="mx-auto px-4 py-6">
         <div className="w-full max-w-[905px] mx-auto">
+          {/* flex-wrap — 슬롯이 많거나 닉네임이 길면 칩 단위로 다음 줄에 넘긴다.
+              없으면 칩이 눌려 닉네임이 칩 안에서 줄바꿈돼 편집이 어려워진다. */}
           {activeTab !== '정보 센터' && (
-          <div className="mb-2 flex items-center gap-1.5">
-            <span className="text-xs text-gray-400 dark:text-zinc-500">캐릭터</span>
+          <div className="mb-2 flex flex-wrap items-center gap-1.5">
+            <span className="shrink-0 text-xs text-gray-400 dark:text-zinc-500">캐릭터</span>
             {Array.from({ length: numSlots }, (_, i) => (
               isEditMode ? (
                 <div
                   key={i}
-                  draggable
-                  onDragStart={() => setDragIndex(i)}
-                  onDragOver={e => {
-                    e.preventDefault();
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    setDropGap(e.clientX > rect.left + rect.width / 2 ? i + 1 : i);
-                  }}
-                  onDrop={() => {
-                    if (dragIndex !== null && dropGap !== null) {
-                      const to = dropGap > dragIndex ? dropGap - 1 : dropGap;
-                      handleReorder(dragIndex, to);
-                    }
-                    setDragIndex(null); setDropGap(null);
-                  }}
-                  onDragEnd={() => { setDragIndex(null); setDropGap(null); }}
-                  className={'relative ' + (dragIndex === i ? 'opacity-40' : '')}
+                  ref={el => { slotRefs.current[i] = el; }}
+                  className={'relative shrink-0 ' + (dragIndex === i ? 'opacity-40' : '')}
                 >
                   {dragIndex !== null && dropGap === i && (
                     <span className="absolute -left-[5px] top-0 bottom-0 w-[3px] bg-orange-500 rounded-full pointer-events-none" />
@@ -888,14 +931,36 @@ export default function Home() {
                         : 'border-gray-200 dark:border-zinc-600 bg-gray-50 dark:bg-zinc-800')
                     }
                   >
-                    <span className="px-1.5 cursor-grab text-gray-400 dark:text-zinc-500">
+                    {/* 드래그는 이 손잡이에서만 받는다 — 칩 전체로 받으면 스크롤하려다 순서가 바뀐다.
+                        포인터 이벤트라 마우스·터치가 같은 코드로 동작한다(HTML5 DnD는 터치에서 안 뜬다).
+                        touch-none은 손잡이에만 걸어 페이지 스크롤은 그대로 둔다. */}
+                    <span
+                      onPointerDown={e => {
+                        e.preventDefault();
+                        e.currentTarget.setPointerCapture(e.pointerId);
+                        setDragIndex(i); setDropGap(i);
+                      }}
+                      onPointerMove={e => {
+                        if (dragIndex === null) return;
+                        setDropGap(gapFromPoint(e.clientX, e.clientY));
+                      }}
+                      onPointerUp={() => {
+                        if (dragIndex !== null && dropGap !== null) {
+                          const to = dropGap > dragIndex ? dropGap - 1 : dropGap;
+                          if (to !== dragIndex) handleReorder(dragIndex, to);
+                        }
+                        setDragIndex(null); setDropGap(null);
+                      }}
+                      onPointerCancel={() => { setDragIndex(null); setDropGap(null); }}
+                      className="px-2.5 lg:px-1.5 self-stretch flex items-center cursor-grab active:cursor-grabbing touch-none select-none text-gray-400 dark:text-zinc-500"
+                    >
                       <svg width="8" height="13" viewBox="0 0 8 13" fill="currentColor">
                         <circle cx="2" cy="2" r="1.2"/><circle cx="6" cy="2" r="1.2"/>
                         <circle cx="2" cy="6.5" r="1.2"/><circle cx="6" cy="6.5" r="1.2"/>
                         <circle cx="2" cy="11" r="1.2"/><circle cx="6" cy="11" r="1.2"/>
                       </svg>
                     </span>
-                    <span className="px-1.5 text-gray-700 dark:text-zinc-300 font-semibold">{presetNames[i]}</span>
+                    <span className="px-1.5 text-gray-700 dark:text-zinc-300 font-semibold whitespace-nowrap">{presetNames[i]}</span>
                     <button
                       onClick={() => handleDeleteSlot(i)}
                       className={`px-1.5 transition-colors cursor-pointer ${numSlots === 1 ? 'text-gray-200 dark:text-zinc-700 cursor-not-allowed' : 'text-gray-400 hover:text-red-500 dark:hover:text-red-400'}`}
@@ -909,7 +974,7 @@ export default function Home() {
                   key={i}
                   onClick={() => handlePresetChange(i)}
                   className={
-                    'h-7 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ' +
+                    'h-7 px-2 rounded-lg text-xs font-semibold transition-colors cursor-pointer border shrink-0 whitespace-nowrap ' +
                     (activePreset === i
                       ? 'bg-orange-500 text-white border-orange-500'
                       : (charMetas[i] && !charMetas[i].ocid
@@ -942,7 +1007,36 @@ export default function Home() {
           )}
           {activeTab === '경험치 효율표' ? (
             numSlots === 0 ? (
-              <AddCharacterPrompt onAdd={handleAddCharacter} />
+            /* 캐릭터가 없을 때: 빈 화면 대신 예시 입력값으로 계산한 표를 그대로 보여준다.
+               캐릭터 카드만 비워 두고 거기에 추가 버튼을 둬서 내 데이터가 아님이 드러나게 한다. */
+            <div className="flex flex-col gap-4">
+                <div className="flex flex-col lg:flex-row gap-4 lg:items-stretch">
+                  <div className="w-full lg:w-[560px] lg:shrink-0">
+                    <CharacterCard
+                      name=""
+                      level={DEMO_LEVEL}
+                      meta={null}
+                      isEmpty
+                      history={[]}
+                      ranking={null}
+                      loading={false}
+                      onAdd={handleAddCharacter}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    {/* 예시라 고칠 대상이 없다 — onEditInfo를 주지 않으면 수정 버튼이 안 그려진다 */}
+                    <InputSummaryCard inputs={DEMO_INPUTS} meta={null} />
+                  </div>
+                </div>
+                <div className="flex flex-col lg:flex-row gap-4 lg:items-start">
+                  <div className="w-full lg:w-[560px] lg:shrink-0">
+                    <EfficiencyTab inputs={DEMO_INPUTS} onChange={() => {}} monsterParkBonus={0} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <RankingPanel items={DEMO_RANKED} />
+                  </div>
+                </div>
+            </div>
             ) : (
             <div className="flex flex-col gap-4">
                 {/* 상단: 캐릭터카드 + 입력정보 좌우 (lg:items-stretch로 높이 맞춤) */}

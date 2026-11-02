@@ -1,25 +1,25 @@
 import type { Metadata } from 'next';
 import PageClient from './PageClient';
+import { routeTitle, ROUTE_DESCRIPTIONS } from '@/data/routeMeta';
 
-// 라우트별 검색결과 제목(서버 <title>) — 구글이 읽는 값. 꼬리표 없이 라벨만.
-// (방문자 탭의 document.title은 PageClient에서 '… | 하루1소재' 꼬리표를 따로 설정)
-// 라벨은 PageClient 탭 이름과 일치. 홈/그 외는 layout 기본 '하루1소재'. openGraph는 layout 유지.
-const ROUTE_TITLES: Record<string, string> = {
-  table: '경험치 효율표',
-  cont: '이벤트/컨텐츠',
-  exp: '경험치 정보',
-  hunt: '사냥터 정보',
-  info: '정보 센터',
-  privacy: '개인정보처리방침',
-};
-
+// 제목·설명은 data/routeMeta.ts가 단일 출처다 — PageClient의 document.title도 같은 값을 쓴다.
+// (사유는 그 파일 머리말 참고: 서버/클라 제목을 나누면 구글이 클라 값을 읽어 키워드가 지워진다)
 export async function generateMetadata(
   { params }: { params: Promise<{ slug?: string[] }> }
 ): Promise<Metadata> {
   const { slug } = await params;
   const key = slug?.[0];
-  const title = key ? ROUTE_TITLES[key] : undefined;
-  return title ? { title } : {};
+  // /cont/<키>처럼 하위 경로도 각각 고유 주소라 그대로 canonical로 쓴다
+  const path = slug?.length ? '/' + slug.join('/') : '/';
+
+  const title = routeTitle(key);
+  const description = key ? ROUTE_DESCRIPTIONS[key] : undefined;
+
+  return {
+    ...(title ? { title } : {}),
+    ...(description ? { description } : {}),
+    alternates: { canonical: path },
+  };
 }
 
 export default function Page() {

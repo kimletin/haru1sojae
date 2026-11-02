@@ -184,6 +184,16 @@ export function getJungpenPrice(inputs: InputValues): number {
   return inputs.priceJungpenMeso / ((inputs.jungpenDays ?? 30) / 30);
 }
 
+/** 정펜(메소) 항목명 — 어느 기간 가격을 넣었는지 이름에 드러낸다.
+ *  가격은 위에서 30일 기준으로 환산되지만, 입력한 쪽이 30일인지 90일인지는 보여야 한다.
+ *  ⚠️ 효율표(EfficiencyTab)와 가성비 순위(calcAllItems)가 같은 이름을 써야 같은 행으로 보인다. */
+export function getJungpenMesoName(inputs: InputValues): string {
+  return `정령의 펜던트(${inputs.jungpenDays ?? 30}일)(메소)`;
+}
+
+/** 정펜(메포)은 30일 고정 상품이라 기간이 바뀌지 않는다 — 메소 쪽과 나란히 보이도록 기간을 박아 둔다 */
+export const JUNGPEN_MEPO_NAME = '정령의 펜던트(30일)(메포)';
+
 export const MEKABERRY_MIN_LEVEL = 280;
 
 /** 메카베리 농장 경험치 */
@@ -409,10 +419,10 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
     item('부티크 사냥 칭호',           '30일 도핑', base30d * 1,    inputs.priceHunterTitle),
     item('혈맹의 반지(메소)',    '30일 도핑', base30d * 0.1,  inputs.priceBloodRingMeso),
     item('경험치 부스트링(메소)',       '30일 도핑', base30d * 0.15, inputs.priceBoostringMeso),
-    item('정령의 펜던트(메소)',           '30일 도핑', base30d * 0.3,  getJungpenPrice(inputs)),
+    item(getJungpenMesoName(inputs),      '30일 도핑', base30d * 0.3,  getJungpenPrice(inputs)),
     item('혈맹의 반지(메포)',    '30일 도핑', base30d * 0.1,  bloodRingMetaPrice),
     item('경험치 부스트링(메포)',       '30일 도핑', base30d * 0.15, boostringMetaPrice),
-    item('정령의 펜던트(메포)',           '30일 도핑', base30d * 0.3,  jungpenMetaPrice),
+    item(JUNGPEN_MEPO_NAME,               '30일 도핑', base30d * 0.3,  jungpenMetaPrice),
     // BM
     item(`${epicName} 0→1단계`, 'BM', stage01Exp, stage01Price),
     item(`${epicName} 1→2단계`, 'BM', stage12Exp, stage12Price),
