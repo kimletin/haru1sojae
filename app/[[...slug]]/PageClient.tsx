@@ -16,6 +16,7 @@ import InfoCenterTab from '@/components/info/InfoCenterTab';
 import HomeCardSection from '@/components/home/HomeCardSection';
 import NoticeBanner from '@/components/home/NoticeBanner';
 import { routeTitle, NOT_FOUND_TITLE } from '@/data/routeMeta';
+import AdSenseScript from '@/components/ui/AdSenseScript';
 import PrivacyTab from '@/components/privacy/PrivacyTab';
 import CharacterSearchModal, { type CharacterInfo } from '@/components/character/CharacterSearchModal';
 import CharacterCard, { type HistoryPoint, type Ranking } from '@/components/table/CharacterCard';
@@ -745,8 +746,14 @@ export default function Home() {
 
   if (!mounted) return <div className="min-h-dvh bg-gray-50 dark:bg-black" />;
 
+  // 광고는 읽을 콘텐츠가 있는 화면에만 띄운다 — 404(이동 목적 화면)·개인정보처리방침(법률 고지)은 제외.
+  // mounted 게이트 뒤에 있으므로 내용이 그려지기 전 빈 화면에도 붙지 않는다.
+  // (2026-11 애드센스 반려 사유: "게시자 콘텐츠가 없는 화면에 Google 게재 광고")
+  const showAds = !notFound && !isPrivacy;
+
   return (
     <div className="min-h-dvh flex flex-col bg-gray-50 dark:bg-black">
+      {showAds && <AdSenseScript />}
       {showSearchModal && (
         <CharacterSearchModal
           onConfirm={handleCharacterConfirm}
@@ -852,9 +859,11 @@ export default function Home() {
 
       <div id="app-scroll" className="flex-1 flex flex-col bg-gray-50 dark:bg-black">
       <div className="flex-1 flex flex-col">
-      <div className="flex-1 pb-10">
+      {/* 404일 때만 flex 컬럼으로 — 안쪽 404 블록이 남은 높이를 받아 세로 가운데로 온다.
+          다른 탭은 기존대로 블록 흐름을 쓴다(레이아웃에 영향 없게) */}
+      <div className={'flex-1 pb-10' + (notFound ? ' flex flex-col' : '')}>
       {notFound ? (
-        <div className="flex flex-col items-center justify-center gap-2 text-center px-4 py-24">
+        <div className="flex-1 flex flex-col items-center justify-center gap-2 text-center px-4 py-10">
           <img src="/404.png" alt="404" />
           <p className="text-4xl font-bold text-gray-800 dark:text-zinc-100">404</p>
           <p className="text-sm text-gray-500 dark:text-zinc-400">페이지를 찾을 수 없습니다.</p>
