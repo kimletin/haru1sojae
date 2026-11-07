@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import { Noto_Sans_KR } from 'next/font/google';
-import AdSenseScript from '@/components/ui/AdSenseScript';
 import { HOME_TITLE, DEFAULT_DESCRIPTION, SITE_NAME } from '@/data/routeMeta';
 import './globals.css';
 
@@ -54,9 +53,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script type="text/javascript" src="https://openapi.nexon.com/js/analytics.js?app_id=301803" async></script>
       </head>
       <body className={`min-h-screen bg-gray-50 text-gray-900 antialiased font-bold overflow-x-hidden ${notoSansKR.className}`}>
+        {/* ⚠️ 애드센스 로더는 여기 두지 않는다 — layout은 404(not-found)까지 감싸므로
+            콘텐츠가 없는 화면에도 광고가 붙어 "게시자 콘텐츠가 없는 화면에 Google 게재 광고"
+            정책 위반이 된다(2026-11 반려 사유). PageClient가 화면을 보고 조건부로 띄운다. */}
         {children}
-        {/* 애드센스 로더 — hydration 후 <head>에 직접 주입 (사유는 컴포넌트 주석 참고) */}
-        <AdSenseScript />
       </body>
     </html>
   );
