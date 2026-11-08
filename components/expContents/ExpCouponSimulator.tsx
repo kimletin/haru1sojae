@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import CardHeader from '@/components/ui/CardHeader';
 import Num from '@/components/ui/Num';
 import SimNumInput from '@/components/expContents/SimNumInput';
-import { LEVEL_EXP } from '@/data/levelExp';
+import { LEVEL_EXP, MIN_LEVEL, MAX_LEVEL } from '@/data/levelExp';
 import { SUPER_EXP_COUPON } from '@/data/superExpCoupon';
 import { calcCouponByCount, calcCouponByTarget, findStartForTarget, type RevStartResult } from '@/components/expContents/simMath';
 
@@ -60,7 +60,7 @@ export default function ExpCouponSimulator({ charLevel, hasCharacter, todayExpRa
       setCouponSimResult({ type: '개수', gainedExp: res.gainedExp, gainPct: res.gainPct, finalLevel: res.finalLevel, finalPct: res.finalPct });
     } else {
       const targetLv = parseInt(couponSimTarget);
-      if (!targetLv || targetLv <= lv || (targetLv < 300 && !LEVEL_EXP[targetLv])) return;
+      if (!targetLv || targetLv <= lv || (targetLv < MAX_LEVEL && !LEVEL_EXP[targetLv])) return;
       const res = calcCouponByTarget(lv, expPct, targetLv, couponSimBeyond, expTable);
       if (!res) return;
       setCouponSimResult({ type: '목표', gainedExp: res.gainedExp, gainPct: res.gainPct, finalLevel: res.finalLevel, finalPct: res.finalPct, count: res.count });
@@ -70,7 +70,7 @@ export default function ExpCouponSimulator({ charLevel, hasCharacter, todayExpRa
   const handleCouponRevCalc = () => {
     const targetLv = parseInt(couponRevTarget);
     const count = parseInt(couponRevCount);
-    if (!targetLv || targetLv < 261 || targetLv > 300) return;
+    if (!targetLv || targetLv < MIN_LEVEL + 1 || targetLv > MAX_LEVEL) return;
     if (!count || count < 1 || count > 99999) return;
     const res = findStartForTarget(targetLv, (sl, sp) => calcCouponByCount(sl, sp, count, couponRevBeyond, expTable));
     if (!res) { setCouponRevResult({ ok: false, msg: '재화가 너무 많아요 (260레벨 이전 필요)' }); return; }
@@ -142,14 +142,14 @@ export default function ExpCouponSimulator({ charLevel, hasCharacter, todayExpRa
             const target = parseInt(couponSimTarget);
             let reason: string | null = null;
             if (couponSimLevel === '' || isNaN(lv)) reason = '레벨을 입력해주세요';
-            else if (lv < 260 || lv > 299) reason = '레벨이 올바르지 않아요';
+            else if (lv < MIN_LEVEL || lv > MAX_LEVEL - 1) reason = '레벨이 올바르지 않아요';
             else if (couponSimExpPct !== '' && (isNaN(expPct) || expPct < 0 || expPct > 100)) reason = '경험치%가 올바르지 않아요';
             else if (couponSimMode === '개수') {
               if (couponSimCount === '' || isNaN(count)) reason = '개수를 입력해주세요';
               else if (count < 1 || count > 99999) reason = '개수가 올바르지 않아요';
             } else if (couponSimMode === '목표') {
               if (couponSimTarget === '' || isNaN(target)) reason = '목표 레벨을 입력해주세요';
-              else if (target <= lv || target > 300) reason = '목표 레벨이 올바르지 않아요';
+              else if (target <= lv || target > MAX_LEVEL) reason = '목표 레벨이 올바르지 않아요';
             }
             return (
               <button onClick={handleCouponSimCalc} disabled={!!reason} className="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
@@ -213,7 +213,7 @@ export default function ExpCouponSimulator({ charLevel, hasCharacter, todayExpRa
             const count = parseInt(couponRevCount);
             let reason: string | null = null;
             if (couponRevTarget === '' || isNaN(targetLv)) reason = '목표 레벨을 입력해주세요';
-            else if (targetLv < 261 || targetLv > 300) reason = '목표 레벨이 올바르지 않아요';
+            else if (targetLv < MIN_LEVEL + 1 || targetLv > MAX_LEVEL) reason = '목표 레벨이 올바르지 않아요';
             else if (couponRevCount === '' || isNaN(count)) reason = '개수를 입력해주세요';
             else if (count < 1 || count > 99999) reason = '개수가 올바르지 않아요';
             return (

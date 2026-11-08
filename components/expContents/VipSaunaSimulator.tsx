@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import CardHeader from '@/components/ui/CardHeader';
 import Num from '@/components/ui/Num';
 import SimNumInput from '@/components/expContents/SimNumInput';
-import { LEVEL_EXP } from '@/data/levelExp';
+import { LEVEL_EXP, MIN_LEVEL, MAX_LEVEL } from '@/data/levelExp';
 import { VIP_SAUNA_EXP } from '@/data/vipSauna';
 import { calcVipSaunaByTime, calcVipSaunaByTarget, findStartForTarget, type RevStartResult } from '@/components/expContents/simMath';
 
@@ -65,7 +65,7 @@ export default function VipSaunaSimulator({ charLevel, hasCharacter, todayExpRat
       setVipSimResult({ type: '시간', gainedExp: res.gainedExp, gainPct, finalLevel: res.finalLevel, finalPct: res.finalPct });
     } else {
       const targetLv = parseInt(vipSimTarget);
-      if (!targetLv || targetLv <= lv || (targetLv < 300 && !LEVEL_EXP[targetLv])) return;
+      if (!targetLv || targetLv <= lv || (targetLv < MAX_LEVEL && !LEVEL_EXP[targetLv])) return;
       const res = calcVipSaunaByTarget(lv, expPct, targetLv, vipSimBeyond, expTable);
       if (!res) return;
       setVipSimResult({ type: '목표', gainedExp: res.gainedExp, gainPct: res.gainPct, finalLevel: res.finalLevel, finalPct: res.finalPct, hours: res.hours, minutes: res.minutes, seconds: res.seconds });
@@ -77,7 +77,7 @@ export default function VipSaunaSimulator({ charLevel, hasCharacter, todayExpRat
     const hours = parseInt(vipRevHours) || 0;
     const minutes = parseInt(vipRevMinutes) || 0;
     const totalSeconds = hours * 3600 + minutes * 60;
-    if (!targetLv || targetLv < 261 || targetLv > 300) return;
+    if (!targetLv || targetLv < MIN_LEVEL + 1 || targetLv > MAX_LEVEL) return;
     if (totalSeconds <= 0) return;
     const res = findStartForTarget(targetLv, (sl, sp) => {
       const r = calcVipSaunaByTime(sl, sp, totalSeconds, vipRevBeyond, expTable);
@@ -156,11 +156,11 @@ export default function VipSaunaSimulator({ charLevel, hasCharacter, todayExpRat
             const minutes = parseInt(vipSimMinutes);
             let reason: string | null = null;
             if (vipSimLevel === '' || isNaN(lv)) reason = '레벨을 입력해주세요';
-            else if (lv < 260 || lv > 299) reason = '레벨이 올바르지 않아요';
+            else if (lv < MIN_LEVEL || lv > MAX_LEVEL - 1) reason = '레벨이 올바르지 않아요';
             else if (vipSimExpPct !== '' && (isNaN(expPct) || expPct < 0 || expPct > 100)) reason = '경험치%가 올바르지 않아요';
             else if (vipSimMode === '목표') {
               if (vipSimTarget === '' || isNaN(target)) reason = '목표 레벨을 입력해주세요';
-              else if (target <= lv || target > 300) reason = '목표 레벨이 올바르지 않아요';
+              else if (target <= lv || target > MAX_LEVEL) reason = '목표 레벨이 올바르지 않아요';
             } else if (vipSimMode === '시간') {
               if ((vipSimHours !== '' && (isNaN(hours) || hours < 0 || hours > 999)) || (vipSimMinutes !== '' && (isNaN(minutes) || minutes < 0 || minutes > 59))) reason = '시간이 올바르지 않아요';
               else if ((hours || 0) === 0 && (minutes || 0) === 0) reason = '시간을 입력해주세요';
@@ -231,7 +231,7 @@ export default function VipSaunaSimulator({ charLevel, hasCharacter, todayExpRat
             const m = parseInt(vipRevMinutes);
             let reason: string | null = null;
             if (vipRevTarget === '' || isNaN(targetLv)) reason = '목표 레벨을 입력해주세요';
-            else if (targetLv < 261 || targetLv > 300) reason = '목표 레벨이 올바르지 않아요';
+            else if (targetLv < MIN_LEVEL + 1 || targetLv > MAX_LEVEL) reason = '목표 레벨이 올바르지 않아요';
             else if ((vipRevHours !== '' && (isNaN(h) || h < 0 || h > 999)) || (vipRevMinutes !== '' && (isNaN(m) || m < 0 || m > 59))) reason = '시간이 올바르지 않아요';
             else if ((h || 0) === 0 && (m || 0) === 0) reason = '시간을 입력해주세요';
             return (

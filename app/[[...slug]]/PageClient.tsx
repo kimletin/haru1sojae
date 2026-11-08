@@ -23,6 +23,7 @@ import CharacterCard, { type HistoryPoint, type Ranking } from '@/components/tab
 import { SunIcon, MoonIcon, TabIcon } from '@/components/ui/Icons';
 import type { CharMeta } from '@/types';
 import { DEFAULT_INPUTS } from '@/data/defaults';
+import { MIN_LEVEL, MAX_LEVEL } from '@/data/levelExp';
 import { getDefaultHunting, HUNTING_REGIONS } from '@/data/huntingGrounds';
 import { getMonsterParkZone } from '@/data/monsterPark';
 import { getEpicDungeonZone } from '@/data/epicDungeonZones';
@@ -111,7 +112,7 @@ const PARAM_TO_TAB: Record<string, Tab> = Object.fromEntries(
 
 /** 레벨에 맞는 초기 입력값. 사냥터·에픽 던전·몬스터파크가 그 레벨에서 갈 수 있는 곳으로 정해진다. */
 function getInitialInputs(level: number): InputValues {
-  const charLevel = Math.min(Math.max(level, 260), 300);
+  const charLevel = Math.min(Math.max(level, MIN_LEVEL), MAX_LEVEL);
   const { region, ground } = getDefaultHunting(charLevel);
   const epicZone = getEpicDungeonZone(charLevel); // 입장 가능한 가장 높은 에픽 던전 (data/epicDungeonZones.ts)
   return {
@@ -408,7 +409,7 @@ export default function Home() {
     }
     handleNameChange(idx, info.name.slice(0, 12));
     const newPresets = [...presetsRef.current];
-    newPresets[idx] = { ...inputs, charLevel: Math.min(Math.max(info.level, 260), 300) };
+    newPresets[idx] = { ...inputs, charLevel: Math.min(Math.max(info.level, MIN_LEVEL), MAX_LEVEL) };
     presetsRef.current = newPresets;
     savePresets(newPresets);
     if (idx === activePresetRef.current) setInputs(newPresets[idx]);
@@ -458,7 +459,7 @@ export default function Home() {
   };
 
   const handleCharLevelUpdate = (idx: number, level: number) => {
-    const clamped = Math.min(Math.max(level, 260), 300);
+    const clamped = Math.min(Math.max(level, MIN_LEVEL), MAX_LEVEL);
     const newPresets = [...presetsRef.current];
     newPresets[idx] = { ...newPresets[idx], charLevel: clamped };
     presetsRef.current = newPresets;

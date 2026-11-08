@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import type { InputValues } from '@/types';
 import CharacterInfoStep from '@/components/character/CharacterInfoStep';
 import { lockScroll, unlockScroll } from '@/lib/scrollLock';
+import { MIN_LEVEL, MAX_LEVEL } from '@/data/levelExp';
 
 export interface CharacterInfo {
   name: string;
@@ -81,7 +82,7 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
   const getFirstError = () => {
     if (manualName.trim().length === 0) return { field: 'name'    as const, msg: '닉네임을 입력해주세요' };
     if (manualLevel === '')             return { field: 'level'   as const, msg: '레벨을 입력해주세요' };
-    if (manualLv < 260 || manualLv > 299) return { field: 'level' as const, msg: '레벨이 올바르지 않아요' };
+    if (manualLv < MIN_LEVEL || manualLv > MAX_LEVEL - 1) return { field: 'level' as const, msg: '레벨이 올바르지 않아요' };
     if (manualExpRate !== '' && (isNaN(expRateNum) || expRateNum < 0 || expRateNum > 100))
                                         return { field: 'expRate' as const, msg: '경험치가 올바르지 않아요' };
     if (manualMonsterPark !== '' && (isNaN(mpNum) || mpNum < 0 || mpNum > 100))
@@ -205,15 +206,15 @@ export default function CharacterSearchModal({ onConfirm, onClose, getInitialInp
                   </div>
                   {(() => {
                     const isDuplicate = !!result.ocid && existingOcids.includes(result.ocid);
-                    const isMaxLevel = result.level >= 300;
-                    const isTooLow = result.level < 260;
+                    const isMaxLevel = result.level >= MAX_LEVEL;
+                    const isTooLow = result.level < MIN_LEVEL;
                     return (
                       <button
                         onClick={handleNextFromSearch}
                         disabled={isMaxLevel || isDuplicate || isTooLow}
                         className="mt-2.5 w-full py-1.5 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                       >
-                        {isMaxLevel ? '만렙을 축하합니다 🎉' : isDuplicate ? '중복 캐릭터입니다' : isTooLow ? 'Lv.260까지 화이팅👏' : '다음'}
+                        {isMaxLevel ? '만렙을 축하합니다 🎉' : isDuplicate ? '중복 캐릭터입니다' : isTooLow ? `Lv.${MIN_LEVEL}까지 화이팅👏` : '다음'}
                       </button>
                     );
                   })()}

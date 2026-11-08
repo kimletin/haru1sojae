@@ -4,7 +4,7 @@ import CardHeader from '@/components/ui/CardHeader';
 import Num from '@/components/ui/Num';
 import SimNumInput from '@/components/expContents/SimNumInput';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
-import { LEVEL_EXP } from '@/data/levelExp';
+import { LEVEL_EXP, MIN_LEVEL, MAX_LEVEL } from '@/data/levelExp';
 import { MONSTER_PARK_EXP, getMonsterParkZone } from '@/data/monsterPark';
 import { calcLevelUp } from '@/components/expContents/simMath';
 import type { SundayType } from '@/types';
@@ -77,9 +77,9 @@ export default function MonsterParkSimulator({ charLevel, hasCharacter, todayExp
             <span className="text-sm text-gray-500 dark:text-zinc-400">지역</span>
             {(() => {
               const lv = parseInt(simLevel);
-              if (lv >= 300) return <span className="text-xs text-red-400 dark:text-red-500">300레벨 미만 입력해주세요</span>;
-              if (lv >= 260) return <span className="text-sm text-orange-500 dark:text-orange-400 font-bold">{getMonsterParkZone(lv)}</span>;
-              return <span className="text-xs text-red-400 dark:text-red-500">260레벨 이상 입력해주세요</span>;
+              if (lv >= MAX_LEVEL) return <span className="text-xs text-red-400 dark:text-red-500">{MAX_LEVEL}레벨 미만 입력해주세요</span>;
+              if (lv >= MIN_LEVEL) return <span className="text-sm text-orange-500 dark:text-orange-400 font-bold">{getMonsterParkZone(lv)}</span>;
+              return <span className="text-xs text-red-400 dark:text-red-500">{MIN_LEVEL}레벨 이상 입력해주세요</span>;
             })()}
           </div>
           <div className="flex items-center justify-between gap-3">
@@ -147,7 +147,7 @@ export default function MonsterParkSimulator({ charLevel, hasCharacter, todayExp
           const buff = parseFloat(simPotionBuff);
           let reason: string | null = null;
           if (simLevel === '' || isNaN(lv)) reason = '레벨을 입력해주세요';
-          else if (lv < 260 || lv > 299) reason = '레벨이 올바르지 않아요';
+          else if (lv < MIN_LEVEL || lv > MAX_LEVEL - 1) reason = '레벨이 올바르지 않아요';
           else if (simExpPct !== '' && (isNaN(expPct) || expPct < 0 || expPct > 100)) reason = '경험치%가 올바르지 않아요';
           else if (simPotionBuff !== '' && (isNaN(buff) || buff < 0 || buff > 100)) reason = '보약%가 올바르지 않아요';
           return (

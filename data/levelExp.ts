@@ -1,3 +1,14 @@
+/** 서비스가 다루는 레벨 구간의 하한. 이 아래는 효율·경험치 정보를 제공하지 않는다. */
+export const MIN_LEVEL = 260;
+/** 만렙. LEVEL_EXP[MAX_LEVEL]은 required를 MAX_SAFE_INTEGER로 둬 "그 위가 없음"을 나타낸다. */
+export const MAX_LEVEL = 300;
+/** 표에 행이 생기는 레벨 목록(만렙 직전까지). 레벨 입력·목표 레벨 검증도 이 범위를 쓴다. */
+export const LEVELS: number[] =
+  Array.from({ length: MAX_LEVEL - MIN_LEVEL }, (_, i) => i + MIN_LEVEL);
+
+// ⚠️ 위 두 상수는 **서비스 전체의 레벨 범위**에만 쓴다.
+//    메카베리 280처럼 컨텐츠별 사용 가능 레벨은 각 컨텐츠에 하드코딩한 그대로 둔다.
+
 // 레벨별 필요 경험치, 전 구간 대비 증가율, 누적 경험치, 비율
 export interface LevelExpData {
   required: number;

@@ -1,14 +1,11 @@
 // 경험치 콘텐츠 시뮬레이터 계산 (순수 함수) — ExpContentsTab에서 분리.
-import { LEVEL_EXP } from '@/data/levelExp';
+import { LEVEL_EXP, MIN_LEVEL, MAX_LEVEL } from '@/data/levelExp';
 import { VIP_SAUNA_EXP } from '@/data/vipSauna';
 import { MEKABERRY_EXP } from '@/data/mekaberry';
 import { BLUEBERRY_EXP } from '@/data/blueberry';
 import { SUPER_EXP_COUPON } from '@/data/superExpCoupon';
 
 // ─── Simulator helpers ────────────────────────────────────────────────────────
-
-/** 최대 레벨 — 여기 도달하면 더 채울 경험치통이 없다 */
-const MAX_LEVEL = 300;
 
 /** 도달 레벨의 경험치% — 목표 계산은 마지막 한 개(또는 5초 한 틱)를 쪼갤 수 없어 목표를 살짝 넘기는데,
  *  최대 레벨에서는 넘친 몫을 담을 곳이 없으므로 0%로 고정한다 */
@@ -214,11 +211,10 @@ export function calcBlueberryByTarget(startLevel: number, startExpPct: number, t
   return { count: totalCount, gainedExp: Math.round(totalGained), gainPct, finalLevel: lv, finalPct };
 }
 
-// 누적 경험치 변환 (260레벨 기준) — 역산 시뮬레이터 공용
-const REV_BASE_LEVEL = 260;
+// 누적 경험치 변환 (서비스 하한 레벨 기준) — 역산 시뮬레이터 공용
 function cumExpOf(level: number, pct: number): number {
   let sum = 0;
-  for (let l = REV_BASE_LEVEL; l < level; l++) sum += LEVEL_EXP[l]?.required ?? 0;
+  for (let l = MIN_LEVEL; l < level; l++) sum += LEVEL_EXP[l]?.required ?? 0;
   sum += (pct / 100) * (LEVEL_EXP[level]?.required ?? 0);
   return sum;
 }
@@ -234,7 +230,7 @@ export function findStartForTarget(
     const r = forward(L, p);
     return cumExpOf(r.finalLevel, r.finalPct);
   };
-  for (let L = REV_BASE_LEVEL; L < targetLevel; L++) {
+  for (let L = MIN_LEVEL; L < targetLevel; L++) {
     if (!LEVEL_EXP[L]) continue;
     const f0 = fcum(L, 0);
     const fTop = fcum(L, 100 * (1 - 1e-12));

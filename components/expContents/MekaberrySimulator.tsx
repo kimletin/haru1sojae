@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import CardHeader from '@/components/ui/CardHeader';
 import Num from '@/components/ui/Num';
 import SimNumInput from '@/components/expContents/SimNumInput';
-import { LEVEL_EXP } from '@/data/levelExp';
+import { LEVEL_EXP, MIN_LEVEL, MAX_LEVEL } from '@/data/levelExp';
 import { MEKABERRY_EXP } from '@/data/mekaberry';
 import { calcMekaberryByCount, calcMekaberryByTarget, findStartForTarget, type RevStartResult } from '@/components/expContents/simMath';
 
@@ -50,7 +50,7 @@ export default function MekaberrySimulator({ charLevel, hasCharacter, todayExpRa
   const handleMekaSimCalc = () => {
     const lv = parseInt(mekaSimLevel) || 0;
     const expPct = Math.min(100, Math.max(0, parseFloat(mekaSimExpPct) || 0));
-    if (!LEVEL_EXP[lv] || lv < 280 || lv > 299) return;
+    if (!LEVEL_EXP[lv] || lv < 280 || lv > MAX_LEVEL - 1) return;
     if (mekaSimMode === '개수') {
       const count = parseInt(mekaSimCount);
       if (!count || count < 1 || count > 99) return;
@@ -58,7 +58,7 @@ export default function MekaberrySimulator({ charLevel, hasCharacter, todayExpRa
       setMekaSimResult({ type: '개수', gainedExp: res.gainedExp, gainPct: res.gainPct, finalLevel: res.finalLevel, finalPct: res.finalPct });
     } else {
       const targetLv = parseInt(mekaSimTarget);
-      if (!targetLv || targetLv <= lv || targetLv > 300) return;
+      if (!targetLv || targetLv <= lv || targetLv > MAX_LEVEL) return;
       const res = calcMekaberryByTarget(lv, expPct, targetLv, expTable);
       if (!res) return;
       setMekaSimResult({ type: '목표', gainedExp: res.gainedExp, gainPct: res.gainPct, finalLevel: res.finalLevel, finalPct: res.finalPct, count: res.count });
@@ -68,7 +68,7 @@ export default function MekaberrySimulator({ charLevel, hasCharacter, todayExpRa
   const handleMekaRevCalc = () => {
     const targetLv = parseInt(mekaRevTarget);
     const count = parseInt(mekaRevCount);
-    if (!targetLv || targetLv < 281 || targetLv > 300) return;
+    if (!targetLv || targetLv < 281 || targetLv > MAX_LEVEL) return;
     if (!count || count < 1 || count > 99) return;
     const res = findStartForTarget(targetLv, (sl, sp) => calcMekaberryByCount(sl, sp, count, expTable));
     if (!res) { setMekaRevResult({ ok: false, msg: '재화가 너무 많아요 (280레벨 이전 필요)' }); return; }
@@ -118,7 +118,7 @@ export default function MekaberrySimulator({ charLevel, hasCharacter, todayExpRa
             const expPct = parseFloat(mekaSimExpPct);
             let reason: string | null = null;
             if (mekaSimLevel === '' || isNaN(lv)) reason = '레벨을 입력해주세요';
-            else if (lv < 280 || lv > 299) reason = '레벨이 올바르지 않아요';
+            else if (lv < 280 || lv > MAX_LEVEL - 1) reason = '레벨이 올바르지 않아요';
             else if (mekaSimExpPct !== '' && (isNaN(expPct) || expPct < 0 || expPct > 100)) reason = '경험치%가 올바르지 않아요';
             else if (mekaSimMode === '개수') {
               const count = parseInt(mekaSimCount);
@@ -127,7 +127,7 @@ export default function MekaberrySimulator({ charLevel, hasCharacter, todayExpRa
             } else {
               const targetLv = parseInt(mekaSimTarget);
               if (mekaSimTarget === '' || isNaN(targetLv)) reason = '목표 레벨을 입력해주세요';
-              else if (targetLv <= lv || targetLv > 300) reason = '목표 레벨이 올바르지 않아요';
+              else if (targetLv <= lv || targetLv > MAX_LEVEL) reason = '목표 레벨이 올바르지 않아요';
             }
             return (
               <button onClick={handleMekaSimCalc} disabled={!!reason} className="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
@@ -184,7 +184,7 @@ export default function MekaberrySimulator({ charLevel, hasCharacter, todayExpRa
             const count = parseInt(mekaRevCount);
             let reason: string | null = null;
             if (mekaRevTarget === '' || isNaN(targetLv)) reason = '목표 레벨을 입력해주세요';
-            else if (targetLv < 281 || targetLv > 300) reason = '목표 레벨이 올바르지 않아요';
+            else if (targetLv < 281 || targetLv > MAX_LEVEL) reason = '목표 레벨이 올바르지 않아요';
             else if (mekaRevCount === '' || isNaN(count)) reason = '개수를 입력해주세요';
             else if (count < 1 || count > 99) reason = '개수가 올바르지 않아요';
             return (

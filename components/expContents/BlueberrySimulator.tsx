@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import CardHeader from '@/components/ui/CardHeader';
 import Num from '@/components/ui/Num';
 import SimNumInput from '@/components/expContents/SimNumInput';
-import { LEVEL_EXP } from '@/data/levelExp';
+import { LEVEL_EXP, MIN_LEVEL, MAX_LEVEL } from '@/data/levelExp';
 import { calcBlueberryByCount, calcBlueberryByTarget, findStartForTarget, type RevStartResult } from '@/components/expContents/simMath';
 
 interface Props {
@@ -49,7 +49,7 @@ export default function BlueberrySimulator({ charLevel, hasCharacter, todayExpRa
   const handleBlueSimCalc = () => {
     const lv = parseInt(blueSimLevel) || 0;
     const expPct = Math.min(100, Math.max(0, parseFloat(blueSimExpPct) || 0));
-    if (!LEVEL_EXP[lv] || lv < 260 || lv > 299) return;
+    if (!LEVEL_EXP[lv] || lv < MIN_LEVEL || lv > MAX_LEVEL - 1) return;
     if (blueSimMode === '개수') {
       const count = parseInt(blueSimCount);
       if (!count || count < 1 || count > 99) return;
@@ -57,7 +57,7 @@ export default function BlueberrySimulator({ charLevel, hasCharacter, todayExpRa
       setBlueSimResult({ type: '개수', gainedExp: res.gainedExp, gainPct: res.gainPct, finalLevel: res.finalLevel, finalPct: res.finalPct });
     } else {
       const targetLv = parseInt(blueSimTarget);
-      if (!targetLv || targetLv <= lv || targetLv > 300) return;
+      if (!targetLv || targetLv <= lv || targetLv > MAX_LEVEL) return;
       const res = calcBlueberryByTarget(lv, expPct, targetLv, blueSimBeyond);
       if (!res) return;
       setBlueSimResult({ type: '목표', gainedExp: res.gainedExp, gainPct: res.gainPct, finalLevel: res.finalLevel, finalPct: res.finalPct, count: res.count });
@@ -67,7 +67,7 @@ export default function BlueberrySimulator({ charLevel, hasCharacter, todayExpRa
   const handleBlueRevCalc = () => {
     const targetLv = parseInt(blueRevTarget);
     const count = parseInt(blueRevCount);
-    if (!targetLv || targetLv < 261 || targetLv > 300) return;
+    if (!targetLv || targetLv < MIN_LEVEL + 1 || targetLv > MAX_LEVEL) return;
     if (!count || count < 1 || count > 99) return;
     const res = findStartForTarget(targetLv, (sl, sp) => calcBlueberryByCount(sl, sp, count, blueRevBeyond));
     if (!res) { setBlueRevResult({ ok: false, msg: '재화가 너무 많아요 (260레벨 이전 필요)' }); return; }
@@ -127,7 +127,7 @@ export default function BlueberrySimulator({ charLevel, hasCharacter, todayExpRa
             const expPct = parseFloat(blueSimExpPct);
             let reason: string | null = null;
             if (blueSimLevel === '' || isNaN(lv)) reason = '레벨을 입력해주세요';
-            else if (lv < 260 || lv > 299) reason = '레벨이 올바르지 않아요';
+            else if (lv < MIN_LEVEL || lv > MAX_LEVEL - 1) reason = '레벨이 올바르지 않아요';
             else if (blueSimExpPct !== '' && (isNaN(expPct) || expPct < 0 || expPct > 100)) reason = '경험치%가 올바르지 않아요';
             else if (blueSimMode === '개수') {
               const count = parseInt(blueSimCount);
@@ -136,7 +136,7 @@ export default function BlueberrySimulator({ charLevel, hasCharacter, todayExpRa
             } else {
               const targetLv = parseInt(blueSimTarget);
               if (blueSimTarget === '' || isNaN(targetLv)) reason = '목표 레벨을 입력해주세요';
-              else if (targetLv <= lv || targetLv > 300) reason = '목표 레벨이 올바르지 않아요';
+              else if (targetLv <= lv || targetLv > MAX_LEVEL) reason = '목표 레벨이 올바르지 않아요';
             }
             return (
               <button onClick={handleBlueSimCalc} disabled={!!reason} className="w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white text-sm font-bold transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
@@ -202,7 +202,7 @@ export default function BlueberrySimulator({ charLevel, hasCharacter, todayExpRa
             const count = parseInt(blueRevCount);
             let reason: string | null = null;
             if (blueRevTarget === '' || isNaN(targetLv)) reason = '목표 레벨을 입력해주세요';
-            else if (targetLv < 261 || targetLv > 300) reason = '목표 레벨이 올바르지 않아요';
+            else if (targetLv < MIN_LEVEL + 1 || targetLv > MAX_LEVEL) reason = '목표 레벨이 올바르지 않아요';
             else if (blueRevCount === '' || isNaN(count)) reason = '개수를 입력해주세요';
             else if (count < 1 || count > 99) reason = '개수가 올바르지 않아요';
             return (
