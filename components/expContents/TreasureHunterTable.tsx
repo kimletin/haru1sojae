@@ -8,10 +8,10 @@ import { pctNoSign } from '@/components/expContents/shared';
 import { useRowsViewport } from '@/components/expContents/useRowsViewport';
 import { MONSTER_EXP } from '@/data/monsterExp';
 import { TREASURE_MULTIPLIERS, type TreasureBox } from '@/data/treasureHunter';
+import { LEVELS as TREASURE_LEVELS } from '@/data/levelExp';
 
 // ─── TreasureHunterTable ──────────────────────────────────────────────────────
 
-const TREASURE_LEVELS = Array.from({ length: 40 }, (_, i) => i + 260);
 export const TREASURE_BOXES: TreasureBox[] = ['폴로/프리토', '에스페시아'];
 export const TREASURE_BOX_META: Record<TreasureBox, { label: string; sub: string; icon: string }> = {
   '폴로/프리토': { label: '골드 트레져 박스', sub: '폴로/프리토', icon: '골드 트레져 박스' },

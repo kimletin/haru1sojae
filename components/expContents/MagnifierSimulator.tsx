@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import CardHeader from '@/components/ui/CardHeader';
 import Num from '@/components/ui/Num';
 import SimNumInput from '@/components/expContents/SimNumInput';
-import { LEVEL_EXP } from '@/data/levelExp';
+import { LEVEL_EXP, MIN_LEVEL, MAX_LEVEL } from '@/data/levelExp';
 import { MONSTER_EXP } from '@/data/monsterExp';
 import { calcLevelUp } from '@/components/expContents/simMath';
 
@@ -113,7 +113,7 @@ export default function MagnifierSimulator({ charLevel, monsterLevel, hasCharact
           const count = parseInt(simCount);
           let reason: string | null = null;
           if (simLevel === '' || isNaN(lv)) reason = '레벨을 입력해주세요';
-          else if (lv < 260 || lv > 299) reason = '레벨이 올바르지 않아요';
+          else if (lv < MIN_LEVEL || lv > MAX_LEVEL - 1) reason = '레벨이 올바르지 않아요';
           else if (simExpPct !== '' && (isNaN(expPct) || expPct < 0 || expPct > 100)) reason = '경험치%가 올바르지 않아요';
           else if (simMobLevel === '' || isNaN(mobLv)) reason = '사냥터 몹 레벨을 입력해주세요';
           else if (!MONSTER_EXP[mobLv]) reason = '사냥터 몹 레벨이 올바르지 않아요';

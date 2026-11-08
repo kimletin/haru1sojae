@@ -7,7 +7,7 @@ import CardHeader from '@/components/ui/CardHeader';
 import SimNumInput from '@/components/expContents/SimNumInput';
 import Num from '@/components/ui/Num';
 import { calcLevelUp } from '@/components/expContents/simMath';
-import { LEVEL_EXP } from '@/data/levelExp';
+import { LEVEL_EXP, MIN_LEVEL, MAX_LEVEL } from '@/data/levelExp';
 import {
   PERSONAL_BOSSES,
   PERSONAL_BOSS_MAX_SELECT,
@@ -75,7 +75,7 @@ export default function PersonalBossTab({ charLevel, hasCharacter, selections, o
   const weeklyExp = rows.reduce((sum, r) => sum + r.exp, 0);
 
   const startLevel = parseInt(levelStr);
-  const canCalc = !!LEVEL_EXP[startLevel] && startLevel < 300 && weeklyExp > 0;
+  const canCalc = !!LEVEL_EXP[startLevel] && startLevel < MAX_LEVEL && weeklyExp > 0;
 
   // total만큼 얻었을 때 오르는 경험치% — 레벨업하면 넘어간 레벨마다 100%씩 더한다.
   // 현재 경험치%는 받지 않고 0%에서 시작한다: 이벤트 기간에 다른 콘텐츠로도 경험치가 오르므로
@@ -235,7 +235,7 @@ export default function PersonalBossTab({ charLevel, hasCharacter, selections, o
               추가한 캐릭터면 그 값으로 채워지고 직접 고칠 수 있다. 모바일도 한 줄 전체를 쓴다 */}
           <div className="col-span-2 lg:col-span-1 flex items-center justify-between gap-3">
             <span className="text-sm text-gray-500 dark:text-zinc-400 shrink-0">현재 레벨</span>
-            <SimNumInput value={levelStr} onChange={setLevelOverride} unit="레벨" pad="7" max={299} />
+            <SimNumInput value={levelStr} onChange={setLevelOverride} unit="레벨" pad="7" max={MAX_LEVEL - 1} />
           </div>
           {/* 입력(현재 레벨) ↔ 결과(주간·예상 총 경험치) 구분선 */}
           <div className="col-span-2 lg:col-span-1 border-t border-gray-100 dark:border-zinc-700" />

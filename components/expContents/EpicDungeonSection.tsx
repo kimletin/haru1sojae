@@ -5,6 +5,7 @@ import SubTabs from '@/components/expContents/SubTabs';
 import { HAIMOUNTAIN, ANGLER_COMPANY, NIGHTMARE_SANCTUARY, AURUM_REGIS, type EpicDungeonData } from '@/data/epicDungeon';
 import { EPIC_DUNGEON_ZONES, getEpicDungeonZone } from '@/data/epicDungeonZones';
 import type { EpicDungeonZone } from '@/types';
+import { LEVELS } from '@/data/levelExp';
 
 // 존별 경험치 표 — 존을 추가하고 여기를 빠뜨리면 타입 체크가 잡는다(Record<EpicDungeonZone, …>)
 const DATA: Record<EpicDungeonZone, Record<number, EpicDungeonData>> = {
@@ -39,7 +40,7 @@ export default function EpicDungeonSection({ charLevel, epicDungeonBonus, hasCha
     setSelectedDungeon(getEpicDungeonZone(charLevel));
   }, [charLevel]);
   const dungeon = DUNGEONS.find(d => d.name === selectedDungeon) ?? DUNGEONS[0];
-  const epicLevels = Array.from({ length: 40 }, (_, i) => i + 260).filter(lv => lv >= dungeon.minLv);
+  const epicLevels = LEVELS.filter(lv => lv >= dungeon.minLv);
 
   return (
           /* 에픽 던전 — 전체 너비 사용 */

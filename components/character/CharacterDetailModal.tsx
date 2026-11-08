@@ -44,10 +44,14 @@ function ExpHistory15({ history }: { history: HistoryPoint[] }) {
   // 하루 평균 경험치가 현재 레벨 경험치통에서 차지하는 비율(%)
   const avgExpPct = (avgExp != null && required != null && required > 0) ? (avgExp / required) * 100 : null;
 
+  // 최대 레벨은 data/levelExp.ts가 required를 MAX_SAFE_INTEGER로 둔다(그 위가 없다는 표시).
+  // 그대로 계산하면 남은 경험치가 천문학적이라 레벨업 날짜가 엉뚱하게 나온다 → 축하 문구로 대체한다.
+  const isMaxLevel = required === Number.MAX_SAFE_INTEGER;
+
   // 레벨업 예상일: (현재 레벨의 필요 경험치 - 현재 경험치) / 하루 평균 획득 경험치
   let daysToLevelUp: number | null = null;
   let levelUpDateLabel = '';
-  if (avgExp != null && avgExp > 0 && required != null && last.exp != null) {
+  if (!isMaxLevel && avgExp != null && avgExp > 0 && required != null && last.exp != null) {
     const remaining = required - last.exp;
     if (remaining > 0) {
       daysToLevelUp = Math.ceil(remaining / avgExp);
@@ -57,7 +61,7 @@ function ExpHistory15({ history }: { history: HistoryPoint[] }) {
 
   return (
     <div className="px-1">
-      {(avgExp !== null || daysToLevelUp !== null) && (
+      {(avgExp !== null || daysToLevelUp !== null || isMaxLevel) && (
         <div className="mb-6">
           {avgExp !== null && (
             <p className="text-[11px] text-gray-400 dark:text-zinc-500">
@@ -65,7 +69,11 @@ function ExpHistory15({ history }: { history: HistoryPoint[] }) {
               {avgExpPct !== null && <span className="text-red-500 dark:text-red-400"> (+{avgExpPct.toFixed(2)}%)</span>}
             </p>
           )}
-          {daysToLevelUp !== null && (
+          {isMaxLevel ? (
+            <p className="text-[11px] text-orange-400 dark:text-orange-300">
+              만렙 달성을 축하합니다 🎉
+            </p>
+          ) : daysToLevelUp !== null && (
             <p className="text-[11px] text-gray-400 dark:text-zinc-500">
               예상 레벨업 날짜 <span className="text-gray-800 dark:text-zinc-100">{levelUpDateLabel}</span> <span className="text-orange-400 dark:text-orange-300">({daysToLevelUp}일 후)</span>
             </p>

@@ -3,7 +3,7 @@
 import CardHeader from '@/components/ui/CardHeader';
 
 import { useRef, useEffect } from 'react';
-import { LEVEL_EXP } from '@/data/levelExp';
+import { LEVEL_EXP, MIN_LEVEL, MAX_LEVEL } from '@/data/levelExp';
 import type { MobGroup } from '@/types';
 import Num from '@/components/ui/Num';
 import { PENALTY_SEGMENTS, type PenaltySegment } from '@/data/expPenalty';
@@ -21,7 +21,7 @@ export default function ExpInfoTab({ charLevel, monsterLevel, huntingMobs, hasCh
     ? mobs.map(m => m.level).filter((v, i, a) => a.indexOf(v) === i)
     : [monsterLevel];
 
-  const levels = Object.keys(LEVEL_EXP).map(Number).sort((a, b) => a - b).filter(lv => lv < 300);
+  const levels = Object.keys(LEVEL_EXP).map(Number).sort((a, b) => a - b).filter(lv => lv < MAX_LEVEL);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLTableRowElement>(null);

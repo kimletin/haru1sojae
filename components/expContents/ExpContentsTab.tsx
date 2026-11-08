@@ -28,8 +28,9 @@ import BlueberrySimulator from '@/components/expContents/BlueberrySimulator';
 import MonsterParkSimulator from '@/components/expContents/MonsterParkSimulator';
 import MagnifierSimulator from '@/components/expContents/MagnifierSimulator';
 import { MONSTER_EXP } from '@/data/monsterExp';
+import { LEVELS } from '@/data/levelExp';
 
-const LEVELS = Array.from({ length: 40 }, (_, i) => i + 260);
+
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
