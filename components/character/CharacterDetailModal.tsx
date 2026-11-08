@@ -71,7 +71,7 @@ function ExpHistory15({ history }: { history: HistoryPoint[] }) {
           )}
           {isMaxLevel ? (
             <p className="text-[11px] text-orange-400 dark:text-orange-300">
-              만렙 달성을 축하해요 🎉
+              만렙 달성을 축하합니다 🎉
             </p>
           ) : daysToLevelUp !== null && (
             <p className="text-[11px] text-gray-400 dark:text-zinc-500">
