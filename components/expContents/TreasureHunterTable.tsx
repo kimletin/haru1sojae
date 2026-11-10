@@ -18,8 +18,14 @@ export const TREASURE_BOX_META: Record<TreasureBox, { label: string; sub: string
   '에스페시아':  { label: '다이아 트레져 박스', sub: '에스페시아', icon: '다이아 트레져 박스' },
 };
 
-export function TreasureHunterTable({ monsterLevel, treasureBonus = 0, selectedBox, hasCharacter = true }: {
-  monsterLevel: number; treasureBonus?: number; selectedBox: TreasureBox; hasCharacter?: boolean;
+/** ⚠️ %의 분모는 **캐릭터 레벨**(charLevel)이다. 행 레벨은 몬스터 레벨이라 분모로 쓰면
+ *  "몹 레벨의 경험치통"이라는 없는 기준이 된다 — 경험치를 받는 쪽은 캐릭터다.
+ *  과거에 "슬롯을 바꾸면 같은 행의 %가 달라진다"는 제보로 행 레벨(lv)로 바꾼 적이 있는데,
+ *  그건 값이 흔들리던 증상을 덮은 것이고 기준 자체는 캐릭터 레벨이 맞다(2026-11 재수정).
+ *  슬롯마다 값이 달라지는 건 정상이다 — 같은 아이템도 레벨이 높을수록 체감 %가 작다.
+ *  캐릭터가 없으면 기준이 없으므로 % 자체를 숨긴다(hasCharacter). */
+export function TreasureHunterTable({ charLevel, monsterLevel, treasureBonus = 0, selectedBox, hasCharacter = true }: {
+  charLevel: number; monsterLevel: number; treasureBonus?: number; selectedBox: TreasureBox; hasCharacter?: boolean;
 }) {
   const [bonusInput, setBonusInput] = useState(treasureBonus > 0 ? String(treasureBonus) : '');
   const [sunday, setSunday] = useState(false);
@@ -97,19 +103,19 @@ export function TreasureHunterTable({ monsterLevel, treasureBonus = 0, selectedB
                       행이 몬스터 레벨이라 기준 캐릭터가 모호하므로, 캐릭터를 추가하지 않았으면 %를 숨긴다 */}
                   <td className={'px-2 py-1.5 text-center ' + baseColor}>
                     <Num n={rare} />
-                    {hasCharacter && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(rare, lv)})</span>}
+                    {hasCharacter && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(rare, charLevel)})</span>}
                   </td>
                   <td className={'px-2 py-1.5 text-center ' + baseColor}>
                     <Num n={epic} />
-                    {hasCharacter && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(epic, lv)})</span>}
+                    {hasCharacter && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(epic, charLevel)})</span>}
                   </td>
                   <td className={'px-2 py-1.5 text-center ' + baseColor}>
                     <Num n={unique} />
-                    {hasCharacter && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(unique, lv)})</span>}
+                    {hasCharacter && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(unique, charLevel)})</span>}
                   </td>
                   <td className={'px-2 py-1.5 text-center ' + baseColor}>
                     <Num n={legendary} />
-                    {hasCharacter && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(legendary, lv)})</span>}
+                    {hasCharacter && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(legendary, charLevel)})</span>}
                   </td>
                 </tr>
               );
