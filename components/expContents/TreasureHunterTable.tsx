@@ -4,7 +4,7 @@ import CardHeader from '@/components/ui/CardHeader';
 import Num from '@/components/ui/Num';
 import SimNumInput from '@/components/expContents/SimNumInput';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
-import { pctNoSign } from '@/components/expContents/shared';
+import { pctNoSign, canShowPct } from '@/components/expContents/shared';
 import { useRowsViewport } from '@/components/expContents/useRowsViewport';
 import { MONSTER_EXP } from '@/data/monsterExp';
 import { TREASURE_MULTIPLIERS, type TreasureBox } from '@/data/treasureHunter';
@@ -23,10 +23,11 @@ export const TREASURE_BOX_META: Record<TreasureBox, { label: string; sub: string
  *  과거에 "슬롯을 바꾸면 같은 행의 %가 달라진다"는 제보로 행 레벨(lv)로 바꾼 적이 있는데,
  *  그건 값이 흔들리던 증상을 덮은 것이고 기준 자체는 캐릭터 레벨이 맞다(2026-11 재수정).
  *  슬롯마다 값이 달라지는 건 정상이다 — 같은 아이템도 레벨이 높을수록 체감 %가 작다.
- *  캐릭터가 없으면 기준이 없으므로 % 자체를 숨긴다(hasCharacter). */
+ *  기준이 없는 경우(캐릭터 미추가 · 만렙이라 경험치통이 없음)는 % 자체를 숨긴다(canShowPct). */
 export function TreasureHunterTable({ charLevel, monsterLevel, treasureBonus = 0, selectedBox, hasCharacter = true }: {
   charLevel: number; monsterLevel: number; treasureBonus?: number; selectedBox: TreasureBox; hasCharacter?: boolean;
 }) {
+  const showPct = canShowPct(hasCharacter, charLevel);
   const [bonusInput, setBonusInput] = useState(treasureBonus > 0 ? String(treasureBonus) : '');
   const [sunday, setSunday] = useState(false);
   const scrollRef = useRowsViewport(TREASURE_LEVELS.length);
@@ -99,23 +100,23 @@ export function TreasureHunterTable({ charLevel, monsterLevel, treasureBonus = 0
                     {lv}
                     {isMe && <span className="ml-1 text-[9px] bg-orange-500 dark:bg-orange-700 text-white px-1 py-0.5 rounded-full">나</span>}
                   </td>
-                  {/* %는 그 행의 레벨 기준으로 고정 — 선택된 캐릭터 슬롯과 무관 (다른 레벨별 표와 동일).
-                      행이 몬스터 레벨이라 기준 캐릭터가 모호하므로, 캐릭터를 추가하지 않았으면 %를 숨긴다 */}
+                  {/* %는 선택한 캐릭터의 경험치통 기준 — 행 레벨은 경험치량만 정한다.
+                      기준이 없는 경우(캐릭터 미추가·만렙)는 canShowPct가 걸러 숨긴다 */}
                   <td className={'px-2 py-1.5 text-center ' + baseColor}>
                     <Num n={rare} />
-                    {hasCharacter && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(rare, charLevel)})</span>}
+                    {showPct && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(rare, charLevel)})</span>}
                   </td>
                   <td className={'px-2 py-1.5 text-center ' + baseColor}>
                     <Num n={epic} />
-                    {hasCharacter && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(epic, charLevel)})</span>}
+                    {showPct && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(epic, charLevel)})</span>}
                   </td>
                   <td className={'px-2 py-1.5 text-center ' + baseColor}>
                     <Num n={unique} />
-                    {hasCharacter && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(unique, charLevel)})</span>}
+                    {showPct && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(unique, charLevel)})</span>}
                   </td>
                   <td className={'px-2 py-1.5 text-center ' + baseColor}>
                     <Num n={legendary} />
-                    {hasCharacter && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(legendary, charLevel)})</span>}
+                    {showPct && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(legendary, charLevel)})</span>}
                   </td>
                 </tr>
               );

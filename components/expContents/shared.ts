@@ -1,11 +1,19 @@
 // 경험치 콘텐츠 표 공용 — pctNoSign 헬퍼 + 공용 타입.
-import { LEVEL_EXP } from '@/data/levelExp';
+import { LEVEL_EXP, MAX_LEVEL } from '@/data/levelExp';
 
 // 퍼센트 표시 (메인 값)
 export function pctNoSign(exp: number, level: number) {
   const req = LEVEL_EXP[level]?.required;
   if (!req) return '';
   return ((exp / req) * 100).toFixed(3) + '%';
+}
+
+/** 캐릭터 레벨을 분모로 쓰는 표(몬스터파크·트레져 헌터·돋보기)에서 %를 보여줄 수 있는지.
+ *  - 캐릭터가 없으면 기준이 없다
+ *  - 만렙은 LEVEL_EXP의 required가 MAX_SAFE_INTEGER라 무엇을 넣어도 0.000%로 찍힌다
+ *  행이 곧 캐릭터 레벨인 표(에픽 던전·잠수맵·EXP 교환권·농장)는 행이 260~299뿐이라 해당 없다. */
+export function canShowPct(hasCharacter: boolean, charLevel: number): boolean {
+  return hasCharacter && charLevel < MAX_LEVEL;
 }
 
 export interface ExpTableProps {

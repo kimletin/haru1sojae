@@ -16,7 +16,7 @@ import type { SundayType, PersonalBossSelections } from '@/types';
 import PersonalBossTab from '@/components/boss/PersonalBossTab';
 import Num from '@/components/ui/Num';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
-import { pctNoSign, type ExpTableProps } from '@/components/expContents/shared';
+import { pctNoSign, canShowPct, type ExpTableProps } from '@/components/expContents/shared';
 import SubTabs from '@/components/expContents/SubTabs';
 import { SingleTable } from '@/components/expContents/SingleTable';
 import EpicDungeonSection from '@/components/expContents/EpicDungeonSection';
@@ -188,7 +188,7 @@ export default function ExpContentsTab({
         title: magnifier.name, valueLabel: '1개 당 경험치',
         headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100',
         // %는 선택한 캐릭터의 경험치통 기준이다(행 레벨이 아니라) — 몹 레벨은 경험치량만 정한다
-        levelLabel: '몬스터 레벨', showPct: hasCharacter, pctLevel: charLevel,
+        levelLabel: '몬스터 레벨', showPct: canShowPct(hasCharacter, charLevel), pctLevel: charLevel,
         rows: LEVELS.map(lv => ({ level: lv, value: magnifierExpOf(lv), isMe: hasCharacter && lv === monsterLevel, ...commonRowProps })),
         // 수상한 돋보기만 추가 경험치 획득량을 받는다 — 에픽 던전 표의 보약 칸과 같은 자리
         footer: magnifier.usesBonus ? (
@@ -376,7 +376,7 @@ export default function ExpContentsTab({
                                 </td>
                                 <td className={'px-3 py-2 text-center ' + (isMe ? 'text-orange-700 font-bold' : 'text-gray-700 dark:text-zinc-300')}>
                                   <Num n={exp} />
-                                  {hasCharacter && <span className={'text-xs ml-1 ' + subColor}>(+{pctNoSign(exp, charLevel)})</span>}
+                                  {canShowPct(hasCharacter, charLevel) && <span className={"text-xs ml-1 " + subColor}>(+{pctNoSign(exp, charLevel)})</span>}
                                 </td>
                               </tr>
                             );
