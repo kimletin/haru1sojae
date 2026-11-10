@@ -5,12 +5,13 @@ import SubTabs from '@/components/expContents/SubTabs';
 import type { TreasureBox } from '@/data/treasureHunter';
 
 interface Props {
+  charLevel: number;
   monsterLevel: number;
   treasureBonus?: number;
   hasCharacter: boolean;
 }
 
-export default function TreasureHunterSection({ monsterLevel, treasureBonus = 0, hasCharacter }: Props) {
+export default function TreasureHunterSection({ charLevel, monsterLevel, treasureBonus = 0, hasCharacter }: Props) {
   const [treasureBox, setTreasureBox] = useState<TreasureBox>('폴로/프리토');
   return (
                 <div className="flex flex-col gap-1.5">
@@ -28,6 +29,7 @@ export default function TreasureHunterSection({ monsterLevel, treasureBonus = 0,
                   />
                   <div className="flex-1 min-h-0">
                     <TreasureHunterTable
+                      charLevel={charLevel}
                       monsterLevel={monsterLevel}
                       treasureBonus={treasureBonus}
                       selectedBox={treasureBox}

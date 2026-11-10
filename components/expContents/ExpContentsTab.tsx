@@ -187,7 +187,8 @@ export default function ExpContentsTab({
     : isMagnifier ? {
         title: magnifier.name, valueLabel: '1개 당 경험치',
         headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100',
-        levelLabel: '몬스터 레벨', showPct: hasCharacter,
+        // %는 선택한 캐릭터의 경험치통 기준이다(행 레벨이 아니라) — 몹 레벨은 경험치량만 정한다
+        levelLabel: '몬스터 레벨', showPct: hasCharacter, pctLevel: charLevel,
         rows: LEVELS.map(lv => ({ level: lv, value: magnifierExpOf(lv), isMe: hasCharacter && lv === monsterLevel, ...commonRowProps })),
         // 수상한 돋보기만 추가 경험치 획득량을 받는다 — 에픽 던전 표의 보약 칸과 같은 자리
         footer: magnifier.usesBonus ? (
@@ -412,7 +413,7 @@ export default function ExpContentsTab({
 
               {newLayout && splitProps && <SingleTable {...splitProps} />}
 
-              {selected === 'treasurehunter' && <TreasureHunterSection monsterLevel={monsterLevel} treasureBonus={treasureBonus} hasCharacter={hasCharacter} />}
+              {selected === 'treasurehunter' && <TreasureHunterSection charLevel={charLevel} monsterLevel={monsterLevel} treasureBonus={treasureBonus} hasCharacter={hasCharacter} />}
 
             </div>
 

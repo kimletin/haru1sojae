@@ -63,7 +63,9 @@ function ExpHistory15({ history }: { history: HistoryPoint[] }) {
     <div className="px-1">
       {(avgExp !== null || daysToLevelUp !== null || isMaxLevel) && (
         <div className="mb-6">
-          {avgExp !== null && (
+          {/* 만렙이면 축하 문구만 남긴다 — 더 채울 경험치통이 없어 평균 경험치도 의미가 없고,
+              분모가 MAX_SAFE_INTEGER라 비율이 늘 (+0.00%)로 찍힌다 */}
+          {!isMaxLevel && avgExp !== null && (
             <p className="text-[11px] text-gray-400 dark:text-zinc-500">
               하루 평균 경험치 <span className="text-gray-800 dark:text-zinc-100">{formatExpKR(avgExp)}</span>
               {avgExpPct !== null && <span className="text-red-500 dark:text-red-400"> (+{avgExpPct.toFixed(2)}%)</span>}

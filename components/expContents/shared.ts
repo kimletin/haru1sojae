@@ -17,6 +17,10 @@ export interface ExpTableProps {
   valueLabel?: string;
   /** 경험치 옆 (+x.xxx%) 표시 여부. 행이 몬스터 레벨인 표는 캐릭터가 없으면 숨긴다 */
   showPct?: boolean;
+  /** %의 분모로 쓸 레벨. 없으면 행 레벨을 쓴다.
+   *  행이 몬스터 레벨인 표(돋보기)는 경험치를 받는 쪽이 캐릭터라 캐릭터 레벨을 넘겨야 한다 —
+   *  행 레벨을 쓰면 "몹 레벨 기준 경험치통"이라는 없는 기준이 된다 */
+  pctLevel?: number;
   /** 카드 맨 아래에 붙는 줄 (에픽 던전 표의 보약 입력칸과 같은 자리) */
   footer?: React.ReactNode;
 }
