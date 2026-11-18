@@ -77,9 +77,9 @@ const COUPON_TABS: Pick<SubChoice, 'name' | 'label' | 'icon'>[] = [
 // 농장 입장권 — 탭 표기는 정식 명칭 그대로(모바일 2열 그리드 한 칸에 들어간다).
 // minLevel = 표에 나오는 최소 레벨, sim = 시뮬레이터 종류(메카베리 계열은 계산식을 공유).
 const FARMS: (SubChoice & { minLevel: number; sim: 'blue' | 'meka' })[] = [
-  { name: '블루베리 농장',        label: '블루베리 농장', icon: '블루베리 농장',        data: BLUEBERRY_EXP,         minLevel: 260, sim: 'blue' },
-  { name: '메카베리 농장',        label: '메카베리 농장', icon: '메카베리 농장',        data: MEKABERRY_EXP,         minLevel: 280, sim: 'meka' },
   { name: '크림슨 메카베리 농장', label: '크림슨 메카베리 농장', icon: '크림슨 메카베리 농장', data: CRIMSON_MEKABERRY_EXP, minLevel: 280, sim: 'meka' },
+  { name: '메카베리 농장',        label: '메카베리 농장', icon: '메카베리 농장',        data: MEKABERRY_EXP,         minLevel: 280, sim: 'meka' },
+  { name: '블루베리 농장',        label: '블루베리 농장', icon: '블루베리 농장',        data: BLUEBERRY_EXP,         minLevel: 260, sim: 'blue' },
 ];
 
 export default function ExpContentsTab({
