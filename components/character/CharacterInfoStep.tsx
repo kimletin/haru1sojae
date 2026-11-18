@@ -260,8 +260,8 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
                  lib/calculator.ts의 getExpBonusMult를 되살리고 disabled를 떼면 된다. */}
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
             <div className="flex items-center gap-1 mb-1">
-              <span className="text-xs text-gray-400 dark:text-zinc-500 font-bold">부스터 사용 시 추가 경험치 획득량</span>
-              <TooltipIcon text="현재 이 값을 쓰는 아이템이 판매되지 않아 입력을 받지 않습니다. 해당 상품이 다시 나오면 열립니다." />
+              <span className="text-xs text-orange-500 dark:text-orange-400 font-bold">부스터 사용 시 추가 경험치 획득량</span>
+              <TooltipIcon text="부스터류 아이템 사용 시점의 추가 경험치 획득량을 그대로 입력해주세요(룬, 버닝 포함)." />
             </div>
             {/* 제목이 길어 입력칸 라벨은 짧게 */}
             <NumField label="추가 경험치 획득량" value={d.expBonus} unit="%" max={9999} icon="추가 경험치 50%" width="w-[90px] lg:w-[80px]" disabled />
