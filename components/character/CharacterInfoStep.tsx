@@ -32,7 +32,6 @@ const PRICE_KEYS = [
   'price50', 'price70', 'price3x', 'price4x',
   'priceSmallBooster', 'priceLargeBooster',
   'priceHunterTitle', 'priceBloodRingMeso', 'priceBoostringMeso', 'priceJungpenMeso', 'jungpenDays',
-  'priceMagnifier', 'priceYetiMagnifier',
 ] as const;
 
 function toTimeStr(sessions: number): string {
@@ -137,7 +136,7 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
 
   // 초기화: 기본값(DEFAULT_INPUTS)으로 되돌린다. 0으로 비우면 시세가 0이 되어 효율표가 통째로
   // '-'가 되고 사용자가 열 칸 넘게 다시 채워야 했다. 기본 시세·가격은 계속 갱신하므로 최신값으로 복귀한다.
-  // 캐릭터 본인의 값(레벨 · 퍼스널 보스 선택)은 그대로 둔다.
+  // 캐릭터 본인의 값(레벨)은 그대로 둔다.
   const handleReset = () => {
     setD(prev => {
       const next = { ...prev, ...DEFAULT_INPUTS };
@@ -234,13 +233,6 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
               </div>
             </div>
           </div>
-          {/* 이벤트 한정 — 판매 종료 시 입력칸·가격 키·효율표 행을 함께 지운다 */}
-          <div className="border-t border-gray-100 dark:border-zinc-700 mt-1.5 pt-1.5">
-            <p className="text-[11px] text-orange-500 dark:text-orange-400 font-semibold mb-0.5">이벤트 BM</p>
-            <NumField label="수상한 돋보기" value={d.priceMagnifier} onChange={v => set('priceMagnifier', v)} icon="수상한 돋보기" />
-            {/* 1열 폭(약 230px)에 정식 이름은 들어가지 않아 입력칸에서만 줄여 쓴다 */}
-            <NumField label="탐정예티 돋보기" value={d.priceYetiMagnifier} onChange={v => set('priceYetiMagnifier', v)} icon="탐정예티의 수상한 돋보기" />
-          </div>
         </div>
 
         {/* 2열: 사냥(일 평균 재획) + 부스터 + 에픽 던전 + 몬스터파크 */}
@@ -262,14 +254,17 @@ export default function CharacterInfoStep({ charName, initialInputs, onSubmit, o
             </div>
           </div>
 
-          {/* 부스터류 아이템(부스터·돋보기)이 받는 추가 경험치 획득량 — 예전엔 800% 고정이었다 */}
+          {/* 부스터류 아이템이 받는 추가 경험치 획득량.
+              ⚠️ 이 값을 쓰던 모멘텀 패스(구성품 VIP 부스터)·수상한 돋보기가 2026-11-18 판매 종료되면서
+                 지금은 어떤 계산에도 반영되지 않아 입력칸을 비활성화해 뒀다. 부스터류 상품이 다시 나오면
+                 lib/calculator.ts의 getExpBonusMult를 되살리고 disabled를 떼면 된다. */}
           <div className="border-t border-gray-100 dark:border-zinc-700 mt-2 pt-2">
             <div className="flex items-center gap-1 mb-1">
-              <span className="text-xs text-orange-500 dark:text-orange-400 font-bold">부스터 사용 시 추가 경험치 획득량</span>
-              <TooltipIcon text="부스터류 아이템 사용 시점의 추가 경험치 획득량을 그대로 입력해주세요(룬, 버닝 포함)." />
+              <span className="text-xs text-gray-400 dark:text-zinc-500 font-bold">부스터 사용 시 추가 경험치 획득량</span>
+              <TooltipIcon text="현재 이 값을 쓰는 아이템이 판매되지 않아 입력을 받지 않습니다. 해당 상품이 다시 나오면 열립니다." />
             </div>
             {/* 제목이 길어 입력칸 라벨은 짧게 */}
-            <NumField label="추가 경험치 획득량" value={d.expBonus} onChange={v => set('expBonus', v)} unit="%" max={9999} icon="추가 경험치 50%" width="w-[90px] lg:w-[80px]" />
+            <NumField label="추가 경험치 획득량" value={d.expBonus} unit="%" max={9999} icon="추가 경험치 50%" width="w-[90px] lg:w-[80px]" disabled />
           </div>
 
           {/* 바로 위 '부스터 사용 시 추가 경험치 획득량'과 이어지는 내용이라 구분선 없이 간격만 둔다 */}

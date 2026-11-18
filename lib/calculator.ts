@@ -176,7 +176,7 @@ export function getEpicDungeonStage12Price(zone: EpicDungeonZone, mesoMarketRate
   return mepoToMeso(metacoin, mesoMarketRate) - SERAJAR_COIN_PRICE * EPIC_SERAJAR_COIN_COUNT;
 }
 
-/** 메카베리 농장 / 모멘텀 리워드 사용 가능 최소 레벨 */
+/** 메카베리 농장 사용 가능 최소 레벨 */
 /** 정령의 펜던트 가격을 30일 기준으로 환산.
  *  90일권은 그대로 쓰면 30일 도핑 표에서 3배 비싸게 잡히므로 1/3로 나눈다.
  *  (마라벨 비용의 90/190 안분과 같은 맥락 — 기간이 다른 상품을 같은 잣대에 올린다) */
@@ -218,83 +218,18 @@ export function getSuperExpCouponExp(charLevel: number): number {
   return SUPER_EXP_COUPON[charLevel] ?? 0;
 }
 
-/** 패스 구성품인 경험치 4배 쿠폰의 경험치 기준 — 부스터를 뺀 30분 순수 사냥 경험치.
- *
- *  ⚠️ 30분 도핑 표의 '단독 4배 쿠폰'은 base30(사냥+부스터)을 쓴다. 같은 아이템이지만 질문이 다르다.
- *   - 단독 쿠폰: "지금 내 세팅(부스터 포함)에서 쿠폰 하나 더 쓰면?" → 부스터 포함이 맞음
- *   - 패스 구성품: 구매 판단용이라 "쿠폰 쓸 때 부스터도 항상 같이 쓴다"는 가정을 두지 않는다.
- *     (쓰는 사람/안 쓰는 사람이 갈려서, 누구에게나 성립하는 하한값으로 잡음) */
-function getPassCoupon4xExp(inputs: InputValues, count: number): number {
-  return getHunt30MinExp(inputs) * 3 * count;
-}
-
-/** 부스터가 주는 경험치는 사용 시점의 추가 경험치 획득량을 그대로 받는다 — 캐릭터·도핑 구성마다
- *  다른 값이라 예전엔 800% 고정이었으나, 지금은 사용자가 입력한 값(inputs.expBonus)을 쓴다.
- *  ⚠️ base30/base30d의 부스터 항과는 역할이 다르다 — 그쪽은 도핑이 곱해질 '기본 경험치'라 배율을 안 붙인다. */
-function getExpBonusMult(inputs: InputValues): number {
-  return 1 + (inputs.expBonus ?? 0) / 100;
-}
-
-/** VIP 부스터 1개가 주는 경험치 (추가 경험치 획득량 적용) */
-function getVipBoosterExp(inputs: InputValues): number {
-  return getGroundMobExp(inputs) * VIP_BOOSTER_MOB_RATE * BOOSTER_SPAWN_COUNT * getExpBonusMult(inputs);
-}
-
-/** 탐정예티의 수상한 돋보기 — 부스터몹 1마리가 일반 몹 800마리분.
- *  ⚠️ VIP 부스터와 달리 추가 경험치 획득량을 받지 않는 고정값이라 배율을 곱하지 않는다. */
-const YETI_MAGNIFIER_MOB_RATE = 800;
-
-/** 수상한 돋보기 1개가 주는 경험치 — VIP 부스터와 같은 사양(10배 + 추가 경험치 적용) */
-export function getMagnifierExp(inputs: InputValues): number {
-  return getVipBoosterExp(inputs);
-}
-
-/** 탐정예티의 수상한 돋보기 1개가 주는 경험치 (190마리 × 800배, 추가 경험치 없음) */
-export function getYetiMagnifierExp(inputs: InputValues): number {
-  return getGroundMobExp(inputs) * YETI_MAGNIFIER_MOB_RATE * BOOSTER_SPAWN_COUNT;
-}
-
-/** 모멘텀 리워드 구성품 (크림슨 메카베리 / 상급 EXP 쿠폰 / VIP 부스터 / 경험치 4배 쿠폰) */
-interface MomentumReward {
-  cash: number;
-  crimson: number;
-  superCoupon: number;
-  vipBooster: number;
-  coupon4x: number;
-}
-
-const PREMIUM_MOMENTUM: MomentumReward = { cash: 29_800, crimson: 5,  superCoupon: 4_500, vipBooster: 20, coupon4x: 4 };
-const PRIME_MOMENTUM:   MomentumReward = { cash: 39_800, crimson: 11, superCoupon: 9_000, vipBooster: 20, coupon4x: 6 };
-
-/** 모멘텀 리워드 총 경험치. 구성품에 크림슨 메카베리가 있어 280 미만은 상품 자체를 쓸 수 없다.
- *  크림슨분만 0이 되게 두면 상급쿠폰·부스터·4배쿠폰분이 남아 그럴듯한 값이 나오므로 전체를 0으로 막는다. */
-function getMomentumRewardExp(r: MomentumReward, inputs: InputValues): number {
-  if (inputs.charLevel < MEKABERRY_MIN_LEVEL) return 0;
-  return (
-    getCrimsonMekaberryExp(inputs.charLevel) * r.crimson +
-    getSuperExpCouponExp(inputs.charLevel) * r.superCoupon +
-    getVipBoosterExp(inputs) * r.vipBooster +
-    getPassCoupon4xExp(inputs, r.coupon4x)
-  );
-}
-
-export function getPremiumMomentumExp(inputs: InputValues): number {
-  return getMomentumRewardExp(PREMIUM_MOMENTUM, inputs);
-}
-
-/** 프라임은 프리미엄을 먼저 사야만 구매할 수 있어, 프라임 단독 가성비는 어떤 신규 구매자도
- *  실제로 얻을 수 없는 값이 된다(단독 기준이면 묶음보다 약 16% 부풀려짐).
- *  그래서 '프리미엄 + 프라임' 묶음(경험치 합산 / 가격 합산)으로 계산한다.
- *  — 증분만 따로 살 수 없으면 마진을 순위에 올리지 않는 tierRow와 같은 원칙. */
-export function getPrimeMomentumExp(inputs: InputValues): number {
-  return getMomentumRewardExp(PREMIUM_MOMENTUM, inputs) + getMomentumRewardExp(PRIME_MOMENTUM, inputs);
-}
-export function getPremiumMomentumPrice(waterBottleRate: number): number {
-  return cashToMeso(PREMIUM_MOMENTUM.cash, waterBottleRate);
-}
-export function getPrimeMomentumPrice(waterBottleRate: number): number {
-  return cashToMeso(PREMIUM_MOMENTUM.cash + PRIME_MOMENTUM.cash, waterBottleRate);
-}
+// ─── 2026-11-18 판매 종료분 ───────────────────────────────────────────────────
+// 프리미엄/프라임 모멘텀 패스와 수상한 돋보기·탐정예티의 수상한 돋보기가 함께 빠지면서
+// 아래 계산들을 지웠다(커밋 이력에서 되살릴 수 있다):
+//   getPassCoupon4xExp · getExpBonusMult · getVipBoosterExp · YETI_MAGNIFIER_MOB_RATE
+//   getMagnifierExp · getYetiMagnifierExp
+//   MomentumReward · PREMIUM/PRIME_MOMENTUM · getMomentumRewardExp
+//   getPremium/PrimeMomentumExp · getPremium/PrimeMomentumPrice
+//
+// ⚠️ 이들의 구성품 계산이던 getCrimsonMekaberryExp · getSuperExpCouponExp는 남겨 뒀다 —
+//    농장·교환권 데이터 조회 함수라 다음 패스류 상품이 나오면 그대로 다시 쓴다.
+// ⚠️ inputs.expBonus(추가 경험치 획득량)를 쓰는 계산이 전부 사라져 정보 수정의 입력칸을
+//    비활성화해 뒀다. 부스터류 상품이 다시 나오면 getExpBonusMult부터 되살린다.
 
 /** 마스터라벨 성장 플러스 — 넥슨캐시 40,000원. 90일간 추가 경험치.
  *  계산은 30일 도핑과 동일한 공식에 기간만 90일을 적용한다. */
@@ -431,10 +366,6 @@ export function calcAllItems(inputs: InputValues, monsterParkBonus: number = 0):
     item(`몬스터파크(${parkZone}) 썬데이`, 'BM', getMonsterParkExp(parkZone, '썬데이', monsterParkBonus), parkPrice),
     item('VIP 사우나',          'BM', vipExp, vipPrice),
     item('마스터라벨 성장 플러스', 'BM', getMasterLabelPlusExp(inputs), getMasterLabelPlusPrice(inputs)),
-    item('프리미엄 모멘텀 패스', 'BM', getPremiumMomentumExp(inputs), getPremiumMomentumPrice(inputs.waterBottleRate)),
-    item('프리미엄+프라임 모멘텀 패스', 'BM', getPrimeMomentumExp(inputs), getPrimeMomentumPrice(inputs.waterBottleRate)),
-    item('수상한 돋보기', 'BM', getMagnifierExp(inputs), inputs.priceMagnifier),
-    item('탐정예티의 수상한 돋보기', 'BM', getYetiMagnifierExp(inputs), inputs.priceYetiMagnifier),
   ];
 
   return items.sort((a, b) => b.ratio - a.ratio);

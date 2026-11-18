@@ -1,7 +1,7 @@
 'use client';
 
 import { InputValues } from '@/types';
-import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getPremiumMomentumExp, getPremiumMomentumPrice, getPrimeMomentumExp, getPrimeMomentumPrice, getMasterLabelPlusExp, getMasterLabelPlusPrice, getDoping30Tiers, MEKABERRY_MIN_LEVEL, getMagnifierExp, getYetiMagnifierExp, getJungpenPrice, getJungpenMesoName, JUNGPEN_MEPO_NAME } from '@/lib/calculator';
+import { getBase30MinExp, getBase30DayExp, mepoToMeso, getEpicDungeonStage01Exp, getEpicDungeonStage01Price, getEpicDungeonStage12Exp, getEpicDungeonStage12Price, getVipSaunaExp, getVipSaunaPrice, getMonsterParkExp, getVipEfficiency, getMasterLabelPlusExp, getMasterLabelPlusPrice, getDoping30Tiers, getJungpenPrice, getJungpenMesoName, JUNGPEN_MEPO_NAME } from '@/lib/calculator';
 import Num from '@/components/ui/Num';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 
@@ -44,13 +44,6 @@ const BM_TIP = (
     <div className="text-gray-200">입력한 마라벨 비용은 마스터라벨 <span className="text-orange-300">190일</span>·성장 플러스 <span className="text-orange-300">90일</span>의 기간 차이를 반영해 <span className="text-orange-300">90/190(약 47%)</span>만 가격에 합산돼요.</div>
   </>
 );
-const EVENT_BM_TIP = (
-  <>
-    <div className={TIP_TITLE}>패스 내 아이템 계산 기준</div>
-    <div className="text-gray-200">패스에 포함된 <span className="text-orange-300">경험치 쿠폰</span>은 부스터류를 쓰지 않은 순수 사냥 경험치 기준으로, <span className="text-orange-300">부스터류</span>는 입력한 <span className="text-orange-300">추가 경험치 획득량</span>을 적용해 계산해요.</div>
-  </>
-);
-
 function EffTable({ title, rows, color = 'green', headerExtra, parkBonuses }: {
   title: string; rows: TableRow[]; color?: 'green' | 'blue' | 'orange'; headerExtra?: React.ReactNode;
   /** 몬파 행 끝에 붙이는 보약 아이콘 목록 */
@@ -176,8 +169,6 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0, parkBonuse
   const parkZone = inputs.monsterParkZone;
   const parkPrice = mepoToMeso(600, inputs.mesoMarketRate);
   const vipExp   = getVipSaunaExp(inputs.charLevel);
-  // 구성품에 크림슨 메카베리가 들어 있는 모멘텀 패스는 280부터 사용 가능
-  const mekaberryLocked = inputs.charLevel < MEKABERRY_MIN_LEVEL;
 
   const bmRows: TableRow[] = [
     { name: epicName + ' 0→1단계', ...effRow(getEpicDungeonStage01Exp(inputs.epicDungeonZone, inputs.charLevel), getEpicDungeonStage01Price(inputs.epicDungeonZone, inputs.mesoMarketRate)) },
@@ -189,13 +180,9 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0, parkBonuse
   ];
 
   // 한시 판매 상품 — 상시 BM과 섞여 있으면 "지금 사둘까"와 "늘 쓰는 것"의 판단이 뒤엉켜 표를 나눈다
+  // (2026-11-18 판매 종료: 프리미엄/프라임 모멘텀 패스 · 수상한 돋보기 · 탐정예티의 수상한 돋보기)
   const eventBmRows: TableRow[] = [
     { name: 'VIP 사우나',            ...effRow(vipExp, getVipSaunaPrice(inputs.mesoMarketRate)) },
-    // 280 미만에서 비활성화되는 항목들은 표 맨 아래에 붙여 둔다
-    { name: '프리미엄 모멘텀 패스', locked: mekaberryLocked, ...effRow(getPremiumMomentumExp(inputs), getPremiumMomentumPrice(inputs.waterBottleRate)) },
-    { name: '프리미엄+프라임 모멘텀 패스', locked: mekaberryLocked, ...effRow(getPrimeMomentumExp(inputs), getPrimeMomentumPrice(inputs.waterBottleRate)) },
-    { name: '수상한 돋보기', ...effRow(getMagnifierExp(inputs), inputs.priceMagnifier) },
-    { name: '탐정예티의 수상한 돋보기', ...effRow(getYetiMagnifierExp(inputs), inputs.priceYetiMagnifier) },
   ];
 
   return (
@@ -207,7 +194,7 @@ export default function EfficiencyTab({ inputs, monsterParkBonus = 0, parkBonuse
 
       <EffTable title="경험치 BM" rows={bmRows} color="orange" parkBonuses={parkBonuses} headerExtra={<HelpMark>{BM_TIP}</HelpMark>} />
 
-      <EffTable title="이벤트 BM" rows={eventBmRows} color="orange" headerExtra={<HelpMark>{EVENT_BM_TIP}</HelpMark>} />
+      <EffTable title="이벤트 BM" rows={eventBmRows} color="orange" />
     </div>
   );
 }

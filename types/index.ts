@@ -6,14 +6,6 @@ export interface MobGroup {
   count: number;
 }
 
-/** 퍼스널 보스 계산기에서 고른 보스 하나 — 난이도 · 파티원 수 (퍼스널 버닝 이벤트 종료 후 삭제) */
-export interface PersonalBossSelection {
-  difficulty: string;
-  party: number;
-}
-/** 보스 이름 → 선택 */
-export type PersonalBossSelections = Record<string, PersonalBossSelection>;
-
 export interface InputValues {
   waterBottleRate: number;      // 물통 시세
   mesoMarketRate: number;       // 메소마켓 시세
@@ -27,7 +19,10 @@ export interface InputValues {
   boosterMonsterLevel: number;  // 부스터 몹 경험치 기준 레벨
   booster30min: number;         // 황금태엽/VIP/헥사 부스터 (30분 내)
   booster1day: number;          // 황금태엽/VIP/헥사 부스터 (1일 평균)
-  expBonus: number;             // 추가 경험치 획득량 (%) — 부스터류 아이템 효율 계산에 쓴다
+  /** 추가 경험치 획득량 (%) — 부스터류 BM 아이템(모멘텀 패스 구성품 · 수상한 돋보기)의 효율 계산에 쓰던 값.
+   *  해당 상품들이 2026-11-18 판매 종료되면서 지금은 어떤 계산에도 쓰이지 않아 입력칸을 비활성화해 뒀다.
+   *  부스터류 상품이 다시 나오면 getExpBonusMult()를 되살려 연결한다(커밋 이력 참고). */
+  expBonus: number;
   masterLabelCount: number;     // 마스터라벨 부위 수 (0~5, 성장 플러스 배율 결정). 추가 시 실착값으로 채우고 이후엔 사용자가 직접 관리
   masterLabelCost: number;      // 성장 플러스 가격에 함께 얹을 마스터라벨 값 (메소, 선택 입력). 0이면 성장 플러스 값만 계산
   price50: number;              // 추가경험치 50% 가격
@@ -41,12 +36,9 @@ export interface InputValues {
   priceBoostringMeso: number;   // 부스트링 (메소)
   priceJungpenMeso: number;     // 정펜 (메소) — 입력한 기간(jungpenDays) 기준 가격
   jungpenDays: 30 | 90;         // 정펜 기간 선택. 90일이면 가격을 1/3로 환산해 30일 기준으로 맞춘다
-  priceMagnifier: number;       // 수상한 돋보기 (메소) — 이벤트 한정
-  priceYetiMagnifier: number;   // 탐정 예티의 수상한 돋보기 (메소) — 이벤트 한정
   epicDungeonZone: EpicDungeonZone;
   monsterParkZone: string;      // 선택된 몬스터파크 지역
   boosterRate: number;          // 보약
-  personalBoss: PersonalBossSelections; // 퍼스널 보스 계산기 선택 — 캐릭터별로 기억 (이벤트 종료 후 삭제)
 }
 
 export interface CharMeta {
