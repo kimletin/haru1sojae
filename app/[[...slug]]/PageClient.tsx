@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { assetSlug } from '@/lib/assetSlug';
-import type { InputValues, MobGroup, PersonalBossSelections } from '@/types';
+import type { InputValues, MobGroup } from '@/types';
 import { calcAllItems } from '@/lib/calculator';
 import CharacterInfoModal from '@/components/character/CharacterInfoModal';
 import CharacterDetailModal from '@/components/character/CharacterDetailModal';
@@ -362,7 +362,7 @@ export default function Home() {
     return numSlots;
   };
 
-  const handleChange = (key: keyof InputValues, value: number | string | boolean | MobGroup[] | PersonalBossSelections) => {
+  const handleChange = (key: keyof InputValues, value: number | string | boolean | MobGroup[]) => {
     setInputs(prev => {
       const next = { ...prev, [key]: value };
       const newPresets = [...presetsRef.current];
@@ -1091,11 +1091,8 @@ export default function Home() {
                     todayExpRate={todayExpRate}
                     slotKey={activePreset}
                     hasCharacter={numSlots > 0}
-                    expBonus={inputs.expBonus}
                     selected={contentKey}
                     onSelect={handleContentSelect}
-                    personalBoss={inputs.personalBoss ?? {}}
-                    onPersonalBossChange={next => handleChange('personalBoss', next)}
                   />
                 )}
                 {activeTab === '경험치 정보' && (

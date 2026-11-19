@@ -29,14 +29,10 @@ export const DEFAULT_INPUTS: InputValues = {
   priceBoostringMeso: 850_000_000,
   priceJungpenMeso: 1_000_000_000,
   jungpenDays: 90,
-  // 아직 본섭 미출시 — 시세가 잡히기 전까지 쓰는 임시 기본가
-  priceMagnifier: 3_000_000,
-  priceYetiMagnifier: 100_000_000,
   epicDungeonZone: '하이마운틴',
   monsterParkZone: '세르니움',
   boosterRate: 0.5,
-  personalBoss: {},
 };
 
 /** 초기화가 건드리지 않는 필드 — 캐릭터 본인의 값이라 유지한다 */
-export const RESET_KEEP_KEYS = ['charLevel', 'personalBoss'] as const;
+export const RESET_KEEP_KEYS = ['charLevel'] as const;

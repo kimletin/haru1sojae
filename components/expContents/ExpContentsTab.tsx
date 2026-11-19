@@ -7,13 +7,12 @@ import SimNumInput from '@/components/expContents/SimNumInput';
 import { useEffect, useState } from 'react';
 import { VIP_SAUNA_EXP, MVP_RESORT_EXP } from '@/data/vipSauna';
 import { MONSTER_PARK_EXP } from '@/data/monsterPark';
-import { SUPER_EXP_COUPON, PERSONAL_EXP_COUPON } from '@/data/superExpCoupon';
+import { SUPER_EXP_COUPON } from '@/data/superExpCoupon';
 import { MEKABERRY_EXP } from '@/data/mekaberry';
 import { CRIMSON_MEKABERRY_EXP } from '@/data/crimsonMekaberry';
 import { BLUEBERRY_EXP } from '@/data/blueberry';
 import { MENU_ITEMS, CONTENT_KEYS } from '@/data/contentMenu';
-import type { SundayType, PersonalBossSelections } from '@/types';
-import PersonalBossTab from '@/components/boss/PersonalBossTab';
+import type { SundayType } from '@/types';
 import Num from '@/components/ui/Num';
 import TooltipWrapper from '@/components/ui/TooltipWrapper';
 import { pctNoSign, canShowPct, type ExpTableProps } from '@/components/expContents/shared';
@@ -26,8 +25,6 @@ import ExpCouponSimulator from '@/components/expContents/ExpCouponSimulator';
 import MekaberrySimulator from '@/components/expContents/MekaberrySimulator';
 import BlueberrySimulator from '@/components/expContents/BlueberrySimulator';
 import MonsterParkSimulator from '@/components/expContents/MonsterParkSimulator';
-import MagnifierSimulator from '@/components/expContents/MagnifierSimulator';
-import { MONSTER_EXP } from '@/data/monsterExp';
 import { LEVELS } from '@/data/levelExp';
 
 
@@ -49,14 +46,9 @@ interface Props {
   todayExpRate?: number | null;
   slotKey?: number;
   hasCharacter?: boolean;
-  /** 추가 경험치 획득량(%) — 수상한 돋보기 표·시뮬레이터의 기본값 */
-  expBonus?: number;
   /** 선택된 메뉴 키(/cont/<키>). 없거나 모르는 키면 첫 메뉴 */
   selected?: string | null;
   onSelect: (key: string) => void;
-  // 퍼스널 보스 미션용 — 이벤트 종료 후 삭제
-  personalBoss: PersonalBossSelections;
-  onPersonalBossChange: (next: PersonalBossSelections) => void;
 }
 
 const SUNDAY_MULT: Record<SundayType, number> = { '평일·토': 1, '일요일': 1.5, '썬데이': 4 };
@@ -76,36 +68,23 @@ const DIVE_FACILITIES: SubChoice[] = [
   { name: 'MVP 리조트', label: 'MVP 리조트', icon: 'MVP 리조트', data: MVP_RESORT_EXP },
 ];
 
-// 퍼스널 버닝 메뉴의 상단 탭 — 보스 처치 경험치 계산기 / 퍼스널 EXP 교환권 (이벤트 종료 후 삭제)
-// 퍼스널 EXP 교환권은 상급과 계산식이 같고 표만 다르다(상급의 480/225 = 2.1333배, data/superExpCoupon.ts)
-// EXP 교환권 메뉴의 상단 탭 — 지금은 상급 하나뿐(퍼스널은 퍼스널 버닝 메뉴로 옮김). 다른 메뉴와 모양을 맞추려고 한 칸이라도 둔다
+// EXP 교환권 메뉴의 상단 탭 — 지금은 상급 하나뿐. 다른 메뉴와 모양을 맞추려고 한 칸이라도 둔다
+// (퍼스널 EXP 교환권은 퍼스널 버닝 이벤트 종료(2026-11-18)와 함께 제거했다)
 const COUPON_TABS: Pick<SubChoice, 'name' | 'label' | 'icon'>[] = [
   { name: '상급 EXP 교환권', label: '상급 EXP 교환권', icon: '상급 EXP 교환권' },
-];
-
-// 돋보기 상단 탭 — 부스터몹 1마리가 일반 몹 몇 마리분인지(mobRate)와 추가 경험치 적용 여부만 다르다.
-// 수상한 돋보기는 VIP 부스터와 같은 사양(10배 + 추가 경험치), 예티 쪽은 800배 고정.
-const MAGNIFIERS: (Pick<SubChoice, 'name' | 'label' | 'icon'> & { mobRate: number; usesBonus: boolean })[] = [
-  { name: '탐정예티의 수상한 돋보기', label: '탐정예티의 수상한 돋보기', icon: '탐정예티의 수상한 돋보기', mobRate: 800, usesBonus: false },
-  { name: '수상한 돋보기',          label: '수상한 돋보기',          icon: '수상한 돋보기',          mobRate: 10,  usesBonus: true },
-];
-
-const BURNING_TABS: Pick<SubChoice, 'name' | 'label' | 'icon'>[] = [
-  { name: '퍼스널 보스',       label: '퍼스널 보스 미션',  icon: '퍼스널 보스' },
-  { name: '퍼스널 EXP 교환권', label: '퍼스널 EXP 교환권', icon: '퍼스널 EXP 교환권' },
 ];
 
 // 농장 입장권 — 탭 표기는 정식 명칭 그대로(모바일 2열 그리드 한 칸에 들어간다).
 // minLevel = 표에 나오는 최소 레벨, sim = 시뮬레이터 종류(메카베리 계열은 계산식을 공유).
 const FARMS: (SubChoice & { minLevel: number; sim: 'blue' | 'meka' })[] = [
-  { name: '블루베리 농장',        label: '블루베리 농장', icon: '블루베리 농장',        data: BLUEBERRY_EXP,         minLevel: 260, sim: 'blue' },
-  { name: '메카베리 농장',        label: '메카베리 농장', icon: '메카베리 농장',        data: MEKABERRY_EXP,         minLevel: 280, sim: 'meka' },
   { name: '크림슨 메카베리 농장', label: '크림슨 메카베리 농장', icon: '크림슨 메카베리 농장', data: CRIMSON_MEKABERRY_EXP, minLevel: 280, sim: 'meka' },
+  { name: '메카베리 농장',        label: '메카베리 농장', icon: '메카베리 농장',        data: MEKABERRY_EXP,         minLevel: 280, sim: 'meka' },
+  { name: '블루베리 농장',        label: '블루베리 농장', icon: '블루베리 농장',        data: BLUEBERRY_EXP,         minLevel: 260, sim: 'blue' },
 ];
 
 export default function ExpContentsTab({
-  charLevel, monsterLevel, monsterParkBonus, monsterParkZone, epicDungeonBonus = 0, treasureBonus = 0, todayExpRate, slotKey, hasCharacter = true, expBonus = 0,
-  selected: selectedKey, onSelect, personalBoss, onPersonalBossChange,
+  charLevel, monsterLevel, monsterParkBonus, monsterParkZone, epicDungeonBonus = 0, treasureBonus = 0, todayExpRate, slotKey, hasCharacter = true,
+  selected: selectedKey, onSelect,
 }: Props) {
   // 레벨로 유추하지 않고 사용자가 고른 지역을 그대로 쓴다(효율표와 같은 기준)
   const myParkZone = monsterParkZone;
@@ -113,40 +92,20 @@ export default function ExpContentsTab({
   // 선택 메뉴는 주소(/cont/<키>)가 정한다 — 키가 없으면(/cont) 좌측 메뉴 + 선택 안내만 보여준다
   const isHub = !selectedKey || !CONTENT_KEYS.includes(selectedKey);
   const selected = isHub ? MENU_ITEMS[0].key : selectedKey;
-  const isPersonalBoss = selected === 'personalburning';
 
   // 잠수맵 시설 선택 (VIP 사우나 / MVP 리조트)
   const [diveFacility, setDiveFacility] = useState(DIVE_FACILITIES[0].name);
   const dive = DIVE_FACILITIES.find(f => f.name === diveFacility) ?? DIVE_FACILITIES[0];
 
-  // 퍼스널 버닝 상단 탭 (퍼스널 보스 / 퍼스널 EXP 교환권)
-  const [burningTab, setBurningTab] = useState(BURNING_TABS[0].name);
-  const showBossCalc = isPersonalBoss && burningTab === '퍼스널 보스';
-
-  // 교환권 표·시뮬레이터 — EXP 교환권 메뉴는 상급, 퍼스널 버닝의 교환권 탭은 퍼스널
+  // 교환권 표·시뮬레이터 — 지금은 EXP 교환권 메뉴의 상급 하나뿐이지만, 상단 탭이 다시 늘어날 수
+  // 있어 분기 모양을 그대로 둔다(퍼스널 교환권 탭이 있던 자리)
   const coupon =
     selected === 'expcoupon' ? { name: '상급 EXP 교환권', data: SUPER_EXP_COUPON }
-    : isPersonalBoss && burningTab === '퍼스널 EXP 교환권' ? { name: '퍼스널 EXP 교환권', data: PERSONAL_EXP_COUPON }
     : null;
 
   // 농장 선택 (블루베리 / 메카베리 / 크림슨 메카베리)
   const [farmType, setFarmType] = useState(FARMS[0].name);
   const farm = FARMS.find(f => f.name === farmType) ?? FARMS[0];
-
-  // 돋보기 선택 (수상한 / 탐정예티의 수상한)
-  const [magnifierType, setMagnifierType] = useState(MAGNIFIERS[0].name);
-  const magnifier = MAGNIFIERS.find(m => m.name === magnifierType) ?? MAGNIFIERS[0];
-  const isMagnifier = selected === 'magnifier';
-  // 수상한 돋보기만 추가 경험치 획득량을 받는다(표 하단 입력칸에서 고칠 수 있다)
-  const [magnifierBonusInput, setMagnifierBonusInput] = useState(expBonus > 0 ? String(expBonus) : '');
-  useEffect(() => {
-    setMagnifierBonusInput(expBonus > 0 ? String(expBonus) : '');
-  }, [expBonus, slotKey]);
-  const magnifierBonus = magnifier.usesBonus ? (parseFloat(magnifierBonusInput) || 0) : null;
-  /** 돋보기 1개 경험치 = 몹 경험치 × 배수 × 190마리 × (1 + 추가 경험치) */
-  const magnifierExpOf = (mobLv: number) =>
-    Math.round((MONSTER_EXP[mobLv] ?? 0) * magnifier.mobRate * 190 * (1 + (magnifierBonus ?? 0) / 100));
-
 
   // 몬스터파크 보약 체크박스
   const [parkBonusInput, setParkBonusInput] = useState(monsterParkBonus > 0 ? String(monsterParkBonus) : '');
@@ -166,15 +125,13 @@ export default function ExpContentsTab({
 
   // 메뉴 하나가 여러 종류를 품는 콘텐츠 — 표/시뮬레이터 위에 상단 선택 버튼을 띄운다
   const subChoices: { items: Pick<SubChoice, 'name' | 'label' | 'icon'>[]; current: string; set: (name: string) => void } | null =
-    selected === 'personalburning' ? { items: BURNING_TABS,    current: burningTab,   set: setBurningTab }
-    : selected === 'divemap'   ? { items: DIVE_FACILITIES, current: diveFacility, set: setDiveFacility }
+    selected === 'divemap'     ? { items: DIVE_FACILITIES, current: diveFacility, set: setDiveFacility }
     : selected === 'expcoupon'  ? { items: COUPON_TABS,     current: COUPON_TABS[0].name, set: () => {} }
     : selected === 'farm'       ? { items: FARMS,           current: farmType,     set: setFarmType }
-    : isMagnifier               ? { items: MAGNIFIERS,      current: magnifierType, set: setMagnifierType }
     : null;
 
   const isEpic = selected === 'epicdungeon';
-  const newLayout = ['farm', 'divemap', 'magnifier'].includes(selected) || coupon != null;
+  const newLayout = ['farm', 'divemap'].includes(selected) || coupon != null;
   // 메카베리 계열(일반/크림슨)은 시뮬레이터 계산식을 공유한다
   const isMekaberryLike = selected === 'farm' && farm.sim === 'meka';
 
@@ -182,22 +139,6 @@ export default function ExpContentsTab({
   const splitProps: ExpTableProps | null =
     selected === 'divemap' ? { title: dive.name, valueLabel: '1시간 당 경험치', headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100', levelLabel: '레벨', rows: LEVELS.map(lv => ({ level: lv, value: dive.data[lv] ?? 0, isMe: hasCharacter && lv === charLevel, ...commonRowProps })) }
     : coupon ? { title: coupon.name, valueLabel: '1000개 당 경험치', headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100', levelLabel: '레벨', rows: LEVELS.map(lv => ({ level: lv, value: (coupon.data[lv] ?? 0) * 1000, isMe: hasCharacter && lv === charLevel, ...commonRowProps })) }
-    // 돋보기는 행이 '몬스터 레벨'이다(캐릭터 레벨이 아니라 잡는 몹 기준) — 트레져 헌터와 같은 이유로
-    // 캐릭터를 추가하지 않으면 %를 숨긴다
-    : isMagnifier ? {
-        title: magnifier.name, valueLabel: '1개 당 경험치',
-        headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100',
-        // %는 선택한 캐릭터의 경험치통 기준이다(행 레벨이 아니라) — 몹 레벨은 경험치량만 정한다
-        levelLabel: '몬스터 레벨', showPct: canShowPct(hasCharacter, charLevel), pctLevel: charLevel,
-        rows: LEVELS.map(lv => ({ level: lv, value: magnifierExpOf(lv), isMe: hasCharacter && lv === monsterLevel, ...commonRowProps })),
-        // 수상한 돋보기만 추가 경험치 획득량을 받는다 — 에픽 던전 표의 보약 칸과 같은 자리
-        footer: magnifier.usesBonus ? (
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs text-gray-500 dark:text-zinc-400">추가 경험치 획득량</span>
-            <SimNumInput value={magnifierBonusInput} onChange={setMagnifierBonusInput} unit="%" pad="4" width="w-16" height="h-[22px]" max={9999} />
-          </div>
-        ) : null,
-      }
     : selected === 'farm' ? { title: farm.name, headerColor: 'bg-orange-200 dark:bg-orange-900/50 border-orange-200 dark:border-orange-800', titleColor: 'text-gray-800 dark:text-zinc-100', levelLabel: '레벨', rows: LEVELS.filter(lv => lv >= farm.minLevel).map(lv => ({ level: lv, value: farm.data[lv] ?? 0, isMe: hasCharacter && lv === charLevel, ...commonRowProps })) }
     : null;
 
@@ -235,27 +176,6 @@ export default function ExpContentsTab({
       </div>
     ) : null;
 
-  // 퍼스널 EXP 교환권 팁 콜아웃 (퍼스널 버닝 메뉴의 교환권 탭, 경험치표 위에 표시) — 이벤트 종료 후 삭제
-  const couponTip = coupon?.name === '퍼스널 EXP 교환권' ? (
-    <div className={tipCalloutClass}>
-      <div className="flex items-center gap-1 mb-1 font-bold text-orange-600 dark:text-orange-400">{tipIcon}퍼스널 EXP 교환권 팁</div>
-      <ul className="space-y-0.5 text-gray-600 dark:text-zinc-300">
-        <li>퍼스널 플레임 커스텀 포인트를 모두 <span className="font-semibold">퍼스널 EXP</span>에 투자하면 주당 최대 <span className="font-semibold">720개</span>를 획득할 수 있습니다.</li>
-        <li>따라서 이벤트 기간 <span className="font-semibold">9주</span> 동안 최대 <span className="font-semibold">6,480개</span>를 획득할 수 있습니다.</li>
-      </ul>
-    </div>
-  ) : null;
-
-  // 탐정예티의 수상한 돋보기 팁 콜아웃 (경험치표 위에 표시) — 이벤트 종료 후 삭제
-  const magnifierTip = isMagnifier && !magnifier.usesBonus ? (
-    <div className={tipCalloutClass}>
-      <div className="flex items-center gap-1 mb-1 font-bold text-orange-600 dark:text-orange-400">{tipIcon}탐정예티의 수상한 돋보기 팁</div>
-      <ul className="space-y-0.5 text-gray-600 dark:text-zinc-300">
-        <li>하루 최대 <span className="font-semibold">3개</span>까지 사용할 수 있으므로 이벤트 기간 <span className="font-semibold">28일</span> 동안 최대 <span className="font-semibold">84개</span>를 사용할 수 있습니다.</li>
-      </ul>
-    </div>
-  ) : null;
-
   // 좌측 메뉴 버튼
   const renderMenuButton = (item: typeof MENU_ITEMS[number], active: boolean) => (
     <button
@@ -266,7 +186,7 @@ export default function ExpContentsTab({
         (active
           ? 'bg-orange-500 text-white '
           : 'bg-white dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 hover:bg-orange-50 dark:hover:bg-zinc-700 ') +
-        // 이벤트 메뉴(퍼스널 보스)는 노란 테두리로 표시
+        // 이벤트 한정 메뉴(MENU_ITEMS의 event: true)는 노란 테두리로 표시
         (item.event
           ? 'border-yellow-400'
           : active ? 'border-orange-500' : 'border-gray-200 dark:border-zinc-600')
@@ -321,20 +241,7 @@ export default function ExpContentsTab({
           />
         )}
         {berryTip}
-        {couponTip}
-        {magnifierTip}
-        {/* 퍼스널 보스 미션 — 캐릭터 없이도 레벨을 직접 넣어 계산할 수 있다. 슬롯을 바꾸면 key로 입력값 초기화 */}
-        {showBossCalc && (
-          <PersonalBossTab
-            key={slotKey}
-            charLevel={charLevel}
-            hasCharacter={hasCharacter}
-            selections={personalBoss}
-            onChange={onPersonalBossChange}
-          />
-        )}
         {/* 표/시뮬레이터 (모바일/태블릿: 세로 스택, 시뮬레이터가 위로 오도록 flex-col-reverse / lg(905px)~: 좌우 배치) */}
-        {!showBossCalc && (
         <div className={'flex gap-4 flex-col-reverse items-stretch lg:flex-row lg:items-start ' + (newLayout || selected === 'monsterpark' ? 'lg:flex-row-reverse' : '')}>
         {isEpic ? (
           <EpicDungeonSection charLevel={charLevel} epicDungeonBonus={epicDungeonBonus} hasCharacter={hasCharacter} />
@@ -419,10 +326,7 @@ export default function ExpContentsTab({
 
             {/* 시뮬레이터 카드 */}
             {selected !== 'treasurehunter' && <div className={newLayout ? 'flex-1 flex flex-col gap-4' : 'flex-1 lg:self-start flex flex-col gap-4'}>
-              {isMagnifier ? (
-                // key = 선택한 돋보기 → 탭을 바꾸면 입력값·결과가 초기화된다
-                <MagnifierSimulator key={magnifier.name} charLevel={charLevel} monsterLevel={monsterLevel} hasCharacter={hasCharacter} todayExpRate={todayExpRate} slotKey={slotKey} mobRate={magnifier.mobRate} expBonus={magnifier.usesBonus ? expBonus : null} />
-              ) : selected === 'divemap' ? (
+              {selected === 'divemap' ? (
                 // key = 선택한 상단 탭 → 탭을 바꾸면 시뮬레이터·목표 레벨 역산 입력값이 초기화된다
                 // (같은 컴포넌트를 쓰는 메카베리↔크림슨에서 이전 표로 계산한 결과가 남는 것도 막는다)
                 <VipSaunaSimulator key={dive.name} charLevel={charLevel} hasCharacter={hasCharacter} todayExpRate={todayExpRate} slotKey={slotKey} expTable={dive.data} />
@@ -439,7 +343,6 @@ export default function ExpContentsTab({
           </>
         )}
         </div>
-        )}
       </div>
       )}
 

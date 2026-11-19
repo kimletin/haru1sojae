@@ -12,7 +12,7 @@ interface Props {
   hasCharacter: boolean;
   todayExpRate?: number | null;
   slotKey?: number;
-  /** 교환권 종류별 1장당 경험치 표 (상급 / 퍼스널) — 계산식은 같고 표만 다르다 */
+  /** 교환권 종류별 1장당 경험치 표 — 종류가 늘어도 계산식은 같고 표만 다르다 */
   expTable?: Record<number, number>;
 }
 

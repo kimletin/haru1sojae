@@ -251,7 +251,7 @@ export type RevStartResult =
   | { ok: true; startLevel: number; startPct: number; targetLevel: number }
   | { ok: false; msg: string };
 
-// EXP 교환권(상급 / 퍼스널)은 계산이 동일하고 레벨별 경험치 테이블만 다르다 → expTable로 주입
+// EXP 교환권은 종류가 늘어도 계산이 동일하고 레벨별 경험치 테이블만 다르다 → expTable로 주입
 export function calcCouponByCount(startLevel: number, startExpPct: number, count: number, beyond: boolean, expTable: Record<number, number> = SUPER_EXP_COUPON) {
   let lv = startLevel;
   let absExp = (startExpPct / 100) * (LEVEL_EXP[lv]?.required ?? 0);
