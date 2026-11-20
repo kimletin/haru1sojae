@@ -136,12 +136,13 @@ export default function ItemName({ name, parkBonuses }: { name: string; parkBonu
     const zone = monparkMatch[1];
     const variant = monparkMatch[2];
     const variantCls = MONPARK_VARIANT_COLORS[variant];
-    // 선택한 지역 아이콘 + '몬파: 지역' — 어느 지역 기준 값인지 바로 보이게
+    // 어느 지역 기준 값인지는 맨 앞 지역 아이콘으로만 보여 준다 — 이름에 지역까지 붙이면
+    // ('몬파: 카르시온 평일·토') 항목 칸에서 너무 길어져 평일·토/일요일/썬데이 뱃지가 밀렸다
     // 합산된 보약은 맨 뒤에 아이콘으로 — 툴팁 내용은 캐릭터 정보 카드의 보약 행과 같다
     return (
       <>
         <Icon name={zone} />
-        몬파: {zone}
+        몬스터파크
         {variant && (
           <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold ml-0.5 ${variantCls ?? 'bg-fuchsia-500 text-white'}`}>{variant}</span>
         )}
